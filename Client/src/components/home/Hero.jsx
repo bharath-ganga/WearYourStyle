@@ -139,21 +139,24 @@ const HeroSlideContent = styled.div`
 
 const Hero = () => {
   const settings = {
-    infinite: true,
+    infinite: bannerData.length > 1,
     slidesToShow: 1,
     slidesToScroll: 1,
+    arrows: bannerData.length > 1,
+    autoplay: true,
+    autoplaySpeed: 3000,
     responsive: [
       {
         breakpoint: 1024,
         settings: {
-          arrows: true,
+          arrows: bannerData.length > 1,
         },
       },
       {
         breakpoint: 768,
         settings: {
           arrows: false,
-          dots: true,
+          dots: bannerData.length > 1,
         },
       },
     ],

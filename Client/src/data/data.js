@@ -69,6 +69,15 @@ const sideMenuData = [
 
 const bannerData = [
   {
+    id: "banner-new",
+    topText: "Exclusive Offers",
+    titleText: "Welcome to WearYourStyle",
+    bottomText: "Discover the latest trends",
+    buttonLink: "/product",
+    buttonText: "Shop Now",
+    imgSource: "/banner.png",
+  },
+  {
     id: "banner-1",
     topText: "T-shirt / Tops",
     titleText: "Step into the Future: AI Virtual Try-On!",
