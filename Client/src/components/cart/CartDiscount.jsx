@@ -1,4 +1,8 @@
 import styled from "styled-components";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { applyDiscount } from "../../redux/slices/cartSlice";
+import { toast } from "react-hot-toast";
 import { Input } from "../../styles/form";
 import {
   BaseButtonOuterspace,
@@ -44,18 +48,36 @@ const CartDiscountWrapper = styled.div`
 `;
 
 const CartDiscount = () => {
+  const [couponCode, setCouponCode] = useState("");
+  const dispatch = useDispatch();
+
+  const handleApplyCoupon = (e) => {
+    e.preventDefault();
+    if (couponCode.trim().toUpperCase() === "HARANADHABABU40") {
+      dispatch(applyDiscount(40));
+      toast.success("Coupon APPLIED! 40% OFF");
+    } else if (couponCode.trim() !== "") {
+      dispatch(applyDiscount(0));
+      toast.error("Invalid coupon code");
+    } else {
+      dispatch(applyDiscount(0));
+    }
+  };
+
   return (
     <CartDiscountWrapper>
       <h3 className="text-xxl text-outerspace">Discount Codes</h3>
       <p className="text-base text-gray">
         Enter your coupon code if you have one.
       </p>
-      <form action="">
+      <form onSubmit={handleApplyCoupon}>
         <div className="coupon-group flex">
           <Input
             type="text"
             className="coupon-input w-full"
-            placeholder="Search"
+            placeholder="Search coupon code"
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value)}
           />
           <BaseButtonOuterspace
             type="submit"

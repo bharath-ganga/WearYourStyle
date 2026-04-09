@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { Container } from "../../styles/styles";
 import Breadcrumb from "../../components/common/Breadcrumb";
 import ProductPreview from "../../components/product/ProductPreview";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import { BaseLinkGreen, BaseButtonGreen } from "../../styles/button";
 import { currencyFormat } from "../../utils/helper";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
@@ -185,6 +185,7 @@ const ProductColorWrapper = styled.div`
 
 const ProductDetailsScreen = () => {
     const { id } = useParams();
+    const location = useLocation();
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [product, setProduct] = useState(null);
@@ -263,6 +264,11 @@ const ProductDetailsScreen = () => {
         { label: product.title, link: "" },
     ];
 
+    const isTryOnable = product.title.toLowerCase().includes("shirt") || 
+                        product.title.toLowerCase().includes("top") ||
+                        product.title.toLowerCase().includes("wear") ||
+                        product.title.toLowerCase().includes("t-shirt");
+
     return (
         <DetailsScreenWrapper>
             <Container>
@@ -329,16 +335,22 @@ const ProductDetailsScreen = () => {
                                 <span className="prod-add-btn-text">Add to cart</span>
                             </BaseButtonGreen>
 
-                            <BaseLinkGreen
-                                to="/virtual_try_on"
-                                className="prod-add-btn"
-                                style={{ backgroundColor: "#8a33fd", borderColor: "#8a33fd" }}
-                            >
-                                <span className="prod-add-btn-icon">
-                                    <i className="bi bi-camera"></i>
-                                </span>
-                                <span className="prod-add-btn-text">Virtual Try On</span>
-                            </BaseLinkGreen>
+                            {isTryOnable && (
+                                <BaseLinkGreen
+                                    to="/virtual_try_on"
+                                    state={{ 
+                                        productId: product.id, 
+                                        imgSource: product.imgSource || (product.previewImages && product.previewImages[0]?.imgSource) 
+                                    }}
+                                    className="prod-add-btn"
+                                    style={{ backgroundColor: "#8a33fd", borderColor: "#8a33fd" }}
+                                >
+                                    <span className="prod-add-btn-icon">
+                                        <i className="bi bi-camera"></i>
+                                    </span>
+                                    <span className="prod-add-btn-text">Virtual Try On</span>
+                                </BaseLinkGreen>
+                            )}
 
                             <span className="prod-price text-xl font-bold text-outerspace">
                                 {currencyFormat(product.price)}

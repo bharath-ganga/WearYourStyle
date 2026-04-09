@@ -159,7 +159,7 @@ import { useState } from "react";
 const ShippingPayment = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { carts, totalAmount } = useSelector((state) => state.cart);
+    const { carts, totalAmount, discountPercent } = useSelector((state) => state.cart);
     const [paymentMethod, setPaymentMethod] = useState("");
 
     const getDeliveryDate = () => {
@@ -182,9 +182,12 @@ const ShippingPayment = () => {
         }
 
         try {
+            const discountAmount = discountPercent > 0 ? (totalAmount * discountPercent) / 100 : 0;
+            const finalAmount = totalAmount - discountAmount + 50;
+
             const orderData = {
                 items: carts,
-                totalAmount: totalAmount + 50, // Including shipping
+                totalAmount: finalAmount, // Including shipping and discount
                 shippingAddress: "Default Address", 
                 paymentMethod: paymentMethod,
                 status: "Order Placed", // initial tracking status
@@ -358,7 +361,12 @@ const ShippingPayment = () => {
               checked={paymentMethod === "UPI"}
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
-            <p className="font-semibod text-lg">UPI</p>
+            <div className="flex flex-col">
+              <p className="font-semibold text-lg">UPI</p>
+              <span className="flex text-base font-medium text-gray">
+                Pay using Google Pay, PhonePe, Paytm, etc.
+              </span>
+            </div>
           </div>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import styled from "styled-components";
 import { Container } from "../../styles/styles";
 import Title from "../../components/common/Title";
@@ -20,13 +21,15 @@ const CheckoutScreenWrapper = styled.main`
 `;
 
 const CheckoutScreen = () => {
+  const [isBillingFilled, setIsBillingFilled] = useState(false);
+
   return (
     <CheckoutScreenWrapper>
       <Container>
         <Title titleText={"Check Out"} />
-        <Billing />
+        <Billing onBillingSubmit={() => setIsBillingFilled(true)} />
         <div className="horiz-line-separator w-full"></div>
-        <ShippingPayment />
+        {isBillingFilled && <ShippingPayment />}
       </Container>
     </CheckoutScreenWrapper>
   );

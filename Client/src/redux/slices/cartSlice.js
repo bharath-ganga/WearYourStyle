@@ -19,6 +19,7 @@ const cartSlice = createSlice({
         carts: fetchFromLocalStorage(),
         itemsCount: 0,
         totalAmount: 0,
+        discountPercent: localStorage.getItem("cartDiscount") ? JSON.parse(localStorage.getItem("cartDiscount")) : 0,
     },
     reducers: {
         addToCart: (state, action) => {
@@ -92,8 +93,13 @@ const cartSlice = createSlice({
             state.carts = [];
             storeInLocalStorage(state.carts);
         },
+
+        applyDiscount: (state, action) => {
+            state.discountPercent = action.payload;
+            localStorage.setItem("cartDiscount", JSON.stringify(action.payload));
+        },
     },
 });
 
-export const { addToCart, removeFromCart, toggleCartQty, getCartTotal, clearCart } = cartSlice.actions;
+export const { addToCart, removeFromCart, toggleCartQty, getCartTotal, clearCart, applyDiscount } = cartSlice.actions;
 export default cartSlice.reducer;

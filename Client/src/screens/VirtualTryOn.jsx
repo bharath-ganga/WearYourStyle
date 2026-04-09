@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Webcam from "react-webcam";
 import io from "socket.io-client";
 import styled from "styled-components";
@@ -113,6 +114,7 @@ const VirtualTryOn = () => {
 
     const [allProducts, setAllProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const location = useLocation();
 
     // Filter products that look like shirts/tops for try-on
     const tryOnClothes = allProducts.filter(p => 
@@ -151,6 +153,24 @@ const VirtualTryOn = () => {
             socket.off("error");
         };
     }, []);
+
+    useEffect(() => {
+        if (allProducts.length > 0 && location.state?.productId && location.state?.imgSource) {
+            // Check if the product we came from is in the tryOnClothes list
+            const passedProduct = allProducts.find(p => p.id === location.state.productId);
+            if (passedProduct) {
+                const isTryOnable = passedProduct.title.toLowerCase().includes("shirt") || 
+                        passedProduct.title.toLowerCase().includes("top") ||
+                        passedProduct.title.toLowerCase().includes("wear") ||
+                        passedProduct.title.toLowerCase().includes("t-shirt");
+                
+                if (isTryOnable && !activeShirt) {
+                    handleImageClick(location.state.imgSource, location.state.productId);
+                    setWebcamActive(true);
+                }
+            }
+        }
+    }, [allProducts, location.state, activeShirt]);
 
     const handleImageClick = async (imageUrl, id) => {
         setActiveShirt(id);

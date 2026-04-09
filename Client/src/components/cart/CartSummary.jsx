@@ -39,8 +39,11 @@ const CartSummaryWrapper = styled.div`
 const CartSummary = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { carts, totalAmount } = useSelector((state) => state.cart);
+  const { carts, totalAmount, discountPercent } = useSelector((state) => state.cart);
   const shippingCharge = 50; // Dynamic or fixed shipping
+
+  const discountAmount = discountPercent > 0 ? (totalAmount * discountPercent) / 100 : 0;
+  const grandTotal = totalAmount - discountAmount + shippingCharge;
 
   useEffect(() => {
     dispatch(getCartTotal());
@@ -53,6 +56,12 @@ const CartSummary = () => {
           <span className="font-medium text-outerspace">Sub Total</span>
           <span className="font-medium text-outerspace">{currencyFormat(totalAmount)}</span>
         </li>
+        {discountPercent > 0 && (
+          <li className="summary-item flex justify-between">
+             <span className="font-medium text-outerspace">Discount ({discountPercent}%)</span>
+             <span className="font-medium text-outerspace text-red-500">-{currencyFormat(discountAmount)}</span>
+          </li>
+        )}
         <li className="summary-item flex justify-between">
           <span className="font-medium text-outerspace">Shipping</span>
           <span className="font-medium text-outerspace">{currencyFormat(shippingCharge)}</span>
@@ -60,7 +69,7 @@ const CartSummary = () => {
         <li className="summary-item flex justify-between">
           <span className="font-medium text-outerspace">Grand Total</span>
           <span className="summary-item-value font-bold text-outerspace">
-            {currencyFormat(totalAmount + shippingCharge)}
+            {currencyFormat(grandTotal)}
           </span>
         </li>
       </ul>

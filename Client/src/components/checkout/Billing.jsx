@@ -94,12 +94,19 @@ const BillingDetailsWrapper = styled.div`
   }
 `;
 
-const Billing = () => {
+const Billing = ({ onBillingSubmit }) => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (onBillingSubmit) {
+      onBillingSubmit();
+    }
+  };
+
   return (
     <BillingOrderWrapper className="billing-and-order grid items-start">
       <BillingDetailsWrapper>
         <h4 className="text-xxl font-bold text-outerspace">Billing Details</h4>
-        <form className="checkout-form">
+        <form className="checkout-form" onSubmit={handleSubmit}>
           <div className="input-elem-group elem-col-2">
             <div className="input-elem">
               <label
@@ -108,7 +115,7 @@ const Billing = () => {
               >
                 First Name*
               </label>
-              <Input type="text" placeholder="First Name" />
+              <Input type="text" placeholder="First Name" required />
             </div>
             <div className="input-elem">
               <label
@@ -117,7 +124,7 @@ const Billing = () => {
               >
                 Last Name*
               </label>
-              <Input type="text" placeholder="Last Name" />
+              <Input type="text" placeholder="Last Name" required />
             </div>
           </div>
           <div className="input-elem-group">
@@ -139,7 +146,7 @@ const Billing = () => {
               >
                 Street Address*
               </label>
-              <Input type="text" placeholder="House number and street name" />
+              <Input type="text" placeholder="House number and street name" required />
             </div>
             <div className="input-elem">
               <label
@@ -162,7 +169,7 @@ const Billing = () => {
               >
                 City*
               </label>
-              <Input type="text" placeholder="Town / City" />
+              <Input type="text" placeholder="Town / City" required />
             </div>
             <div className="input-elem">
               <label
@@ -176,12 +183,11 @@ const Billing = () => {
                   Select State
                 </option>
                 {[
-                  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
-                  "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", 
-                  "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", 
-                  "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", 
-                  "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", 
-                  "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"
+                  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", 
+                  "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", 
+                  "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", 
+                  "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", 
+                  "Uttar Pradesh", "Uttarakhand", "West Bengal"
                 ].map(state => (
                   <option key={state} value={state}>{state}</option>
                 ))}
@@ -194,7 +200,7 @@ const Billing = () => {
               >
                 Postal Code*
               </label>
-              <Input type="text" placeholder="Postal Code" />
+              <Input type="text" placeholder="Postal Code" required />
             </div>
           </div>
           <div className="input-elem-group elem-col-2">
@@ -205,7 +211,7 @@ const Billing = () => {
               >
                 Phone*
               </label>
-              <Input type="text" placeholder="Phone" />
+              <Input type="text" placeholder="Phone" required />
             </div>
           </div>
           <BaseButtonGreen type="submit" className="contd-delivery-btn">
