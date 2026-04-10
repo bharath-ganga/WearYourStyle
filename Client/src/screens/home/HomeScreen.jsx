@@ -130,6 +130,7 @@ const HomeScreen = () => {
   const [locationName, setLocationName] = useState("");
   const [temperature, setTemperature] = useState(null);
   const [suggestedProducts, setSuggestedProducts] = useState([]);
+  const [manualCity, setManualCity] = useState("");
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -195,6 +196,27 @@ const HomeScreen = () => {
     }
   };
 
+  const handleManualLocation = async () => {
+    if (!manualCity.trim()) return;
+    try {
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(manualCity)}`);
+      const geoData = await geoRes.json();
+      if (geoData && geoData.length > 0) {
+        const lat = geoData[0].lat;
+        const lon = geoData[0].lon;
+        localStorage.setItem("locationAsked", "true");
+        localStorage.setItem("lat", lat);
+        localStorage.setItem("lon", lon);
+        setShowModal(false);
+        fetchLocationInfo(lat, lon);
+      } else {
+        alert("City not found. Try another or use Detect Live Location.");
+      }
+    } catch (err) {
+      console.error("Geocoding failed", err);
+    }
+  };
+
   const handleAllowLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -228,10 +250,33 @@ const HomeScreen = () => {
         <ModalOverlay>
           <ModalContent>
             <h2>Enable Location</h2>
-            <p>We'd like to use your location to show the current weather and suggest clothing perfectly suited for your surroundings.</p>
+            <p>We'd like to suggest clothing perfectly suited for your surroundings.</p>
+            
+            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
+                <input 
+                    type="text" 
+                    placeholder="Enter city manually..." 
+                    value={manualCity} 
+                    onChange={(e) => setManualCity(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleManualLocation()}
+                    style={{ padding: '12px', width: '60%', borderRadius: '8px', border: '1px solid #ccc', marginRight: '8px', fontSize: '15px' }}
+                />
+                <button onClick={handleManualLocation} style={{ padding: '12px 20px', background: '#333', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Search
+                </button>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', color: '#999' }}>
+                <div style={{ flex: 1, height: '1px', background: '#eee' }}></div>
+                <span style={{ padding: '0 10px', fontSize: '13px', fontWeight: 'bold' }}>OR</span>
+                <div style={{ flex: 1, height: '1px', background: '#eee' }}></div>
+            </div>
+
             <div className="btn-group">
-               <button onClick={handleAllowLocation}>Allow Location</button>
-               <button className="skip-btn" onClick={handleSkipLocation}>Skip</button>
+               <button onClick={handleAllowLocation} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <i className="bi bi-geo-alt-fill"></i> Use Live Location
+               </button>
+               <button className="skip-btn" onClick={handleSkipLocation} style={{ width: 'auto' }}>Skip</button>
             </div>
           </ModalContent>
         </ModalOverlay>

@@ -97,8 +97,16 @@ const BillingDetailsWrapper = styled.div`
 const Billing = ({ onBillingSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    const address = `${data.street}, ${data.apt ? data.apt + ', ' : ''}${data.city}, ${data.state} ${data.postal}, ${data.country}`;
+    const email = data.email;
+    const phone = data.phone;
+    const name = `${data.firstName} ${data.lastName}`;
+    
     if (onBillingSubmit) {
-      onBillingSubmit();
+      onBillingSubmit({ address, email, phone, name });
     }
   };
 
@@ -109,79 +117,49 @@ const Billing = ({ onBillingSubmit }) => {
         <form className="checkout-form" onSubmit={handleSubmit}>
           <div className="input-elem-group elem-col-2">
             <div className="input-elem">
-              <label
-                htmlFor=""
-                className="text-base text-outerspace font-semibold"
-              >
-                First Name*
-              </label>
-              <Input type="text" placeholder="First Name" required />
+              <label className="text-base text-outerspace font-semibold">First Name*</label>
+              <Input type="text" name="firstName" placeholder="First Name" required />
             </div>
             <div className="input-elem">
-              <label
-                htmlFor=""
-                className="text-base text-outerspace font-semibold"
-              >
-                Last Name*
-              </label>
-              <Input type="text" placeholder="Last Name" required />
-            </div>
-          </div>
-          <div className="input-elem-group">
-            <div className="input-elem">
-              <label
-                htmlFor=""
-                className="text-base text-outerspace font-semibold"
-              >
-                Country / Region*
-              </label>
-              <Input type="text" placeholder="Country / Region" required />
+              <label className="text-base text-outerspace font-semibold">Last Name*</label>
+              <Input type="text" name="lastName" placeholder="Last Name" required />
             </div>
           </div>
           <div className="input-elem-group elem-col-2">
             <div className="input-elem">
-              <label
-                htmlFor=""
-                className="text-base text-outerspace font-semibold"
-              >
-                Street Address*
-              </label>
-              <Input type="text" placeholder="House number and street name" required />
+              <label className="text-base text-outerspace font-semibold">Email Address*</label>
+              <Input type="email" name="email" placeholder="Email Address" required />
             </div>
             <div className="input-elem">
-              <label
-                htmlFor=""
-                className="text-base text-outerspace font-semibold"
-              >
-                Apt, suite, unit
-              </label>
-              <Input
-                type="text"
-                placeholder="apartment, suite, unit, etc. (optional)"
-              />
+              <label className="text-base text-outerspace font-semibold">Phone*</label>
+              <Input type="text" name="phone" placeholder="Phone" required />
+            </div>
+          </div>
+          <div className="input-elem-group">
+            <div className="input-elem">
+              <label className="text-base text-outerspace font-semibold">Country / Region*</label>
+              <Input type="text" name="country" placeholder="Country / Region" required />
+            </div>
+          </div>
+          <div className="input-elem-group elem-col-2">
+            <div className="input-elem">
+              <label className="text-base text-outerspace font-semibold">Street Address*</label>
+              <Input type="text" name="street" placeholder="House number and street name" required />
+            </div>
+            <div className="input-elem">
+              <label className="text-base text-outerspace font-semibold">Apt, suite, unit</label>
+              <Input type="text" name="apt" placeholder="apartment, suite, unit, etc. (optional)" />
             </div>
           </div>
           <div className="input-elem-group elem-col-3">
             <div className="input-elem">
-              <label
-                htmlFor=""
-                className="text-base text-outerspace font-semibold"
-              >
-                City*
-              </label>
-              <Input type="text" placeholder="Town / City" required />
+              <label className="text-base text-outerspace font-semibold">City*</label>
+              <Input type="text" name="city" placeholder="Town / City" required />
             </div>
             <div className="input-elem">
-              <label
-                htmlFor="state"
-                className="text-base text-outerspace font-semibold"
-              >
-                State*
-              </label>
+              <label className="text-base text-outerspace font-semibold">State*</label>
               <select name="state" required defaultValue="">
-                <option value="" disabled>
-                  Select State
-                </option>
+                <option value="" disabled>Select State</option>
                 {[
                   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", 
                   "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", 
@@ -194,35 +172,13 @@ const Billing = ({ onBillingSubmit }) => {
               </select>
             </div>
             <div className="input-elem">
-              <label
-                htmlFor=""
-                className="text-base text-outerspace font-semibold"
-              >
-                Postal Code*
-              </label>
-              <Input type="text" placeholder="Postal Code" required />
-            </div>
-          </div>
-          <div className="input-elem-group elem-col-2">
-            <div className="input-elem">
-              <label
-                htmlFor=""
-                className="text-base text-outerspace font-semibold"
-              >
-                Phone*
-              </label>
-              <Input type="text" placeholder="Phone" required />
+              <label className="text-base text-outerspace font-semibold">Postal Code*</label>
+              <Input type="text" name="postal" placeholder="Postal Code" required />
             </div>
           </div>
           <BaseButtonGreen type="submit" className="contd-delivery-btn">
             Continue to delivery
           </BaseButtonGreen>
-          <div className="input-check-group flex items-center flex-wrap">
-            <Input type="checkbox" />
-            <p className="text-base">
-              Save my information for a faster checkout
-            </p>
-          </div>
         </form>
       </BillingDetailsWrapper>
       <CheckoutSummary />

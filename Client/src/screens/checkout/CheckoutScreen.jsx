@@ -21,15 +21,19 @@ const CheckoutScreenWrapper = styled.main`
 `;
 
 const CheckoutScreen = () => {
-  const [isBillingFilled, setIsBillingFilled] = useState(false);
+  const [billingDetails, setBillingDetails] = useState(null);
+
+  const handleBillingSubmit = (details) => {
+    setBillingDetails(details);
+  };
 
   return (
     <CheckoutScreenWrapper>
       <Container>
         <Title titleText={"Check Out"} />
-        <Billing onBillingSubmit={() => setIsBillingFilled(true)} />
+        <Billing onBillingSubmit={handleBillingSubmit} />
         <div className="horiz-line-separator w-full"></div>
-        {isBillingFilled && <ShippingPayment />}
+        {billingDetails && <ShippingPayment billingDetails={billingDetails} />}
       </Container>
     </CheckoutScreenWrapper>
   );

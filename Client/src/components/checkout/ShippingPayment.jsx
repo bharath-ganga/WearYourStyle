@@ -156,7 +156,7 @@ const ShippingPaymentWrapper = styled.div`
 
 import { useState } from "react";
 
-const ShippingPayment = () => {
+const ShippingPayment = ({ billingDetails }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { carts, totalAmount, discountPercent } = useSelector((state) => state.cart);
@@ -185,21 +185,22 @@ const ShippingPayment = () => {
             const discountAmount = discountPercent > 0 ? (totalAmount * discountPercent) / 100 : 0;
             const finalAmount = totalAmount - discountAmount + 50;
 
-            // Generate a simulated transaction ID
             const transactionId = `TRX-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
             
             const orderData = {
                 items: carts,
                 totalAmount: finalAmount, 
-                shippingAddress: "Default Address", 
+                shippingAddress: billingDetails?.address || "Default Address", 
                 paymentMethod: paymentMethod,
                 status: "Order Placed", 
                 delivery_date: getDeliveryDate(),
                 userId: localStorage.getItem("userId") || "guest",
+                userEmail: billingDetails?.email || localStorage.getItem("userEmail") || "Guest",
+                phone: billingDetails?.phone || "N/A",
                 payment_details: {
                     transaction_id: transactionId,
                     payment_type: paymentMethod,
-                    customer_name: localStorage.getItem("userName") || "Guest User",
+                    customer_name: billingDetails?.name || localStorage.getItem("userName") || "Guest User",
                     timestamp: new Date().toISOString()
                 }
             };
@@ -226,11 +227,20 @@ const ShippingPayment = () => {
           Select the address that matches your card or payment method.
         </p>
         <div className="list-group">
-          <div className="list-group-item flex items-center">
-            <Input type="radio" name="shipping_addr" defaultChecked />
-            <span className="font-semibold text-lg">
-              Same as Billing address
-            </span>
+          <div className="list-group-item flex flex-col items-start gap-2">
+            <div className="flex items-center w-full">
+                <Input type="radio" name="shipping_addr" className="mr-2" defaultChecked />
+                <span className="font-semibold text-lg">
+                Same as Billing address
+                </span>
+            </div>
+            {billingDetails?.address && (
+                <div style={{ marginLeft: '28px', padding: '12px', backgroundColor: '#eef2f6', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#334155', fontSize: '14px', maxWidth: '400px' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{billingDetails.name}</div>
+                    <div><i className="bi bi-geo-alt-fill" style={{ marginRight: '6px', color: '#00a98f' }}></i>{billingDetails.address}</div>
+                    <div style={{ marginTop: '4px' }}><i className="bi bi-telephone-fill" style={{ marginRight: '6px', color: '#00a98f' }}></i>{billingDetails.phone}</div>
+                </div>
+            )}
           </div>
           <div className="horiz-line-separator"></div>
           <div className="list-group-item flex items-center">
@@ -311,12 +321,20 @@ const ShippingPayment = () => {
                 <Input
                   type="text"
                   className="form-elem"
-                  placeholder="Card number"
+                  placeholder="Card number (16 digits)"
+                  maxLength="16"
+                  onChange={(e) => {
+                      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 16);
+                  }}
                 />
                 <Input
                   type="text"
                   className="form-elem"
-                  placeholder="Name of card"
+                  placeholder="NAME ON CARD"
+                  style={{ textTransform: 'uppercase' }}
+                  onChange={(e) => {
+                      e.target.value = e.target.value.toUpperCase();
+                  }}
                 />
               </div>
               <div className="form-elem-group">
@@ -324,11 +342,23 @@ const ShippingPayment = () => {
                   type="text"
                   className="form-elem"
                   placeholder="Expiration date (MM/YY)"
+                  maxLength="5"
+                  onChange={(e) => {
+                      let val = e.target.value.replace(/\D/g, '');
+                      if (val.length >= 3) {
+                          val = val.slice(0, 2) + '/' + val.slice(2, 4);
+                      }
+                      e.target.value = val;
+                  }}
                 />
                 <Input
                   type="text"
                   className="form-elem"
-                  placeholder="Security Code"
+                  placeholder="CVV"
+                  maxLength="4"
+                  onChange={(e) => {
+                      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  }}
                 />
               </div>
             </div>
@@ -364,21 +394,52 @@ const ShippingPayment = () => {
             <p className="font-semibod text-lg">PayPal</p>
           </div>
           <div className="horiz-line-separator"></div>
-          <div className="list-group-item flex items-center">
-            <Input
-              type="radio"
-              className="list-group-item-check"
-              name="payment_method"
-              value="UPI"
-              checked={paymentMethod === "UPI"}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-            />
-            <div className="flex flex-col">
-              <p className="font-semibold text-lg">UPI</p>
-              <span className="flex text-base font-medium text-gray">
-                Pay using Google Pay, PhonePe, Paytm, etc.
-              </span>
+          <div className="list-group-item">
+            <div className="flex items-center list-group-item-head">
+              <Input
+                type="radio"
+                className="list-group-item-check"
+                name="payment_method"
+                value="UPI"
+                checked={paymentMethod === "UPI"}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              />
+              <div className="flex flex-col">
+                <p className="font-semibold text-lg">UPI</p>
+                <span className="flex text-base font-medium text-gray">
+                  Pay using Google Pay, PhonePe, Paytm, etc.
+                </span>
+              </div>
             </div>
+            {paymentMethod === "UPI" && (
+              <div className="payment-details" style={{ marginTop: '20px' }}>
+                <div className="form-elem-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Input 
+                        type="text" 
+                        className="form-elem" 
+                        placeholder="10-digit mobile number" 
+                        maxLength="10"
+                        style={{ flex: 2 }}
+                        onChange={(e) => {
+                            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        }}
+                    />
+                    <span style={{ fontWeight: 'bold', fontSize: '18px', color: '#555' }}>@</span>
+                    <select className="form-elem" style={{ flex: 1, padding: '0 10px', height: '40px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                        <option value="okaxis">okaxis</option>
+                        <option value="okhdfcbank">okhdfcbank</option>
+                        <option value="oksbi">oksbi</option>
+                        <option value="okicici">okicici</option>
+                        <option value="ybl">ybl (Yes Bank)</option>
+                        <option value="ibl">ibl (ICICI Bank)</option>
+                        <option value="axl">axl (Axis Bank)</option>
+                        <option value="paytm">paytm</option>
+                        <option value="airtel">airtel</option>
+                        <option value="apl">apl (Amazon Pay)</option>
+                    </select>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

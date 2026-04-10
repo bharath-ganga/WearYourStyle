@@ -12,9 +12,11 @@ const placeOrder = asyncHandler(async (req, res) => {
         shippingAddress, 
         paymentMethod, 
         userId, 
+        userEmail,
+        phone,
         status, 
         delivery_date,
-        payment_details // New: containing transc_id, name, type, date
+        payment_details
     } = req.body;
 
     if (!items || items.length === 0) {
@@ -23,10 +25,12 @@ const placeOrder = asyncHandler(async (req, res) => {
 
     const orderData = {
         userId: userId || "guest",
+        userEmail: userEmail || "Guest",
+        phone: phone || "N/A",
         order_no: `ORD-${Date.now()}`,
         items: items.map(item => ({
             ...item,
-            name: item.title // Normalizing title to name for OrderItem component
+            name: item.title 
         })),
         totalAmount,
         shippingAddress,

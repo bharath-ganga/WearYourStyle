@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { API_BASE_URL } from "../../config/apiConfig";
+import OrderStatusTracker from "../../components/common/OrderStatusTracker";
 
 const OrderDetailScreenWrapper = styled.main`
   .btn-and-title-wrapper {
@@ -355,25 +356,9 @@ const OrderDetailScreen = () => {
                 </div>
               </div>
 
-              <OrderDetailStatusWrapper className="order-d-status">
-                <div className="order-status bg-silver">
-                  <div className={`order-status-dot bg-silver ${getStatusClass("Order Placed")}`}>
-                    <span className="order-status-text font-semibold text-center no-wrap text-silver">
-                      Order Placed
-                    </span>
-                  </div>
-                  <div className={`order-status-dot bg-silver ${getStatusClass("Shipped")}`}>
-                    <span className="order-status-text font-semibold text-center no-wrap text-silver">
-                      Shipped
-                    </span>
-                  </div>
-                  <div className={`order-status-dot bg-silver ${getStatusClass("Delivered")}`}>
-                    <span className="order-status-text font-semibold text-center no-wrap text-silver">
-                      Delivered
-                    </span>
-                  </div>
-                </div>
-              </OrderDetailStatusWrapper>
+              <div style={{ marginTop: '40px', marginBottom: '80px' }}>
+                  <OrderStatusTracker currentStatus={order.status} />
+              </div>
               
               <OrderDetailMessageWrapper className="order-message flex items-center justify-start">
                 <p className="font-semibold text-gray">

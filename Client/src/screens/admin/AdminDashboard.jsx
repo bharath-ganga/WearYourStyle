@@ -5,6 +5,7 @@ import axios from "axios";
 import { API_BASE_URL } from "../../config/apiConfig";
 import { toast } from "react-hot-toast";
 import { currencyFormat } from "../../utils/helper";
+import OrderStatusTracker from "../../components/common/OrderStatusTracker";
 
 const AdminWrapper = styled.div`
   padding: 40px 0;
@@ -216,7 +217,7 @@ const AdminDashboard = () => {
                         <thead>
                             <tr>
                                 <th>Order ID</th>
-                                <th>Customer Email</th>
+                                <th>Customer Details</th>
                                 <th>Transaction ID</th>
                                 <th>Payment Type</th>
                                 <th>Date</th>
@@ -232,13 +233,29 @@ const AdminDashboard = () => {
                                         <div style={{fontSize: '11px', color: '#888'}}>{order.id}</div>
                                     </td>
                                     <td>
-                                        <div>{order.userEmail || "Guest"}</div>
-                                        <div style={{fontSize: '12px', color: '#666'}}>{order.paymentDetails?.customerName}</div>
+                                        <div style={{fontWeight: '600', color: '#333'}}>
+                                            {order.userEmail || order.paymentDetails?.customerName || "Guest"}
+                                        </div>
+                                        <div style={{fontSize: '12px', color: '#666', marginTop: '4px'}}>
+                                            <i className="bi bi-telephone-fill" style={{marginRight: '6px'}}></i>
+                                            {order.phone || "N/A"}
+                                        </div>
+                                        <div style={{fontSize: '12px', color: '#666', marginTop: '2px', maxWidth: '200px'}}>
+                                            <i className="bi bi-geo-alt-fill" style={{marginRight: '6px'}}></i>
+                                            {order.shippingAddress && order.shippingAddress !== "Default Address" ? order.shippingAddress : "No Address Provided"}
+                                        </div>
                                     </td>
                                     <td><code style={{background: '#f0f0f0', padding: '2px 5px', borderRadius: '4px'}}>{order.paymentDetails?.transactionId || "N/A"}</code></td>
                                     <td>{order.paymentDetails?.paymentType || order.paymentMethod}</td>
                                     <td>{order.order_date}</td>
-                                    <td><Badge status={order.status}>{order.status}</Badge></td>
+                                    <td style={{ minWidth: '300px' }}>
+                                        <div style={{ marginBottom: '10px' }}>
+                                            <Badge status={order.status}>{order.status}</Badge>
+                                        </div>
+                                        {order.status !== "Cancelled" && (
+                                            <OrderStatusTracker currentStatus={order.status} compact={true} />
+                                        )}
+                                    </td>
                                     <td>
                                         <select 
                                             value={order.status} 
@@ -247,6 +264,7 @@ const AdminDashboard = () => {
                                         >
                                             <option value="Order Placed">Order Placed</option>
                                             <option value="Shipped">Shipped</option>
+                                            <option value="Out for delivery">Out for delivery</option>
                                             <option value="Delivered">Delivered</option>
                                             <option value="Cancelled">Cancelled</option>
                                         </select>
