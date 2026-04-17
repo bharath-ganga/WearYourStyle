@@ -163,8 +163,8 @@ const VirtualTryOn = () => {
     const location = useLocation();
 
     // Filter products that look like shirts/tops for try-on
-    const tryOnClothes = allProducts.filter(p => 
-        p.title.toLowerCase().includes("shirt") || 
+    const tryOnClothes = allProducts.filter(p =>
+        p.title.toLowerCase().includes("shirt") ||
         p.title.toLowerCase().includes("top") ||
         p.title.toLowerCase().includes("wear") ||
         p.title.toLowerCase().includes("t-shirt")
@@ -213,11 +213,11 @@ const VirtualTryOn = () => {
             // Check if the product we came from is in the tryOnClothes list
             const passedProduct = allProducts.find(p => p.id === location.state.productId);
             if (passedProduct) {
-                const isTryOnable = passedProduct.title.toLowerCase().includes("shirt") || 
-                        passedProduct.title.toLowerCase().includes("top") ||
-                        passedProduct.title.toLowerCase().includes("wear") ||
-                        passedProduct.title.toLowerCase().includes("t-shirt");
-                
+                const isTryOnable = passedProduct.title.toLowerCase().includes("shirt") ||
+                    passedProduct.title.toLowerCase().includes("top") ||
+                    passedProduct.title.toLowerCase().includes("wear") ||
+                    passedProduct.title.toLowerCase().includes("t-shirt");
+
                 if (isTryOnable && !activeShirt) {
                     handleImageClick(location.state.imgSource, location.state.productId);
                     setWebcamActive(true);
@@ -233,7 +233,7 @@ const VirtualTryOn = () => {
             const img = new Image();
             img.crossOrigin = "Anonymous";
             img.src = imageUrl;
-            
+
             await new Promise((resolve, reject) => {
                 img.onload = resolve;
                 img.onerror = () => reject(new Error("Failed to load image element"));
@@ -249,8 +249,8 @@ const VirtualTryOn = () => {
             const dataUrl = canvas.toDataURL("image/png");
             const shirtBase64 = dataUrl.split(",")[1];
 
-            setShirtImage(shirtBase64); 
-            
+            setShirtImage(shirtBase64);
+
             socket.emit("update_garment", { shirt: shirtBase64 });
         } catch (error) {
             console.error("Error loading shirt image:", error);
@@ -275,7 +275,7 @@ const VirtualTryOn = () => {
     const blobToBase64 = (blob) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(",")[1]); 
+            reader.onloadend = () => resolve(reader.result.split(",")[1]);
             reader.onerror = reject;
             reader.readAsDataURL(blob);
         });
@@ -283,7 +283,7 @@ const VirtualTryOn = () => {
 
     const toggleWebcam = () => {
         setWebcamActive((prev) => !prev);
-        setSelectedImage(null); 
+        setSelectedImage(null);
         setDetectedSize("");
         setAiFeedback("");
         setIsAiProcessing(false);
@@ -298,18 +298,18 @@ const VirtualTryOn = () => {
         let interval;
         if (webcamActive && shirtImage) {
             // Send frame every 100ms for smooth live preview
-            interval = setInterval(sendFrameToServer, 100); 
+            interval = setInterval(sendFrameToServer, 100);
         }
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [webcamActive, shirtImage]); 
+    }, [webcamActive, shirtImage]);
 
     return (
         <Section>
             <Container>
                 <h2>AI Virtual Try-On</h2>
-                
+
                 <div style={{ background: "#f0f0ff", padding: "15px", borderRadius: "8px", marginBottom: "20px", border: "1px solid #d0d0ff" }}>
                     <h4 style={{ marginBottom: "10px", color: "#8a33fd" }}>How to use:</h4>
                     <ul style={{ paddingLeft: "20px", listStyleType: "decimal" }}>
@@ -318,7 +318,7 @@ const VirtualTryOn = () => {
                         <li style={{ marginBottom: "5px" }}>Ensure you are in a <strong>well-lit room</strong> with a plain background if possible.</li>
                     </ul>
                 </div>
-                
+
                 <TryOnWrapper>
                     <WebcamContainer>
                         {!webcamActive && (
@@ -337,7 +337,7 @@ const VirtualTryOn = () => {
                                     className="webcam-feed"
                                     mirrored={true}
                                 />
-                                
+
                                 {selectedImage && (
                                     <div className="overlay" style={{ zIndex: 5 }}>
                                         <img src={selectedImage} alt="Virtual Try-On" className="overlay-image" style={{ transform: "scaleX(-1)" }} />
@@ -354,8 +354,8 @@ const VirtualTryOn = () => {
 
                                 {/* AI STATUS OVERLAY */}
                                 <div style={{
-                                    position: 'absolute', top: '20px', right: '20px', 
-                                    backgroundColor: 'rgba(0,0,0,0.7)', padding: '10px 15px', 
+                                    position: 'absolute', top: '20px', right: '20px',
+                                    backgroundColor: 'rgba(0,0,0,0.7)', padding: '10px 15px',
                                     borderRadius: '8px', zIndex: 10, color: '#fff',
                                     border: '1px solid #14c4b5'
                                 }}>
@@ -366,15 +366,15 @@ const VirtualTryOn = () => {
                                         </span>
                                     </div>
                                 </div>
-                                
+
                                 <div className="controls">
-                                    <BaseButtonBlack onClick={toggleWebcam} style={{background: "#ff4d4d"}}>
+                                    <BaseButtonBlack onClick={toggleWebcam} style={{ background: "#ff4d4d" }}>
                                         Stop Camera
                                     </BaseButtonBlack>
-                                    
+
                                     {selectedImage && (
-                                        <a 
-                                            href={selectedImage} 
+                                        <a
+                                            href={selectedImage}
                                             download="MyWearYourStyleFit.png"
                                             style={{
                                                 textDecoration: 'none', background: '#14c4b5', color: 'white',
@@ -388,9 +388,9 @@ const VirtualTryOn = () => {
                                 </div>
                             </>
                         )}
-                        
+
                         {!shirtImage && webcamActive && (
-                            <p style={{color: "white", zIndex: 10, position: 'absolute', top: '40%'}}>Please select a garment from the gallery</p>
+                            <p style={{ color: "white", zIndex: 10, position: 'absolute', top: '40%' }}>Please select a garment from the gallery</p>
                         )}
                     </WebcamContainer>
 
@@ -405,7 +405,7 @@ const VirtualTryOn = () => {
                         ) : (
                             <div className="shirt-grid">
                                 {tryOnClothes.map((product) => (
-                                    <ShirtItem 
+                                    <ShirtItem
                                         key={product.id}
                                         $active={activeShirt === product.id}
                                         onClick={() => handleImageClick(product.imgSource, product.id)}
