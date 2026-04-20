@@ -254,7 +254,7 @@ const OrderDetailListWrapper = styled.div`
 const breadcrumbItems = [
   { label: "Home", link: "/" },
   { label: "Order", link: "/order" },
-  { label: "Order Details", link: "/order_detail" },
+  { label: "Order Details", link: "/order" },
 ];
 
 const OrderDetailScreen = () => {
@@ -309,7 +309,20 @@ const OrderDetailScreen = () => {
   if (!order) {
       return (
           <OrderDetailScreenWrapper className="page-py-spacing">
-              <Container><p className="py-20 text-center text-xl text-red-500">Order not found.</p></Container>
+              <Container>
+                <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                    <p className="text-xl text-red-500 font-bold mb-4">Order not found.</p>
+                    <p className="text-gray mb-6">We couldn't find the order you're looking for. It may have been removed or you may have entered an incorrect ID.</p>
+                    <Link to="/order" style={{ 
+                        display: 'inline-block',
+                        padding: '12px 24px',
+                        backgroundColor: '#3c4242',
+                        color: 'white',
+                        borderRadius: '8px',
+                        fontWeight: '600'
+                    }}>Go Back to My Orders</Link>
+                </div>
+              </Container>
           </OrderDetailScreenWrapper>
       );
   }

@@ -202,7 +202,58 @@ const AccountScreen = () => {
                   </div>
                 </form>
                 <div>
-                  <h4 className="title-sm">My Contact Addresss</h4>
+                  <h4 className="title-sm" style={{ marginTop: '40px' }}>Recent Orders</h4>
+                  <div style={{ 
+                      background: '#fcfcfc', 
+                      border: '1px solid #eee', 
+                      borderRadius: '12px', 
+                      padding: '20px',
+                      marginBottom: '30px'
+                  }}>
+                      <div className="flex justify-between items-center mb-4">
+                          <p className="text-gray italic">View your most recent orders here.</p>
+                          <Link to="/order" className="text-sea-green font-bold hover:underline">View All Orders</Link>
+                      </div>
+                      
+                      {/* Recent Order Preview Widget */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+                          <div style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '15px', 
+                              padding: '15px',
+                              backgroundColor: 'white',
+                              borderRadius: '8px',
+                              border: '1px solid #efefef',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                          }}>
+                              <div style={{ width: '60px', height: '60px', borderRadius: '6px', overflow: 'hidden', backgroundColor: '#f5f5f5' }}>
+                                  <img src={staticImages.product1 || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=100"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                  <h5 style={{ margin: 0, fontSize: '16px' }}>Blue Flower Print Crop Top</h5>
+                                  <p style={{ margin: 0, color: '#888', fontSize: '14px' }}>Order #ORD-1776679422663 • Dec 12, 2024</p>
+                              </div>
+                              <div style={{ textAlign: 'right' }}>
+                                  <span style={{ 
+                                      display: 'inline-block',
+                                      padding: '4px 10px',
+                                      borderRadius: '20px',
+                                      fontSize: '12px',
+                                      fontWeight: 'bold',
+                                      backgroundColor: '#e6fffa',
+                                      color: '#00a98f',
+                                      marginBottom: '5px'
+                                  }}>In Progress</span>
+                                  <div>
+                                      <Link to="/order" className="text-sm font-bold text-gray hover:text-black">View Details</Link>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <h4 className="title-sm">My Contact Address</h4>
                   <BaseLinkGreen to="/account/add" className="btn-add-address" style={{ marginBottom: "20px", display: "inline-block" }}>Add Address</BaseLinkGreen>
                   <div className="address-list grid">
                     {add && add.map(item => (

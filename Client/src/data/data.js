@@ -288,7 +288,7 @@ const footerData = [
     title: "Need Help",
     links: [
       { text: "Contact Us", url: "/contact" },
-      { text: "Track Order", url: "/track_order" },
+      { text: "Track Order", url: "/order" },
       { text: "Returns & Refunds", url: "/returns_refunds" },
       { text: "FAQ's", url: "/faqs" },
       { text: "Career", url: "/career" },

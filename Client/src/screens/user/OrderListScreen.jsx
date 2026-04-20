@@ -7,7 +7,7 @@ import Title from "../../components/common/Title";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
 import { orderData } from "../../data/data";
 import OrderItemList from "../../components/user/OrderItemList";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
@@ -102,7 +102,10 @@ const OrderListScreen = () => {
                     ) : orders.length > 0 ? (
                         <OrderItemList orders={orders} />
                     ) : (
-                        <p className="py-10 text-center">No orders found.</p>
+                        <div className="py-20 text-center flex flex-col justify-center items-center gap-4">
+                            <p className="text-xl text-gray">No orders found.</p>
+                            <Link to="/product" style={{ backgroundColor: '#3c4242', color: 'white', padding: '10px 24px', borderRadius: '8px', fontWeight: 'bold' }}>Start Shopping</Link>
+                        </div>
                     )}
                 </div>
               </div>

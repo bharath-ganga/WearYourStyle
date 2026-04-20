@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 import { Container } from "../../styles/styles";
 import { staticImages } from "../../utils/images";
 import { BaseLinkGreen } from "../../styles/button";
@@ -38,7 +39,10 @@ const ConfirmScreen = () => {
             <p className="text-4xl font-semibold text-outerspace">
               Your Order is Confirmed
             </p>
-            <BaseLinkGreen to="/">Continue Shopping</BaseLinkGreen>
+            <div className="flex gap-2">
+              <BaseLinkGreen to="/">Continue Shopping</BaseLinkGreen>
+              <Link to="/order" className="btn text-base font-semibold" style={{ border: "1px solid #3c4242", padding: "8px 16px", borderRadius: "4px" }}>View Order</Link>
+            </div>
           </div>
         </div>
       </Container>
