@@ -23,6 +23,10 @@ model_dir = os.path.dirname(__file__)
 pose_model_path = os.path.join(model_dir, "pose_landmarker.task")
 classifier_model_path = os.path.join(model_dir, "classifier.tflite")
 
+# Haar Cascades for facial features and positioning (Virtual Accessories)
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+
 # Download classifier model if not exists (EfficientNet Lite0)
 if not os.path.exists(classifier_model_path):
     print("Downloading image classifier model...")
@@ -253,22 +257,56 @@ def process_frame(data):
         # Convert frame to MediaPipe Image
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         
+        # --- Haar Cascade: Facial Features and Positioning ---
+        # Used for real-time object detection (e.g., placing virtual accessories like glasses or hats)
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        
+        for (fx, fy, fw, fh) in faces:
+            # Draw a subtle bounding box around the face for positioning accessories
+            cv2.rectangle(frame, (fx, fy), (fx+fw, fy+fh), (200, 200, 200), 1)
+            cv2.putText(frame, "Face (Accessory Anchor)", (fx, fy - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (200, 200, 200), 1)
+            
+            # Detect eyes within the face region for precise feature mapping (e.g., glasses)
+            roi_gray = gray_frame[fy:fy+fh, fx:fx+fw]
+            roi_color = frame[fy:fy+fh, fx:fx+fw]
+            eyes = eye_cascade.detectMultiScale(roi_gray, scaleFactor=1.1, minNeighbors=5, minSize=(15, 15))
+            
+            for (ex, ey, ew, eh) in eyes:
+                cv2.rectangle(roi_color, (ex, ey), (ex+ew, ey+eh), (150, 150, 150), 1)
+        # -----------------------------------------------------
+        
         # Detect pose landmarks
         detection_result = detector.detect(mp_image)
 
         if detection_result.pose_landmarks:
             landmarks = detection_result.pose_landmarks[0]
             
+            # Extract 8 body landmark coordinates (x, y for left/right shoulders & hips)
             left_shoulder = landmarks[11]
             right_shoulder = landmarks[12]
+            left_hip = landmarks[23]
+            right_hip = landmarks[24]
 
             h, w, _ = frame.shape
             ls_x, ls_y = int(left_shoulder.x * w), int(left_shoulder.y * h)
             rs_x, rs_y = int(right_shoulder.x * w), int(right_shoulder.y * h)
+            lh_x, lh_y = int(left_hip.x * w), int(left_hip.y * h)
+            rh_x, rh_y = int(right_hip.x * w), int(right_hip.y * h)
 
-            shoulder_width = abs(ls_x - rs_x)
+            # Convert to NumPy vectors for precise geometry
+            rs = np.array([rs_x, rs_y], dtype=np.float32)
+            ls = np.array([ls_x, ls_y], dtype=np.float32)
+            rh = np.array([rh_x, rh_y], dtype=np.float32)
+            lh = np.array([lh_x, lh_y], dtype=np.float32)
 
-            if shoulder_width > 0:
+            neck = (rs + ls) / 2.0
+            mid_hip = (rh + lh) / 2.0
+
+            shoulder_width = np.sqrt((ls_x - rs_x)**2 + (ls_y - rs_y)**2)
+            torso_height = np.sqrt((neck[0] - mid_hip[0])**2 + (neck[1] - mid_hip[1])**2)
+
+            if shoulder_width > 0 and torso_height > 0:
                 normalized_shoulder = shoulder_width / w
                 if normalized_shoulder < 0.18:
                     detected_size = "S (Small)"
@@ -279,29 +317,62 @@ def process_frame(data):
                 else:
                     detected_size = "XL (Extra Large)"
 
-                # Resize cropped shirt seamlessly based on subject's body geometry
-                scale_factor = 1.45
-                shirt_width = int(shoulder_width * scale_factor)
-                shirt_height = int(shirt_width * cropped_shirt.shape[0] / cropped_shirt.shape[1])
-                resized_shirt = cv2.resize(cropped_shirt, (shirt_width, shirt_height))
+                # Compute body tilt angle and perpendicular unit vector pointing upwards (decreasing y)
+                dx = ls_x - rs_x
+                dy = ls_y - rs_y
+                ux = dy / shoulder_width
+                uy = -dx / shoulder_width
+                u = np.array([ux, uy], dtype=np.float32)
 
-                mid_shoulder_x = (ls_x + rs_x) // 2
-                mid_shoulder_y = (ls_y + rs_y) // 2
+                # Anchor offset to place the top of the garment just above the shoulder line
+                offset_val = torso_height * 0.08
+                offset = u * offset_val
 
-                # Anchor the dress beautifully slightly above the collarbone line
-                shirt_position = (
-                    mid_shoulder_x - shirt_width // 2,
-                    mid_shoulder_y - int(shirt_height * 0.15)
+                # Scale parameters
+                width_scale_factor = 1.45
+                height_scale_factor = 1.15
+
+                # Destination points: 1) top-middle (neck+offset), 2) top-left (right shoulder boundary), 3) bottom-middle (hip midpoint)
+                p_dst1 = neck + offset
+                p_dst2 = neck + (rs - neck) * width_scale_factor + offset
+                p_dst3 = neck + (mid_hip - neck) * height_scale_factor + offset
+
+                # Source points on the cropped shirt: 1) top-middle, 2) top-left, 3) bottom-middle
+                sh, sw = cropped_shirt.shape[:2]
+                src_pts = np.array([
+                    [sw / 2.0, 0.0],
+                    [0.0, 0.0],
+                    [sw / 2.0, sh]
+                ], dtype=np.float32)
+
+                dst_pts = np.array([
+                    p_dst1,
+                    p_dst2,
+                    p_dst3
+                ], dtype=np.float32)
+
+                # Calculate the affine transformation matrix
+                M = cv2.getAffineTransform(src_pts, dst_pts)
+
+                # Warp the garment image to fit the body tilt, size, and perspective
+                warped_shirt = cv2.warpAffine(
+                    cropped_shirt,
+                    M,
+                    (w, h),
+                    flags=cv2.INTER_LINEAR,
+                    borderMode=cv2.BORDER_CONSTANT,
+                    borderValue=(0, 0, 0, 0)
                 )
 
-                frame = overlay_png(frame, resized_shirt, shirt_position)
+                # Overlay using the existing overlay_png function at (0, 0)
+                frame = overlay_png(frame, warped_shirt, (0, 0))
             else:
                 emit('no_fit', {'message': 'Stand back for detection'})
         else:
             emit('no_fit', {'message': 'Person not found'})
 
-        # Encode the processed frame back to base64
-        _, buffer = cv2.imencode('.png', frame)
+        # Encode the processed frame back to base64 as JPEG for lower latency & higher real-time frame rates
+        _, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
         processed_frame = base64.b64encode(buffer).decode('utf-8')
 
         # Send the processed frame back to the client
@@ -312,4 +383,4 @@ def process_frame(data):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     print(f"AI ML Server starting on port {port}...")
-    socketio.run(app, debug=False, host='0.0.0.0', port=port, allow_unsafe_werkzeug=True)
+    socketio.run(app, debug=False, host='0.0.0.0', port=port)

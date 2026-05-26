@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { API_BASE_URL } from "../../config/apiConfig";
+import { staticImages } from "../../utils/images";
 
 const AccountScreenWrapper = styled.main`
   .address-list {
@@ -65,16 +66,23 @@ const AccountScreen = () => {
   const [user, setUser] = useState();
   const [add, setAdd] = useState();
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+    const navigate = useNavigate();
       useEffect(() => {
         const authenticateUser = async () => {
+            let token = localStorage.getItem("accessToken");
+            // Retry retrieving token if it's not found immediately (helpful for race conditions on fresh login)
+            if (!token) {
+                await new Promise(resolve => setTimeout(resolve, 150));
+                token = localStorage.getItem("accessToken");
+            }
+
+            if (!token) {
+                navigate("/sign_in");
+                toast.error("Please Log In first!");
+                return;
+            }
+
             try {
-                const token = localStorage.getItem("accessToken");
-                if (!token) {
-                    navigate("/sign_in");
-                    toast.error("Please Log In first!");
-                    return;
-                }
                 const response = await axios.get(`${API_BASE_URL}/api/profile`, {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -87,10 +95,15 @@ const AccountScreen = () => {
             }
             catch (err) {
                 console.log("Error:", err);
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("userId");
-                toast.error("Please login again to access your account.");
-                navigate("/sign_in");
+                // Only clear token and redirect on auth errors (401 Unauthorized, 403 Forbidden)
+                if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("userId");
+                    toast.error("Please login again to access your account.");
+                    navigate("/sign_in");
+                } else {
+                    toast.error("Failed to load profile. Please check your connection.");
+                }
             } finally {
                 setLoading(false);
             }
@@ -113,7 +126,7 @@ const AccountScreen = () => {
 
   return (
     <>
-      {user && (
+      {user ? (
         <AccountScreenWrapper className="page-py-spacing">
           <Container>
             <Breadcrumb items={breadcrumbItems} />
@@ -315,6 +328,19 @@ const AccountScreen = () => {
                 </div>
               </UserContent>
             </UserDashboardWrapper>
+          </Container>
+        </AccountScreenWrapper>
+      ) : (
+        <AccountScreenWrapper className="page-py-spacing">
+          <Container>
+            <Breadcrumb items={breadcrumbItems} />
+            <div style={{ textAlign: 'center', padding: '50px 0' }}>
+              <h4 style={{ color: '#ff4d4d', marginBottom: '10px' }}>Failed to load account details.</h4>
+              <p style={{ marginBottom: '20px' }}>Please check your internet connection or login again.</p>
+              <Link to="/sign_in" style={{ color: '#00a98f', fontWeight: 'bold', textDecoration: 'underline' }}>
+                Go to Sign In
+              </Link>
+            </div>
           </Container>
         </AccountScreenWrapper>
       )}

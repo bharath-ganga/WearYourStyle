@@ -152,6 +152,7 @@ const VirtualTryOn = () => {
     const [selectedImage, setSelectedImage] = useState(null); // Stores processed image
     const [webcamActive, setWebcamActive] = useState(false); // Toggles webcam
     const webcamRef = useRef(null);
+    const isProcessingRef = useRef(false); // Processing lock
     const [shirtImage, setShirtImage] = useState(null); // Stores selected shirt image
     const [activeShirt, setActiveShirt] = useState(null);
     const [detectedSize, setDetectedSize] = useState("");
@@ -187,19 +188,22 @@ const VirtualTryOn = () => {
         if (!socket) return;
 
         socket.on("frame_processed", (data) => {
-            setSelectedImage(`data:image/png;base64,${data.frame}`);
+            setSelectedImage(`data:image/jpeg;base64,${data.frame}`);
             if (data.detected_size) setDetectedSize(data.detected_size);
             setAiFeedback("");
             setIsAiProcessing(false);
+            isProcessingRef.current = false;
         });
 
         socket.on("no_fit", (data) => {
             setAiFeedback(data.message);
             setIsAiProcessing(false);
+            isProcessingRef.current = false;
         });
 
         socket.on("error", (error) => {
             console.error("Error from server:", error.message);
+            isProcessingRef.current = false;
         });
 
         return () => {
@@ -259,6 +263,7 @@ const VirtualTryOn = () => {
 
     const sendFrameToServer = async () => {
         if (!webcamRef.current || !socket.connected || !activeShirt) return;
+        if (isProcessingRef.current) return;
 
         const screenshot = webcamRef.current.getScreenshot();
         if (!screenshot) return;
@@ -266,6 +271,7 @@ const VirtualTryOn = () => {
         // Extract base64 part from data URL
         const frameBase64 = screenshot.split(",")[1];
 
+        isProcessingRef.current = true;
         socket.emit("process_frame", {
             frame: frameBase64
         });
@@ -339,7 +345,7 @@ const VirtualTryOn = () => {
                                 />
 
                                 {selectedImage && (
-                                    <div className="overlay" style={{ zIndex: 5 }}>
+                                    <div className="overlay" style={{ zIndex: 5, transition: 'opacity 0.1s ease' }}>
                                         <img src={selectedImage} alt="Virtual Try-On" className="overlay-image" style={{ transform: "scaleX(-1)" }} />
                                     </div>
                                 )}

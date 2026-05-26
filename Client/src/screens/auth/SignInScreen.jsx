@@ -59,7 +59,9 @@ const SignInScreen = () => {
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("userId", userId);
       toast.success("Successfully Logged In!");
-      navigate("/account");
+      setTimeout(() => {
+        navigate("/account");
+      }, 100);
     }
     catch (err) {
       console.log("Error:", err);
