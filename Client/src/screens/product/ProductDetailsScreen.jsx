@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { Container } from "../../styles/styles";
+import { API_BASE_URL } from "../../config/apiConfig";
 import Breadcrumb from "../../components/common/Breadcrumb";
 import ProductPreview from "../../components/product/ProductPreview";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
@@ -198,7 +199,7 @@ const ProductDetailsScreen = () => {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/products/${id}`);
+                const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
                 if (response.ok) {
                     const foundProduct = await response.json();
                     setProduct(foundProduct);

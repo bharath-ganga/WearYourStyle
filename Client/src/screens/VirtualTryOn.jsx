@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { Container, Section } from "../styles/styles";
 import { BaseButtonBlack, BaseButtonGreen } from "../styles/button";
 import { breakpoints, defaultTheme } from "../styles/themes/default";
-import { ML_BASE_URL } from "../config/apiConfig";
+import { API_BASE_URL, ML_BASE_URL } from "../config/apiConfig";
 
 const socket = io(ML_BASE_URL); // Connect to the WebSocket server
 
@@ -159,6 +159,22 @@ const VirtualTryOn = () => {
     const [isAiProcessing, setIsAiProcessing] = useState(false);
     const [aiFeedback, setAiFeedback] = useState("");
 
+    const [activeTab, setActiveTab] = useState("clothing"); // Tab selection: clothing or accessories
+    const [activeAccessory, setActiveAccessory] = useState(null); // Selected accessory
+
+    const accessoryItems = [
+        { id: "sunglasses", name: "Sunglasses", icon: "🕶️", label: "Retro Glasses" },
+        { id: "hat", name: "Hat", icon: "👒", label: "Fashion Cap" },
+        { id: "crown", name: "Crown", icon: "👑", label: "Royal Crown" },
+        { id: "none", name: "Remove Accessories", icon: "❌", label: "Clear" }
+    ];
+
+    const handleAccessoryClick = (accId) => {
+        const id = accId === "none" ? null : accId;
+        setActiveAccessory(id);
+        socket.emit("update_accessory", { accessory: id });
+    };
+
     const [allProducts, setAllProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const location = useLocation();
@@ -174,7 +190,7 @@ const VirtualTryOn = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await fetch("http://localhost:3000/api/products");
+                const response = await fetch(`${API_BASE_URL}/api/products`);
                 const data = await response.json();
                 setAllProducts(data);
             } catch (error) {
@@ -262,7 +278,8 @@ const VirtualTryOn = () => {
     };
 
     const sendFrameToServer = async () => {
-        if (!webcamRef.current || !socket.connected || !activeShirt) return;
+        if (!webcamRef.current || !socket.connected) return;
+        if (!activeShirt && !activeAccessory) return;
         if (isProcessingRef.current) return;
 
         const screenshot = webcamRef.current.getScreenshot();
@@ -302,14 +319,14 @@ const VirtualTryOn = () => {
 
     useEffect(() => {
         let interval;
-        if (webcamActive && shirtImage) {
+        if (webcamActive && (shirtImage || activeAccessory)) {
             // Send frame every 100ms for smooth live preview
             interval = setInterval(sendFrameToServer, 100);
         }
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [webcamActive, shirtImage]);
+    }, [webcamActive, shirtImage, activeAccessory]);
 
     return (
         <Section>
@@ -373,6 +390,22 @@ const VirtualTryOn = () => {
                                     </div>
                                 </div>
 
+                                {/* AI SIZE RECOMMENDATION BADGE */}
+                                {detectedSize && (
+                                    <div style={{
+                                        position: 'absolute', top: '75px', right: '20px',
+                                        backgroundColor: 'rgba(20, 196, 181, 0.9)', padding: '10px 15px',
+                                        borderRadius: '8px', zIndex: 10, color: '#fff',
+                                        fontWeight: 'bold', border: '1px solid #fff',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+                                        display: 'flex', alignItems: 'center', gap: '8px'
+                                    }}>
+                                        <i className="bi bi-rulers" style={{ color: '#fff' }}></i>
+                                        <span style={{ fontSize: '13px' }}>Recommended Size: {detectedSize}</span>
+                                    </div>
+                                )}
+
+
                                 <div className="controls">
                                     <BaseButtonBlack onClick={toggleWebcam} style={{ background: "#ff4d4d" }}>
                                         Stop Camera
@@ -395,28 +428,68 @@ const VirtualTryOn = () => {
                             </>
                         )}
 
-                        {!shirtImage && webcamActive && (
-                            <p style={{ color: "white", zIndex: 10, position: 'absolute', top: '40%' }}>Please select a garment from the gallery</p>
+                        {!shirtImage && !activeAccessory && webcamActive && (
+                            <p style={{ color: "white", zIndex: 10, position: 'absolute', top: '40%' }}>Please select a garment or accessory</p>
                         )}
                     </WebcamContainer>
 
                     <ShirtSelection>
-                        <div className="header">
-                            <h2>Clothing</h2>
+                        <div style={{ display: 'flex', borderBottom: '2px solid #a3a3a3' }}>
+                            <button 
+                                onClick={() => setActiveTab('clothing')}
+                                style={{
+                                    flex: 1, padding: '12px', border: 'none', 
+                                    background: activeTab === 'clothing' ? '#e5e5e5' : '#d4d4d4',
+                                    fontWeight: 'bold', cursor: 'pointer',
+                                    color: activeTab === 'clothing' ? '#8a33fd' : '#555',
+                                    borderBottom: activeTab === 'clothing' ? '3px solid #8a33fd' : 'none'
+                                }}
+                            >
+                                Garments
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('accessories')}
+                                style={{
+                                    flex: 1, padding: '12px', border: 'none', 
+                                    background: activeTab === 'accessories' ? '#e5e5e5' : '#d4d4d4',
+                                    fontWeight: 'bold', cursor: 'pointer',
+                                    color: activeTab === 'accessories' ? '#8a33fd' : '#555',
+                                    borderBottom: activeTab === 'accessories' ? '3px solid #8a33fd' : 'none'
+                                }}
+                            >
+                                Accessories
+                            </button>
                         </div>
-                        {loading ? (
-                            <div className="flex justify-center items-center py-10">
-                                <i className="bi bi-arrow-clockwise fa-spin text-3xl" style={{ animation: "spin 1s linear infinite" }}></i>
-                            </div>
+                        
+                        {activeTab === 'clothing' ? (
+                            loading ? (
+                                <div className="flex justify-center items-center py-10">
+                                    <i className="bi bi-arrow-clockwise fa-spin text-3xl" style={{ animation: "spin 1s linear infinite" }}></i>
+                                </div>
+                            ) : (
+                                <div className="shirt-grid">
+                                    {tryOnClothes.map((product) => (
+                                        <ShirtItem
+                                            key={product.id}
+                                            $active={activeShirt === product.id}
+                                            onClick={() => handleImageClick(product.imgSource, product.id)}
+                                        >
+                                            <img src={product.imgSource} alt={product.title} />
+                                        </ShirtItem>
+                                    ))}
+                                </div>
+                            )
                         ) : (
                             <div className="shirt-grid">
-                                {tryOnClothes.map((product) => (
+                                {accessoryItems.map((item) => (
                                     <ShirtItem
-                                        key={product.id}
-                                        $active={activeShirt === product.id}
-                                        onClick={() => handleImageClick(product.imgSource, product.id)}
+                                        key={item.id}
+                                        $active={(item.id === "none" && activeAccessory === null) || activeAccessory === item.id}
+                                        onClick={() => handleAccessoryClick(item.id)}
+                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', height: '140px' }}
                                     >
-                                        <img src={product.imgSource} alt={product.title} />
+                                        <span style={{ fontSize: '48px', marginBottom: '8px' }}>{item.icon}</span>
+                                        <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>{item.label}</span>
                                     </ShirtItem>
                                 ))}
                             </div>

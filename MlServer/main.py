@@ -17,6 +17,7 @@ socketio = SocketIO(app, cors_allowed_origins="*", max_http_buffer_size=10**7)
 
 # Session-based garment cache
 garment_cache = {}
+accessory_cache = {}
 
 # MediaPipe Initialization
 model_dir = os.path.dirname(__file__)
@@ -41,6 +42,16 @@ pose_options = vision.PoseLandmarkerOptions(
     base_options=pose_base_options,
     output_segmentation_masks=False)
 detector = vision.PoseLandmarker.create_from_options(pose_options)
+
+# Load accessory images
+sunglasses_img = cv2.imread(os.path.join(model_dir, "assets", "sunglasses.png"), cv2.IMREAD_UNCHANGED)
+hat_img = cv2.imread(os.path.join(model_dir, "assets", "hat.png"), cv2.IMREAD_UNCHANGED)
+crown_img = cv2.imread(os.path.join(model_dir, "assets", "crown.png"), cv2.IMREAD_UNCHANGED)
+accessories_dict = {
+    'sunglasses': sunglasses_img,
+    'hat': hat_img,
+    'crown': crown_img
+}
 
 # Image Classifier
 classifier_base_options = python.BaseOptions(model_asset_path=classifier_model_path)
@@ -212,6 +223,71 @@ def remove_background(image):
     
     return image
 
+def overlay_accessory_on_frame(frame, accessory_type, landmarks):
+    acc = accessories_dict.get(accessory_type)
+    if acc is None or acc is False:
+        return frame
+    
+    h, w, _ = frame.shape
+    
+    # Extract landmarks
+    # landmarks[2] is left eye, landmarks[5] is right eye
+    # landmarks[7] is left ear, landmarks[8] is right ear
+    le_x, le_y = int(landmarks[2].x * w), int(landmarks[2].y * h)
+    re_x, re_y = int(landmarks[5].x * w), int(landmarks[5].y * h)
+    
+    # Calculate distance and center
+    eye_dist = np.sqrt((le_x - re_x)**2 + (le_y - re_y)**2)
+    if eye_dist <= 0:
+        return frame
+        
+    angle = np.arctan2(le_y - re_y, le_x - re_x) * 180 / np.pi
+    
+    if accessory_type == 'sunglasses':
+        # Center is between the eyes
+        center_x = int((le_x + re_x) / 2)
+        center_y = int((le_y + re_y) / 2)
+        
+        # Scale sunglasses
+        scale_w = int(eye_dist * 2.5)
+        scale_h = int(scale_w * (acc.shape[0] / acc.shape[1]))
+        
+        # Resize and rotate
+        resized = cv2.resize(acc, (scale_w, scale_h), interpolation=cv2.INTER_LINEAR)
+        M = cv2.getRotationMatrix2D((scale_w/2, scale_h/2), angle, 1.0)
+        rotated = cv2.warpAffine(resized, M, (scale_w, scale_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0,0))
+        
+        # Position top-left
+        pos_x = center_x - int(scale_w / 2)
+        pos_y = center_y - int(scale_h / 2)
+        
+        frame = overlay_png(frame, rotated, (pos_x, pos_y))
+        
+    elif accessory_type in ['hat', 'crown']:
+        # Center is above the eye line
+        center_x = int((le_x + re_x) / 2)
+        
+        # Offset upwards based on eye distance
+        offset_y = int(eye_dist * 1.3)
+        center_y = int((le_y + re_y) / 2) - offset_y
+        
+        # Scale hat/crown
+        scale_w = int(eye_dist * 3.2) if accessory_type == 'hat' else int(eye_dist * 2.2)
+        scale_h = int(scale_w * (acc.shape[0] / acc.shape[1]))
+        
+        # Resize and rotate
+        resized = cv2.resize(acc, (scale_w, scale_h), interpolation=cv2.INTER_LINEAR)
+        M = cv2.getRotationMatrix2D((scale_w/2, scale_h/2), angle, 1.0)
+        rotated = cv2.warpAffine(resized, M, (scale_w, scale_h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0,0))
+        
+        # Position top-left
+        pos_x = center_x - int(scale_w / 2)
+        pos_y = center_y - int(scale_h / 2)
+        
+        frame = overlay_png(frame, rotated, (pos_x, pos_y))
+        
+    return frame
+
 @socketio.on('update_garment')
 def update_garment(data):
     try:
@@ -228,10 +304,26 @@ def update_garment(data):
     except Exception as e:
         emit('error', {'message': f'Garment update failed: {str(e)}'})
 
+@socketio.on('update_accessory')
+def update_accessory(data):
+    try:
+        acc_type = data.get('accessory')
+        if acc_type in [None, 'sunglasses', 'hat', 'crown', 'none']:
+            if acc_type == 'none':
+                acc_type = None
+            accessory_cache[request.sid] = acc_type
+            emit('accessory_updated', {'status': 'success', 'accessory': acc_type})
+        else:
+            emit('error', {'message': 'Invalid accessory type'})
+    except Exception as e:
+        emit('error', {'message': f'Accessory update failed: {str(e)}'})
+
 @socketio.on('disconnect')
 def handle_disconnect():
     if request.sid in garment_cache:
         del garment_cache[request.sid]
+    if request.sid in accessory_cache:
+        del accessory_cache[request.sid]
 
 @socketio.on('process_frame')
 def process_frame(data):
@@ -247,9 +339,10 @@ def process_frame(data):
 
         # Retrieve cached shirt for this session
         shirt = garment_cache.get(request.sid)
+        active_accessory = accessory_cache.get(request.sid)
 
-        if shirt is None:
-            emit('error', {'message': 'No shirt selected. Please select one.'})
+        if shirt is None and active_accessory is None:
+            emit('error', {'message': 'No shirt or accessory selected. Please select one.'})
             return
 
         cropped_shirt = crop_to_content(shirt)
@@ -317,55 +410,59 @@ def process_frame(data):
                 else:
                     detected_size = "XL (Extra Large)"
 
-                # Compute body tilt angle and perpendicular unit vector pointing upwards (decreasing y)
-                dx = ls_x - rs_x
-                dy = ls_y - rs_y
-                ux = dy / shoulder_width
-                uy = -dx / shoulder_width
-                u = np.array([ux, uy], dtype=np.float32)
+                if shirt is not None:
+                    # Compute body tilt angle and perpendicular unit vector pointing upwards (decreasing y)
+                    dx = ls_x - rs_x
+                    dy = ls_y - rs_y
+                    ux = dy / shoulder_width
+                    uy = -dx / shoulder_width
+                    u = np.array([ux, uy], dtype=np.float32)
 
-                # Anchor offset to place the top of the garment just above the shoulder line
-                offset_val = torso_height * 0.08
-                offset = u * offset_val
+                    # Anchor offset to place the top of the garment just above the shoulder line
+                    offset_val = torso_height * 0.08
+                    offset = u * offset_val
 
-                # Scale parameters
-                width_scale_factor = 1.45
-                height_scale_factor = 1.15
+                    # Scale parameters
+                    width_scale_factor = 1.45
+                    height_scale_factor = 1.15
 
-                # Destination points: 1) top-middle (neck+offset), 2) top-left (right shoulder boundary), 3) bottom-middle (hip midpoint)
-                p_dst1 = neck + offset
-                p_dst2 = neck + (rs - neck) * width_scale_factor + offset
-                p_dst3 = neck + (mid_hip - neck) * height_scale_factor + offset
+                    # Destination points: 1) top-middle (neck+offset), 2) top-left (right shoulder boundary), 3) bottom-middle (hip midpoint)
+                    p_dst1 = neck + offset
+                    p_dst2 = neck + (rs - neck) * width_scale_factor + offset
+                    p_dst3 = neck + (mid_hip - neck) * height_scale_factor + offset
 
-                # Source points on the cropped shirt: 1) top-middle, 2) top-left, 3) bottom-middle
-                sh, sw = cropped_shirt.shape[:2]
-                src_pts = np.array([
-                    [sw / 2.0, 0.0],
-                    [0.0, 0.0],
-                    [sw / 2.0, sh]
-                ], dtype=np.float32)
+                    # Source points on the cropped shirt: 1) top-middle, 2) top-left, 3) bottom-middle
+                    sh, sw = cropped_shirt.shape[:2]
+                    src_pts = np.array([
+                        [sw / 2.0, 0.0],
+                        [0.0, 0.0],
+                        [sw / 2.0, sh]
+                    ], dtype=np.float32)
 
-                dst_pts = np.array([
-                    p_dst1,
-                    p_dst2,
-                    p_dst3
-                ], dtype=np.float32)
+                    dst_pts = np.array([
+                        p_dst1,
+                        p_dst2,
+                        p_dst3
+                    ], dtype=np.float32)
 
-                # Calculate the affine transformation matrix
-                M = cv2.getAffineTransform(src_pts, dst_pts)
+                    # Calculate the affine transformation matrix
+                    M = cv2.getAffineTransform(src_pts, dst_pts)
 
-                # Warp the garment image to fit the body tilt, size, and perspective
-                warped_shirt = cv2.warpAffine(
-                    cropped_shirt,
-                    M,
-                    (w, h),
-                    flags=cv2.INTER_LINEAR,
-                    borderMode=cv2.BORDER_CONSTANT,
-                    borderValue=(0, 0, 0, 0)
-                )
+                    # Warp the garment image to fit the body tilt, size, and perspective
+                    warped_shirt = cv2.warpAffine(
+                        cropped_shirt,
+                        M,
+                        (w, h),
+                        flags=cv2.INTER_LINEAR,
+                        borderMode=cv2.BORDER_CONSTANT,
+                        borderValue=(0, 0, 0, 0)
+                    )
 
-                # Overlay using the existing overlay_png function at (0, 0)
-                frame = overlay_png(frame, warped_shirt, (0, 0))
+                    # Overlay using the existing overlay_png function at (0, 0)
+                    frame = overlay_png(frame, warped_shirt, (0, 0))
+
+                if active_accessory is not None:
+                    frame = overlay_accessory_on_frame(frame, active_accessory, landmarks)
             else:
                 emit('no_fit', {'message': 'Stand back for detection'})
         else:

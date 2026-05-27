@@ -3,6 +3,7 @@ import Header from "../header/Header";
 import Footer from "../footer/Footer";
 import Sidebar from "../sidebar/Sidebar";
 import { Outlet } from "react-router-dom";
+import ChatbotWidget from "../common/ChatbotWidget";
 
 const BaseLayout = () => {
   return (
@@ -16,6 +17,7 @@ const BaseLayout = () => {
       >
         <Outlet />
       </div>
+      <ChatbotWidget />
       <Footer />
     </PageWrapper>
   );

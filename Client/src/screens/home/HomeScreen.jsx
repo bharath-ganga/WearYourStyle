@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import { API_BASE_URL } from "../../config/apiConfig";
 import Hero from "../../components/home/Hero";
 import Featured from "../../components/home/Featured";
 import NewArrival from "../../components/home/NewArrival";
@@ -135,7 +136,7 @@ const HomeScreen = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/products");
+        const response = await fetch(`${API_BASE_URL}/api/products`);
         const data = await response.json();
         
         // Shuffle the array to ensure truly mixed and diverse items rather than clumped categories

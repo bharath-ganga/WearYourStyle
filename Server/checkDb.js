@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { readFileSync } from 'fs';
 
 // Since we are in the backend directory, let's load the Firebase creds
-const serviceAccountPath = resolve('./src/config/wearyourstyle-ecc14-firebase-adminsdk-y94l4-8ea73623ea.json');
+const serviceAccountPath = resolve('./serviceAccountKey.json');
 
 const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
 

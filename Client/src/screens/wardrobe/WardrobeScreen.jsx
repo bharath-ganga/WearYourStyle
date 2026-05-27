@@ -1,8 +1,11 @@
 import styled from "styled-components";
 import { Container } from "../../styles/styles";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { staticImages } from "../../utils/images";
+import toast from "react-hot-toast";
+import { API_BASE_URL, ML_BASE_URL } from "../../config/apiConfig";
 
 const WardrobeWrapper = styled.div`
   padding: 40px 0;
@@ -113,6 +116,9 @@ const WardrobeScreen = () => {
 
     const [allProducts, setAllProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [designPrompt, setDesignPrompt] = useState("");
+    const [designing, setDesigning] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Fetch weather (Mock for now, but structured)
@@ -124,7 +130,7 @@ const WardrobeScreen = () => {
         
         const fetchProducts = async () => {
             try {
-                const response = await fetch("http://localhost:3000/api/products");
+                const response = await fetch(`${API_BASE_URL}/api/products`);
                 const data = await response.json();
                 setAllProducts(data);
                 
@@ -143,6 +149,113 @@ const WardrobeScreen = () => {
         fetchProducts();
     }, [weather.temp]);
 
+    const handleGeneratePrint = () => {
+        if (!designPrompt.trim()) return;
+        setDesigning(true);
+
+        setTimeout(() => {
+            const canvas = document.createElement("canvas");
+            canvas.width = 400;
+            canvas.height = 400;
+            const ctx = canvas.getContext("2d");
+
+            // T-shirt Path
+            const drawTshirt = (c) => {
+                c.beginPath();
+                c.moveTo(150, 40);
+                c.quadraticCurveTo(200, 60, 250, 40);
+                c.lineTo(320, 70);
+                c.lineTo(360, 130);
+                c.lineTo(320, 150);
+                c.lineTo(310, 130);
+                c.lineTo(300, 360);
+                c.lineTo(100, 360);
+                c.lineTo(90, 130);
+                c.lineTo(80, 150);
+                c.lineTo(40, 130);
+                c.lineTo(80, 70);
+                c.closePath();
+            };
+
+            // Clip pattern inside T-shirt
+            ctx.save();
+            drawTshirt(ctx);
+            ctx.clip();
+
+            const prompt = designPrompt.toLowerCase();
+            if (prompt.includes("retro") || prompt.includes("cyberpunk") || prompt.includes("grid")) {
+                // Neon Retro Grid
+                ctx.fillStyle = "#111111";
+                ctx.fillRect(0, 0, 400, 400);
+                ctx.strokeStyle = "#ff007f";
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 400; i += 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, 400);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(400, i);
+                    ctx.stroke();
+                }
+            } else if (prompt.includes("cherry") || prompt.includes("sakura") || prompt.includes("pink") || prompt.includes("flower")) {
+                // Cherry Blossom Pattern
+                ctx.fillStyle = "#ffe4e1";
+                ctx.fillRect(0, 0, 400, 400);
+                ctx.fillStyle = "#ff69b4";
+                for (let i = 0; i < 30; i++) {
+                    ctx.beginPath();
+                    ctx.arc(Math.random() * 400, Math.random() * 400, 15 + Math.random() * 15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (prompt.includes("ocean") || prompt.includes("wave") || prompt.includes("blue")) {
+                // Blue Waves
+                ctx.fillStyle = "#e0f7fa";
+                ctx.fillRect(0, 0, 400, 400);
+                ctx.strokeStyle = "#00acc1";
+                ctx.lineWidth = 8;
+                for (let i = 0; i < 400; i += 40) {
+                    ctx.beginPath();
+                    ctx.arc(i, 200, 60, 0, Math.PI, false);
+                    ctx.stroke();
+                }
+            } else {
+                // Stylish gradient fallback
+                const grad = ctx.createLinearGradient(0, 0, 400, 400);
+                grad.addColorStop(0, "#8a33fd");
+                grad.addColorStop(1, "#00f2fe");
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 400, 400);
+            }
+
+            ctx.restore();
+
+            // Draw outline boundary
+            ctx.strokeStyle = "#cccccc";
+            ctx.lineWidth = 4;
+            drawTshirt(ctx);
+            ctx.stroke();
+
+            const tshirtDataUrl = canvas.toDataURL("image/png");
+            
+            // Add custom garment to local wardrobe
+            const newItem = {
+                id: `custom_${Date.now()}`,
+                imgSource: tshirtDataUrl,
+                title: `${designPrompt} Custom Top`,
+                type: "T-shirt",
+                color: "Custom",
+                isCustom: true
+            };
+
+            setWardrobeItems(prev => [newItem, ...prev]);
+            toast.success("AI Custom Shirt added to your collection!");
+            setDesignPrompt("");
+            setDesigning(false);
+        }, 1500);
+    };
+
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -155,7 +268,7 @@ const WardrobeScreen = () => {
         formData.append("image", file);
 
         try {
-            const response = await axios.post("http://localhost:5000/classify", formData, {
+            const response = await axios.post(`${ML_BASE_URL}/classify`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
@@ -197,7 +310,7 @@ const WardrobeScreen = () => {
             top: selectedItems.top,
             bottom: selectedItems.bottom
         }]);
-        toast?.success("Ensemble Saved to Lookbooks!");
+        toast.success("Ensemble Saved to Lookbooks!");
         // Reset
         setSelectedItems({ top: null, bottom: null });
     };
@@ -224,7 +337,7 @@ const WardrobeScreen = () => {
 
                 <SectionTitle>Elevate Your Style with AI</SectionTitle>
 
-                <Grid>
+                <Grid style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
                     {/* 🔹 AI Classification */}
                     <Card>
                         <CardTitle>AI Closet Uploader</CardTitle>
@@ -252,6 +365,29 @@ const WardrobeScreen = () => {
                                 <small>Match Confidence: {(classification.confidence * 100).toFixed(1)}%</small>
                             </div>
                         )}
+                    </Card>
+
+                    {/* 🔹 AI Custom Pattern Designer */}
+                    <Card>
+                        <CardTitle>AI Pattern Designer</CardTitle>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <small style={{ color: '#666' }}>Type design prompts to print on a 2D vector T-shirt:</small>
+                            <input 
+                                type="text"
+                                placeholder="e.g. cherry blossom, neon grid..."
+                                value={designPrompt}
+                                onChange={(e) => setDesignPrompt(e.target.value)}
+                                style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc', outline: 'none', fontSize: '14px' }}
+                            />
+                            <button 
+                                className="btn btn-primary"
+                                style={{ backgroundColor: '#6c5ce7', borderColor: '#6c5ce7', fontWeight: 'bold' }}
+                                onClick={handleGeneratePrint}
+                                disabled={designing}
+                            >
+                                {designing ? "Designing..." : "Generate AI Print"}
+                            </button>
+                        </div>
                     </Card>
 
                     {/* 🔹 Outfit Builder */}
@@ -298,14 +434,24 @@ const WardrobeScreen = () => {
                 <SectionTitle style={{marginTop: '50px'}}>Your Collection</SectionTitle>
                 <Grid>
                     {wardrobeItems.length === 0 ? (
-                        <p>No items added yet. Upload images to start your virtual closet.</p>
+                        <p>No items added yet. Upload images or generate custom designs to start your closet.</p>
                     ) : (
                         wardrobeItems.map(item => (
-                            <Card key={item.id} style={{padding: '10px'}} onClick={() => handleSelectItem(item)}>
-                                <img src={item.imgSource} style={{width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px'}} />
+                            <Card key={item.id} style={{padding: '10px', position: 'relative'}} onClick={() => handleSelectItem(item)}>
+                                <img src={item.imgSource} style={{width: '100%', height: '150px', objectFit: 'contain', borderRadius: '8px'}} />
                                 <div style={{marginTop: '10px', textAlign: 'center'}}>
                                     <strong>{item.title}</strong>
                                 </div>
+                                <button 
+                                    className="btn btn-sm btn-dark" 
+                                    style={{ position: 'absolute', top: '10px', right: '10px', padding: '4px 8px', fontSize: '11px', background: '#8a33fd', border: 'none' }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate("/virtual_try_on", { state: { productId: item.id, imgSource: item.imgSource } });
+                                    }}
+                                >
+                                    Try On
+                                </button>
                             </Card>
                         ))
                     )}
