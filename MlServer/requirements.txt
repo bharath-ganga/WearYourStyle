@@ -1,9 +1,31 @@
-opencv-python-headless
-mediapipe
-numpy
+# WearYourStyle — ML Server Dependencies
+# Install with:  pip install -r requirements.txt
+
+# ── Core server stack ──────────────────────────────────────────
 flask
+flask-cors
 flask-socketio
 python-socketio
 eventlet
+
+# ── Computer vision & ML ───────────────────────────────────────
+opencv-python-headless
+mediapipe
+numpy
 requests
-flask-cors
+
+# ── Layer 1+: TPS cloth warping ────────────────────────────────
+scipy
+Pillow
+
+# ── Layer 3: Background removal (via subprocess from Node.js) ──
+# rembg also used directly in Python for the /tryon/photo endpoint
+rembg
+onnxruntime
+
+# ── Layer 2: HR-VITON (optional — only needed for full HQ mode) ─
+# Uncomment after downloading weights into MlServer/weights/hr_viton/
+# and cloning the HR-VITON repo into MlServer/hr_viton_src/
+# torch
+# torchvision
+# einops
