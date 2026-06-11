@@ -21,8 +21,8 @@ try {
   if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
     let privateKey = process.env.FIREBASE_PRIVATE_KEY;
     
-    // 1. Remove surrounding double quotes if they exist
-    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+    // 1. Remove surrounding double or single quotes if they exist
+    if ((privateKey.startsWith('"') && privateKey.endsWith('"')) || (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
       privateKey = privateKey.substring(1, privateKey.length - 1);
     }
     
