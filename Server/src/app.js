@@ -39,6 +39,31 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/db-debug', async (req, res) => {
+    const rawKey = process.env.FIREBASE_PRIVATE_KEY || "";
+    const safeRawKey = rawKey.length > 30 ? 
+        `${rawKey.substring(0, 15)}...[len: ${rawKey.length}]...${rawKey.substring(rawKey.length - 15)}` : 
+        rawKey;
+    
+    let privateKey = rawKey.trim();
+    privateKey = privateKey.replace(/^['"\\"]+|['"\\"]+$/g, '');
+    privateKey = privateKey.replace(/\\n/g, '\n').replace(/\r/g, '');
+    
+    let processedKey = privateKey;
+    if (privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      const parts = privateKey.split(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----/);
+      if (parts.length >= 3) {
+        let base64Body = parts[1].trim();
+        base64Body = base64Body.replace(/[\s\t]+/g, '\n');
+        processedKey = `-----BEGIN PRIVATE KEY-----\n${base64Body}\n-----END PRIVATE KEY-----`;
+      }
+    } else {
+      processedKey = `-----BEGIN PRIVATE KEY-----\n${processedKey}\n-----END PRIVATE KEY-----`;
+    }
+    
+    const safeProcessedKey = processedKey.length > 30 ? 
+        `${processedKey.substring(0, 15)}...[len: ${processedKey.length}]...${processedKey.substring(processedKey.length - 15)}` : 
+        processedKey;
+
     try {
         const db = await connectDb();
         res.status(200).json({
@@ -47,7 +72,9 @@ app.get('/api/db-debug', async (req, res) => {
             projectId: process.env.FIREBASE_PROJECT_ID || "missing",
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "missing",
             hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-            privateKeyLength: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.length : 0
+            privateKeyLength: rawKey.length,
+            safeRawKey,
+            safeProcessedKey
         });
     } catch (err) {
         res.status(500).json({
@@ -59,7 +86,9 @@ app.get('/api/db-debug', async (req, res) => {
                 projectId: process.env.FIREBASE_PROJECT_ID || "missing",
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "missing",
                 hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-                privateKeyLength: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.length : 0
+                privateKeyLength: rawKey.length,
+                safeRawKey,
+                safeProcessedKey
             }
         });
     }

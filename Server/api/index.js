@@ -36,7 +36,9 @@ export default async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Vercel Serverless Function Initialization Error",
-      error: error.message
+      error: error.message,
+      url: req.url || "undefined",
+      headers: req.headers || {}
     });
   }
 };
