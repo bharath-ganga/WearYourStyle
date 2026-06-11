@@ -39,94 +39,28 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/db-debug', async (req, res) => {
-    const rawKey = process.env.FIREBASE_PRIVATE_KEY || "";
-    const safeRawKey = rawKey.length > 30 ? 
-        `${rawKey.substring(0, 15)}...[len: ${rawKey.length}]...${rawKey.substring(rawKey.length - 15)}` : 
-        rawKey;
-    
-    let privateKey = rawKey.trim();
-    privateKey = privateKey.replace(/^['"\\"]+|['"\\"]+$/g, '');
-    privateKey = privateKey.replace(/\\n/g, '\n').replace(/\r/g, '');
-    
-    let processedKey = privateKey;
-    if (privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-      const parts = privateKey.split(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----/);
-      if (parts.length >= 3) {
-        let base64Body = parts[1].trim();
-        base64Body = base64Body.replace(/[\s\t]+/g, '\n');
-        processedKey = `-----BEGIN PRIVATE KEY-----\n${base64Body}\n-----END PRIVATE KEY-----`;
-      }
-    } else {
-      processedKey = `-----BEGIN PRIVATE KEY-----\n${processedKey}\n-----END PRIVATE KEY-----`;
-    }
-    
-    const safeProcessedKey = processedKey.length > 30 ? 
-        `${processedKey.substring(0, 15)}...[len: ${processedKey.length}]...${processedKey.substring(processedKey.length - 15)}` : 
-        processedKey;
-
     try {
-        const rawKey = process.env.FIREBASE_PRIVATE_KEY || "";
-        const charCounts = {};
-        for (const char of rawKey) {
-            charCounts[char] = (charCounts[char] || 0) + 1;
-        }
-
-        let privateKey = rawKey.trim();
-        privateKey = privateKey.replace(/^['"\\"]+|['"\\"]+$/g, '');
-        privateKey = privateKey.replace(/\\n/g, '\n').replace(/\r/g, '');
-        
-        let base64Body = privateKey;
-        if (privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-          const parts = privateKey.split(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----/);
-          if (parts.length >= 3) {
-            base64Body = parts[1].trim();
-          }
-        }
-        
-        const beforeStripLen = base64Body.length;
-        base64Body = base64Body.replace(/[\s\r\n\t]+/g, '');
-        const afterStripLen = base64Body.length;
-
-        const hasLeadingN = base64Body.startsWith('nMII');
-        let processedBody = base64Body;
-        if (hasLeadingN) {
-            processedBody = base64Body.substring(1);
-        }
-
-        const modulus4BeforePad = processedBody.length % 4;
-        const padLength = (4 - (processedBody.length % 4)) % 4;
-        if (padLength > 0) {
-            processedBody += '='.repeat(padLength);
-        }
-
-        const chunks = [];
-        for (let i = 0; i < processedBody.length; i += 64) {
-          chunks.push(processedBody.substring(i, i + 64));
-        }
-        const finalKey = `-----BEGIN PRIVATE KEY-----\n${chunks.join('\n')}\n-----END PRIVATE KEY-----\n`;
-
-        const regexMatch = !!finalKey.match(/-----BEGIN PRIVATE KEY-----\n[\s\S]+\n-----END PRIVATE KEY-----\n?/);
-
+        const db = await connectDb();
+        const snapshot = await db.collection("products").limit(1).get();
         res.status(200).json({
-            status: "diagnostic",
-            rawLength: rawKey.length,
-            charCounts,
-            beforeStripLen,
-            afterStripLen,
-            hasLeadingN,
-            processedBodyLen: processedBody.length,
-            modulus4BeforePad,
-            padLength,
-            regexMatch,
-            finalKeyLength: finalKey.length,
-            safeFinalKey: `${finalKey.substring(0, 40)}...[len: ${finalKey.length}]...${finalKey.substring(finalKey.length - 40)}`
+            status: "success",
+            message: "Firebase connected successfully and Firestore query completed",
+            projectId: process.env.FIREBASE_PROJECT_ID || "missing",
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "missing",
+            productsFound: snapshot.size
         });
     } catch (err) {
         res.status(500).json({
             status: "error",
-            message: "Diagnostic failed",
+            message: "Firebase connection failed",
             error: err.message,
-            stack: err.stack
+            stack: err.stack,
+            env: {
+                projectId: process.env.FIREBASE_PROJECT_ID || "missing",
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "missing",
+                hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+                privateKeyLength: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.length : 0
+            }
         });
     }
 });

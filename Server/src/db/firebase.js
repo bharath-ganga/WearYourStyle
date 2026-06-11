@@ -36,8 +36,8 @@ try {
       }
     }
     
-    // 4. Remove all whitespaces/newlines/tabs from the base64 body
-    base64Body = base64Body.replace(/[\s\r\n\t]+/g, '');
+    // 4. Clean all characters that are NOT valid base64 characters (strips backslashes, spaces, quotes, etc.)
+    base64Body = base64Body.replace(/[^A-Za-z0-9+/=]/g, '');
     
     // 5. Repair prepended 'n' if the key was split/sliced near a '\n'
     if (base64Body.startsWith('nMII')) {
