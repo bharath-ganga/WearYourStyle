@@ -32,6 +32,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
+app.get('/', (req, res) => {
+    res.send("WearYourStyle - Server is running");
+});
+
 import { Product } from "./models/product.model.js";
 
 // Product Routes - Moved up for priority
