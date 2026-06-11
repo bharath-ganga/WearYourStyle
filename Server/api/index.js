@@ -5,8 +5,10 @@ import seedAdmin from "../src/seedAdmin.js";
 let cachedDb = null;
 
 export default async (req, res) => {
-  // Bypass db connection block for debug route so we can inspect environment variables diagnostics
-  if (req.url && (req.url === "/api/db-debug" || req.url.startsWith("/api/db-debug"))) {
+  const path = req.url || "";
+  const vercelPath = req.headers["x-vercel-forwarded-path"] || req.headers["x-matched-path"] || "";
+  
+  if (path.includes("db-debug") || vercelPath.includes("db-debug")) {
     return app(req, res);
   }
 
