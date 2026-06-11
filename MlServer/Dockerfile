@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     libx11-6 \
     libgomp1 \
     libgles2 \
+    libegl1 \
     wget \
     && rm -rf /var/lib/apt/lists/*
 

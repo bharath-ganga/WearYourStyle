@@ -808,6 +808,13 @@ def _run_hq_pipeline(
     return result, size
 
 # ═══════════════════════════════════════════════════════════════
+#  Flask REST — Status check
+# ═══════════════════════════════════════════════════════════════
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({"status": "running", "message": "WearYourStyle ML Server is running"})
+
+# ═══════════════════════════════════════════════════════════════
 #  Flask REST — /classify
 # ═══════════════════════════════════════════════════════════════
 @app.route("/classify", methods=["POST"])
@@ -1047,6 +1054,6 @@ def process_frame_hq(data):
 #  Entrypoint
 # ═══════════════════════════════════════════════════════════════
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 7860))
     print(f"🚀 WearYourStyle ML Server → http://0.0.0.0:{port}", flush=True)
     socketio.run(app, debug=False, host="0.0.0.0", port=port)

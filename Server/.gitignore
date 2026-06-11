@@ -143,3 +143,4 @@ dist
 
 # Firebase Service Account Key (NEVER commit this!)
 serviceAccountKey.json
+.vercel
