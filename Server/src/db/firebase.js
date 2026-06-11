@@ -19,18 +19,24 @@ try {
 } catch (error) {
   // If file missing, construct from environment variables (Production environment)
   if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
-    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY.trim();
     
-    // 1. Remove surrounding double or single quotes if they exist
-    if ((privateKey.startsWith('"') && privateKey.endsWith('"')) || (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
-      privateKey = privateKey.substring(1, privateKey.length - 1);
-    }
+    // 1. Remove surrounding quotes (single, double, or escaped)
+    privateKey = privateKey.replace(/^['"\\"]+|['"\\"]+$/g, '');
     
-    // 2. Replace literal \n with actual newlines
-    privateKey = privateKey.replace(/\\n/g, '\n');
+    // 2. Replace literal \n with actual newlines and remove carriage returns
+    privateKey = privateKey.replace(/\\n/g, '\n').replace(/\r/g, '');
     
-    // 3. Ensure the key has the official PEM headers/footers
-    if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+    // 3. Repair base64 body if newlines were converted to spaces/tabs by Vercel
+    if (privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      const parts = privateKey.split(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----/);
+      if (parts.length >= 3) {
+        let base64Body = parts[1].trim();
+        base64Body = base64Body.replace(/[\s\t]+/g, '\n');
+        privateKey = `-----BEGIN PRIVATE KEY-----\n${base64Body}\n-----END PRIVATE KEY-----`;
+      }
+    } else {
+      // Ensure the key has the official PEM headers/footers if missing
       privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
     }
 
