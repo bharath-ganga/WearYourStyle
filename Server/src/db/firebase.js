@@ -27,18 +27,36 @@ try {
     // 2. Replace literal \n with actual newlines and remove carriage returns
     privateKey = privateKey.replace(/\\n/g, '\n').replace(/\r/g, '');
     
-    // 3. Repair base64 body if newlines were converted to spaces/tabs by Vercel
+    // 3. Isolate the base64 body
+    let base64Body = privateKey;
     if (privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
       const parts = privateKey.split(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----/);
       if (parts.length >= 3) {
-        let base64Body = parts[1].trim();
-        base64Body = base64Body.replace(/[\s\t]+/g, '\n');
-        privateKey = `-----BEGIN PRIVATE KEY-----\n${base64Body}\n-----END PRIVATE KEY-----`;
+        base64Body = parts[1].trim();
       }
-    } else {
-      // Ensure the key has the official PEM headers/footers if missing
-      privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
     }
+    
+    // 4. Remove all whitespaces/newlines/tabs from the base64 body
+    base64Body = base64Body.replace(/[\s\r\n\t]+/g, '');
+    
+    // 5. Repair prepended 'n' if the key was split/sliced near a '\n'
+    if (base64Body.startsWith('nMII')) {
+      base64Body = base64Body.substring(1);
+    }
+    
+    // 6. Restore base64 padding if missing
+    const padLength = (4 - (base64Body.length % 4)) % 4;
+    if (padLength > 0) {
+      base64Body += '='.repeat(padLength);
+    }
+    
+    // 7. Reconstruct the PEM key with proper newlines every 64 characters
+    const chunks = [];
+    for (let i = 0; i < base64Body.length; i += 64) {
+      chunks.push(base64Body.substring(i, i + 64));
+    }
+    
+    privateKey = `-----BEGIN PRIVATE KEY-----\n${chunks.join('\n')}\n-----END PRIVATE KEY-----\n`;
 
     serviceAccount = {
       projectId: process.env.FIREBASE_PROJECT_ID,
