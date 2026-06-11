@@ -5,6 +5,11 @@ import seedAdmin from "../src/seedAdmin.js";
 let cachedDb = null;
 
 export default async (req, res) => {
+  // Bypass db connection block for debug route so we can inspect environment variables diagnostics
+  if (req.url && (req.url === "/api/db-debug" || req.url.startsWith("/api/db-debug"))) {
+    return app(req, res);
+  }
+
   try {
     if (!cachedDb) {
       console.log("[Vercel] Connecting to Firestore...");
