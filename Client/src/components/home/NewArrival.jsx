@@ -107,7 +107,7 @@ const OverlayImage = styled.img`
 `;
 
 
-const socket = io(ML_BASE_URL);
+const socket = io(ML_BASE_URL, { transports: ["websocket"] });
 
 const NewArrival = ({ products = [] }) => {
   const [selectedImage, setSelectedImage] = useState(null); 

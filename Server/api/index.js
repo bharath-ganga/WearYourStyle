@@ -15,6 +15,17 @@ export default async (req, res) => {
     return app(req, res);
   } catch (error) {
     console.error("[Vercel] Initialization error:", error);
+    
+    const origin = req.headers.origin;
+    if (origin && (origin.startsWith("http://localhost") || origin.endsWith(".vercel.app"))) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+    } else {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+    }
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+
     res.status(500).json({
       success: false,
       message: "Vercel Serverless Function Initialization Error",

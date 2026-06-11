@@ -11,7 +11,7 @@ import { API_BASE_URL, ML_BASE_URL } from "../config/apiConfig";
 // ─────────────────────────────────────────────────────────────────────────────
 //  Socket — singleton, created once at module level (PRESERVED)
 // ─────────────────────────────────────────────────────────────────────────────
-const socket = io(ML_BASE_URL);
+const socket = io(ML_BASE_URL, { transports: ["websocket"] });
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Animations
