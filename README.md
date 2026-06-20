@@ -154,7 +154,7 @@ export const ML_BASE_URL = "http://localhost:5000";
 ---
 
 ## 🎥 Demonstration
-[https://wear-your-style.vercel.app/](https://wear-your-style.vercel.app/)
+[https://wear-your-style-jfso.vercel.app/](https://wear-your-style-jfso.vercel.app/)
 
 *(Interactive walkthroughs and screenshots coming soon!)*
 
