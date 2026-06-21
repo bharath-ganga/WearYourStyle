@@ -96,9 +96,15 @@ const ProductListScreen = () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/products`);
         const data = await response.json();
-        setProducts(data);
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else {
+          console.error("Failed to fetch products: expected array but got", data);
+          setProducts([]);
+        }
       } catch (error) {
         console.error("Failed to fetch products", error);
+        setProducts([]);
       } finally {
         setLoading(false);
       }

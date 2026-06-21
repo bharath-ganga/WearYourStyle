@@ -726,9 +726,15 @@ const VirtualTryOn = () => {
       try {
         const res  = await fetch(`${API_BASE_URL}/api/products`);
         const data = await res.json();
-        setAllProducts(data);
+        if (Array.isArray(data)) {
+          setAllProducts(data);
+        } else {
+          console.error("Failed to fetch products: expected array but got", data);
+          setAllProducts([]);
+        }
       } catch (e) {
         console.error("Failed to fetch products:", e);
+        setAllProducts([]);
       } finally {
         setLoading(false);
       }

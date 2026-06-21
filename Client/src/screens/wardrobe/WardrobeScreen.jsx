@@ -132,16 +132,24 @@ const WardrobeScreen = () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/products`);
                 const data = await response.json();
-                setAllProducts(data);
-                
-                // Initial recommendations based on weather
-                if (weather.temp > 25) {
-                    setRecommendedOutfit([data[1], data[2]].filter(Boolean)); // Light clothes
+                if (Array.isArray(data)) {
+                    setAllProducts(data);
+                    
+                    // Initial recommendations based on weather
+                    if (weather.temp > 25) {
+                        setRecommendedOutfit([data[1], data[2]].filter(Boolean)); // Light clothes
+                    } else {
+                        setRecommendedOutfit([data[3], data[4]].filter(Boolean)); // Warmer clothes
+                    }
                 } else {
-                    setRecommendedOutfit([data[3], data[4]].filter(Boolean)); // Warmer clothes
+                    console.error("Failed to fetch products: expected array but got", data);
+                    setAllProducts([]);
+                    setRecommendedOutfit([]);
                 }
             } catch (error) {
                 console.error("Failed to fetch products", error);
+                setAllProducts([]);
+                setRecommendedOutfit([]);
             } finally {
                 setLoading(false);
             }

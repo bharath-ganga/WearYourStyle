@@ -13,11 +13,17 @@ const ProductSimilar = () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/products`);
         const data = await response.json();
-        // Shuffle and limit to 4
-        const shuffled = data.sort(() => 0.5 - Math.random());
-        setProducts(shuffled.slice(0, 4));
+        if (Array.isArray(data)) {
+          // Shuffle and limit to 4
+          const shuffled = [...data].sort(() => 0.5 - Math.random());
+          setProducts(shuffled.slice(0, 4));
+        } else {
+          console.error("Failed to fetch products: expected array but got", data);
+          setProducts([]);
+        }
       } catch (error) {
         console.error("Failed to fetch products", error);
+        setProducts([]);
       } finally {
         setLoading(false);
       }

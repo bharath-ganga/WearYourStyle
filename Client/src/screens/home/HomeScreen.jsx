@@ -139,11 +139,17 @@ const HomeScreen = () => {
         const response = await fetch(`${API_BASE_URL}/api/products`);
         const data = await response.json();
         
-        // Shuffle the array to ensure truly mixed and diverse items rather than clumped categories
-        const shuffled = [...data].sort(() => 0.5 - Math.random());
-        setAllProducts(shuffled);
+        if (Array.isArray(data)) {
+          // Shuffle the array to ensure truly mixed and diverse items rather than clumped categories
+          const shuffled = [...data].sort(() => 0.5 - Math.random());
+          setAllProducts(shuffled);
+        } else {
+          console.error("Failed to fetch products: expected array but got", data);
+          setAllProducts([]);
+        }
       } catch (error) {
         console.error("Failed to fetch products", error);
+        setAllProducts([]);
       } finally {
         setLoading(false);
       }

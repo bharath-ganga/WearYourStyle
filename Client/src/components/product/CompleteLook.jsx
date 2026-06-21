@@ -15,26 +15,32 @@ const CompleteLook = ({ currentProduct }) => {
         const response = await fetch(`${API_BASE_URL}/api/products`);
         const data = await response.json();
         
-        // Filter out identical categories. E.g. If viewing a shirt, recommend shoes or pants.
-        const currentLowerTitle = currentProduct.title.toLowerCase();
-        const isCurrentTop = currentLowerTitle.includes("shirt") || currentLowerTitle.includes("top");
-        
-        const complementary = data.filter(item => {
-           if (item.id === currentProduct.id) return false;
-           const itemTitleLower = item.title.toLowerCase();
-           const isItemTop = itemTitleLower.includes("shirt") || itemTitleLower.includes("top");
-           // Complementary logic: If viewing Top, show Non-Top
-           if (isCurrentTop) return !isItemTop;
-           // If viewing Non-Top, show Tops
-           return isItemTop;
-        });
+        if (Array.isArray(data)) {
+          // Filter out identical categories. E.g. If viewing a shirt, recommend shoes or pants.
+          const currentLowerTitle = currentProduct.title.toLowerCase();
+          const isCurrentTop = currentLowerTitle.includes("shirt") || currentLowerTitle.includes("top");
+          
+          const complementary = data.filter(item => {
+             if (item.id === currentProduct.id) return false;
+             const itemTitleLower = item.title.toLowerCase();
+             const isItemTop = itemTitleLower.includes("shirt") || itemTitleLower.includes("top");
+             // Complementary logic: If viewing Top, show Non-Top
+             if (isCurrentTop) return !isItemTop;
+             // If viewing Non-Top, show Tops
+             return isItemTop;
+          });
 
-        // Fallback to random if not enough complementary
-        let displayList = complementary.length > 0 ? complementary : data;
-        const shuffled = displayList.sort(() => 0.5 - Math.random());
-        setProducts(shuffled.slice(0, 4));
+          // Fallback to random if not enough complementary
+          let displayList = complementary.length > 0 ? complementary : data;
+          const shuffled = [...displayList].sort(() => 0.5 - Math.random());
+          setProducts(shuffled.slice(0, 4));
+        } else {
+          console.error("Failed to fetch products: expected array but got", data);
+          setProducts([]);
+        }
       } catch (error) {
         console.error("Failed to fetch products", error);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
