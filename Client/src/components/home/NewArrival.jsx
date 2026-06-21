@@ -213,6 +213,11 @@ useEffect(() => {
     variableWidth: true,
     autoplay: true,
     autoplaySpeed: 3000,
+    beforeChange: (current, next) => {
+      if (document.activeElement && document.activeElement.closest(".slick-slider")) {
+        document.activeElement.blur();
+      }
+    },
   };
 
   const path = [

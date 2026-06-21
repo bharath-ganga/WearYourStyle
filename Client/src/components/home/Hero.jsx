@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -158,6 +159,8 @@ const HeroSlideContent = styled.div`
 `;
 
 const Hero = () => {
+  const [activeSlide, setActiveSlide] = useState(0);
+
   const settings = {
     infinite: bannerData.length > 1,
     slidesToShow: 1,
@@ -165,6 +168,12 @@ const Hero = () => {
     arrows: bannerData.length > 1,
     autoplay: true,
     autoplaySpeed: 3000,
+    beforeChange: (current, next) => {
+      setActiveSlide(next);
+      if (document.activeElement && document.activeElement.closest(".slick-slider")) {
+        document.activeElement.blur();
+      }
+    },
     responsive: [
       {
         breakpoint: 1024,
@@ -190,7 +199,8 @@ const Hero = () => {
           prevArrow={<CustomPrevArrow />}
           {...settings}
         >
-          {bannerData?.map((banner) => {
+          {bannerData?.map((banner, index) => {
+            const isActive = index === activeSlide;
             return (
               <HeroSliderItemWrapper key={banner.id}>
                 <img src={banner.imgSource} className="object-fit-cover" />
@@ -205,7 +215,11 @@ const Hero = () => {
                     <p className="hero-text-bottom font-semibold uppercase">
                       {banner.bottomText}
                     </p>
-                    <BaseLinkWhite to={banner.buttonLink} className="hero-btn">
+                    <BaseLinkWhite 
+                      to={banner.buttonLink} 
+                      className="hero-btn"
+                      tabIndex={isActive ? 0 : -1}
+                    >
                       {banner.buttonText}
                     </BaseLinkWhite>
                   </Container>

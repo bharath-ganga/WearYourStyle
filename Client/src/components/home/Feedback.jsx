@@ -70,6 +70,11 @@ const Feedback = () => {
     speed: 300,
     slidesToShow: 3,
     slidesToScroll: 3,
+    beforeChange: (current, next) => {
+      if (document.activeElement && document.activeElement.closest(".slick-slider")) {
+        document.activeElement.blur();
+      }
+    },
     responsive: [
       {
         breakpoint: 1024,
