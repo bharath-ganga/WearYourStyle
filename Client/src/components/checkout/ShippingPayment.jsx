@@ -182,10 +182,9 @@ const ShippingPayment = ({ billingDetails }) => {
         }
 
         const token = localStorage.getItem("accessToken");
-        if (!token) {
-            toast.error("Please sign in to place an order.");
-            navigate("/sign_in");
-            return;
+        const headers = {};
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
         }
 
         try {
@@ -201,20 +200,18 @@ const ShippingPayment = ({ billingDetails }) => {
                 paymentMethod: paymentMethod,
                 status: "Order Placed", 
                 delivery_date: getDeliveryDate(),
+                userId: localStorage.getItem("userId") || "guest",
+                userEmail: billingDetails?.email || localStorage.getItem("userEmail") || "Guest",
                 phone: billingDetails?.phone || "N/A",
                 payment_details: {
                     transaction_id: transactionId,
                     payment_type: paymentMethod,
-                    customer_name: billingDetails?.name || localStorage.getItem("userName") || "User",
+                    customer_name: billingDetails?.name || localStorage.getItem("userName") || "Guest User",
                     timestamp: new Date().toISOString()
                 }
             };
 
-            await axios.post(`${API_BASE_URL}/api/orders/place`, orderData, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            await axios.post(`${API_BASE_URL}/api/orders/place`, orderData, { headers });
             
             const pts = Number(localStorage.getItem("loyaltyPoints") || 450);
             localStorage.setItem("loyaltyPoints", pts + 50);

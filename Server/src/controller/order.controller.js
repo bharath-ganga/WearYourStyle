@@ -6,10 +6,6 @@ import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/AsyncHandler.js";
 
 const placeOrder = asyncHandler(async (req, res) => {
-    if (!req.user) {
-        throw new ApiError(401, "You must be logged in to place an order");
-    }
-
     const { 
         items, 
         totalAmount, 
@@ -18,11 +14,13 @@ const placeOrder = asyncHandler(async (req, res) => {
         phone,
         status, 
         delivery_date,
-        payment_details
+        payment_details,
+        userId: bodyUserId,
+        userEmail: bodyUserEmail
     } = req.body;
 
-    const userId = req.user.id;
-    const userEmail = req.user.email;
+    const userId = req.user ? req.user.id : (bodyUserId || "guest");
+    const userEmail = req.user ? req.user.email : (bodyUserEmail || "Guest");
 
     if (!items || items.length === 0) {
         throw new ApiError(400, "Cart is empty");
@@ -58,7 +56,7 @@ const placeOrder = asyncHandler(async (req, res) => {
             order_no: order.order_no,
             transactionId: payment_details.transaction_id,
             paymentType: payment_details.payment_type || paymentMethod,
-            customerName: payment_details.customer_name || req.user.firstName || "User",
+            customerName: payment_details.customer_name || (req.user ? req.user.firstName : "Guest"),
             amount: totalAmount,
             timestamp: payment_details.timestamp || new Date().toISOString()
         });
@@ -95,7 +93,7 @@ const getMyOrders = asyncHandler(async (req, res) => {
 
 const getOrderById = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    
+
     if (!id) {
         throw new ApiError(400, "Order ID is required");
     }
@@ -118,7 +116,7 @@ const getOrderById = asyncHandler(async (req, res) => {
 
 const cancelOrder = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    
+
     const order = await Order.findById(id);
     if (!order) {
         throw new ApiError(404, "Order not found");

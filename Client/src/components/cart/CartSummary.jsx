@@ -77,15 +77,7 @@ const CartSummary = () => {
       <BaseButtonGreen 
         type="button" 
         className="checkout-btn"
-        onClick={() => {
-          const token = localStorage.getItem("accessToken");
-          if (!token) {
-            toast.error("Please sign in to proceed to checkout.");
-            navigate("/sign_in");
-          } else {
-            navigate("/checkout");
-          }
-        }}
+        onClick={() => navigate("/checkout")}
       >
         Proceed To Checkout
       </BaseButtonGreen>
