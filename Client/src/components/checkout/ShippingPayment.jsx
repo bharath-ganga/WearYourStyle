@@ -181,6 +181,13 @@ const ShippingPayment = ({ billingDetails }) => {
             return;
         }
 
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+            toast.error("Please sign in to place an order.");
+            navigate("/sign_in");
+            return;
+        }
+
         try {
             const discountAmount = discountPercent > 0 ? (totalAmount * discountPercent) / 100 : 0;
             const finalAmount = totalAmount - discountAmount + 50;
@@ -194,18 +201,20 @@ const ShippingPayment = ({ billingDetails }) => {
                 paymentMethod: paymentMethod,
                 status: "Order Placed", 
                 delivery_date: getDeliveryDate(),
-                userId: localStorage.getItem("userId") || "guest",
-                userEmail: billingDetails?.email || localStorage.getItem("userEmail") || "Guest",
                 phone: billingDetails?.phone || "N/A",
                 payment_details: {
                     transaction_id: transactionId,
                     payment_type: paymentMethod,
-                    customer_name: billingDetails?.name || localStorage.getItem("userName") || "Guest User",
+                    customer_name: billingDetails?.name || localStorage.getItem("userName") || "User",
                     timestamp: new Date().toISOString()
                 }
             };
 
-            await axios.post(`${API_BASE_URL}/api/orders/place`, orderData);
+            await axios.post(`${API_BASE_URL}/api/orders/place`, orderData, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             
             const pts = Number(localStorage.getItem("loyaltyPoints") || 450);
             localStorage.setItem("loyaltyPoints", pts + 50);

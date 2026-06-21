@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import styled from "styled-components";
 import { Container } from "../../styles/styles";
 import Title from "../../components/common/Title";
@@ -21,7 +23,16 @@ const CheckoutScreenWrapper = styled.main`
 `;
 
 const CheckoutScreen = () => {
+  const navigate = useNavigate();
   const [billingDetails, setBillingDetails] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      toast.error("Please sign in to proceed to checkout.");
+      navigate("/sign_in");
+    }
+  }, [navigate]);
 
   const handleBillingSubmit = (details) => {
     setBillingDetails(details);

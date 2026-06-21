@@ -6,26 +6,31 @@ import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/AsyncHandler.js";
 
 const placeOrder = asyncHandler(async (req, res) => {
+    if (!req.user) {
+        throw new ApiError(401, "You must be logged in to place an order");
+    }
+
     const { 
         items, 
         totalAmount, 
         shippingAddress, 
         paymentMethod, 
-        userId, 
-        userEmail,
         phone,
         status, 
         delivery_date,
         payment_details
     } = req.body;
 
+    const userId = req.user.id;
+    const userEmail = req.user.email;
+
     if (!items || items.length === 0) {
         throw new ApiError(400, "Cart is empty");
     }
 
     const orderData = {
-        userId: userId || "guest",
-        userEmail: userEmail || "Guest",
+        userId,
+        userEmail,
         phone: phone || "N/A",
         order_no: `ORD-${Date.now()}`,
         items: items.map(item => ({
@@ -53,7 +58,7 @@ const placeOrder = asyncHandler(async (req, res) => {
             order_no: order.order_no,
             transactionId: payment_details.transaction_id,
             paymentType: payment_details.payment_type || paymentMethod,
-            customerName: payment_details.customer_name || "Guest",
+            customerName: payment_details.customer_name || req.user.firstName || "User",
             amount: totalAmount,
             timestamp: payment_details.timestamp || new Date().toISOString()
         });
@@ -76,12 +81,11 @@ const placeOrder = asyncHandler(async (req, res) => {
 });
 
 const getMyOrders = asyncHandler(async (req, res) => {
-    const userId = req.user?.id || req.query.userId;
-    
-    if (!userId) {
-        throw new ApiError(400, "User ID is required");
+    if (!req.user) {
+        throw new ApiError(401, "You must be logged in to view your orders");
     }
 
+    const userId = req.user.id;
     const orders = await Order.findByUserId(userId);
 
     return res
@@ -102,6 +106,11 @@ const getOrderById = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Order not found");
     }
 
+    // Security check: Only the owner or an admin can view the order details
+    if (order.userId !== req.user.id && req.user.role !== "admin") {
+        throw new ApiError(403, "You do not have permission to view this order");
+    }
+
     return res
         .status(200)
         .json(new ApiResponse(200, order, "Order fetched successfully"));
@@ -113,6 +122,11 @@ const cancelOrder = asyncHandler(async (req, res) => {
     const order = await Order.findById(id);
     if (!order) {
         throw new ApiError(404, "Order not found");
+    }
+
+    // Security check: Only the owner or an admin can cancel the order
+    if (order.userId !== req.user.id && req.user.role !== "admin") {
+        throw new ApiError(403, "You do not have permission to cancel this order");
     }
 
     if (order.status === "Cancelled") {

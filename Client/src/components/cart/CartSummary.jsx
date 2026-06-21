@@ -6,6 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { getCartTotal } from "../../redux/slices/cartSlice";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const CartSummaryWrapper = styled.div`
   background-color: ${defaultTheme.color_flash_white};
@@ -76,7 +77,15 @@ const CartSummary = () => {
       <BaseButtonGreen 
         type="button" 
         className="checkout-btn"
-        onClick={() => navigate("/checkout")}
+        onClick={() => {
+          const token = localStorage.getItem("accessToken");
+          if (!token) {
+            toast.error("Please sign in to proceed to checkout.");
+            navigate("/sign_in");
+          } else {
+            navigate("/checkout");
+          }
+        }}
       >
         Proceed To Checkout
       </BaseButtonGreen>
