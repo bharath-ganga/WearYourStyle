@@ -203,6 +203,57 @@ const CornerBrackets = styled.div`
   span::after  { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
 `;
 
+const SilhouetteGuide = styled.div`
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 280px;
+  height: 420px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease;
+  opacity: ${(p) => (p.$visible ? 0.45 : 0)};
+  z-index: 4;
+
+  .silhouette-head {
+    width: 100px;
+    height: 125px;
+    border: 3px solid ${defaultTheme.color_sea_green};
+    border-radius: 50%;
+    margin-bottom: 12px;
+    box-shadow: 0 0 10px rgba(16, 185, 177, 0.2);
+  }
+  .silhouette-shoulders {
+    width: 250px;
+    height: 160px;
+    border: 3px solid ${defaultTheme.color_sea_green};
+    border-bottom: none;
+    border-top-left-radius: 120px;
+    border-top-right-radius: 120px;
+    box-shadow: 0 -4px 10px rgba(16, 185, 177, 0.2);
+  }
+  .guide-text {
+    margin-top: 24px;
+    background: rgba(10, 10, 15, 0.85);
+    border: 1px solid ${defaultTheme.color_sea_green};
+    color: ${defaultTheme.color_sea_green};
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+`;
+
 // HUD badges (top-right area)
 const HudBadge = styled.div`
   position: absolute;
@@ -1001,6 +1052,18 @@ const VirtualTryOn = () => {
                     <CornerBrackets $visible={webcamActive}>
                       <span />
                     </CornerBrackets>
+
+                    {/* Visual silhouette guide overlay */}
+                    {!selectedImage && (
+                      <SilhouetteGuide $visible={webcamActive}>
+                        <div className="silhouette-head" />
+                        <div className="silhouette-shoulders" />
+                        <div className="guide-text">
+                          <i className="bi bi-person-bounding-box" />
+                          Align shoulders & step back
+                        </div>
+                      </SilhouetteGuide>
+                    )}
 
                     {/* AI scan line */}
                     <ScanLineOverlay $active={isAiProcessing} />
