@@ -34,7 +34,7 @@ import { ThemeContextProvider } from "./context/ThemeContext";
 function App() {
   return (
     <ThemeContextProvider>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <GlobalStyles />
         <Routes>
           {/* main screens */}
