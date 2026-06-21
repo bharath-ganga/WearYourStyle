@@ -1,7 +1,7 @@
 # WearYourStyle One-Click Startup Script
 Write-Host ">>> WearYourStyle: AI Fashion Ecosystem Start-up Sequence..." -ForegroundColor Cyan
 
-$ports = @(3000, 5000, 5174)
+$ports = @(3000, 5000, 7860, 5174)
 
 Write-Host "`nStep 1: Cleaning up existing port usage..." -ForegroundColor Yellow
 foreach ($port in $ports) {
@@ -28,7 +28,7 @@ Write-Host "[1/3] Launching Backend Server (Port 3000)..."
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd Server; npm run dev"
 
 # 2. Start ML Server (Python)
-Write-Host "[2/3] Launching AI ML Server (Port 5000)..."
+Write-Host "[2/3] Launching AI ML Server (Port 7860)..."
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd MlServer; if (Test-Path '.\venv\Scripts\python.exe') { .\venv\Scripts\python.exe main.py } else { python main.py }"
 
 # 3. Start Client (Frontend)
