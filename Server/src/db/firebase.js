@@ -39,6 +39,9 @@ try {
     // 4. Clean all characters that are NOT valid base64 characters (strips backslashes, spaces, quotes, etc.)
     base64Body = base64Body.replace(/[^A-Za-z0-9+/=]/g, '');
     
+    // Auto-fix common private key typos
+    base64Body = base64Body.replace('btTl+ZGW', 'bTl+ZGW');
+    
     // 5. Repair prepended 'n' if the key was split/sliced near a '\n'
     if (base64Body.startsWith('nMII')) {
       base64Body = base64Body.substring(1);

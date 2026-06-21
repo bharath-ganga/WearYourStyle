@@ -50,60 +50,6 @@ app.get('/api/db-debug', async (req, res) => {
             productsFound: snapshot.size
         });
     } catch (err) {
-        let pkDiag = {};
-        const pk = process.env.FIREBASE_PRIVATE_KEY;
-        if (pk) {
-            let privateKey = pk.trim();
-            privateKey = privateKey.replace(/^['"\\"]+|['"\\"]+$/g, '');
-            privateKey = privateKey.replace(/\\n/g, '\n').replace(/\r/g, '');
-            
-            let base64Body = privateKey;
-            if (privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-              const parts = privateKey.split(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----/);
-              if (parts.length >= 3) {
-                base64Body = parts[1].trim();
-              }
-            }
-            
-            base64Body = base64Body.replace(/[^A-Za-z0-9+/=]/g, '');
-            
-            const startsWithNMII = base64Body.startsWith('nMII');
-            let cleanedLengthBeforePadding = base64Body.length;
-            
-            if (startsWithNMII) {
-              base64Body = base64Body.substring(1);
-            }
-            
-            const padLength = (4 - (base64Body.length % 4)) % 4;
-            let paddingAdded = padLength;
-            if (padLength > 0) {
-              base64Body += '='.repeat(padLength);
-            }
-
-            import('crypto').then((crypto) => {
-                const hash = crypto.createHash('sha256').update(base64Body).digest('hex');
-                // Note: We'll log it or we can just send it since it's a non-reversible hash of the base64 content
-            });
-
-            // We can calculate SHA256 synchronously using node's crypto
-            const crypto = await import('crypto');
-            const sha256 = crypto.createHash('sha256').update(base64Body).digest('hex');
-            
-            pkDiag = {
-                rawLength: pk.length,
-                startsWithBegin: pk.includes("-----BEGIN PRIVATE KEY-----"),
-                endsWithEnd: pk.includes("-----END PRIVATE KEY-----"),
-                literalNewlineCount: (pk.match(/\\n/g) || []).length,
-                realNewlineCount: (pk.match(/\n/g) || []).length,
-                cleanedLengthBeforePadding,
-                startsWithNMII,
-                paddingAdded,
-                cleanedLengthAfterPadding: base64Body.length,
-                base64BodySha256: sha256,
-                expectedSha256: "95e8e35d286cea2823e68e7fe8d053f8bfe777cf17bd9518ce7e6c229d9722b8"
-            };
-        }
-
         res.status(500).json({
             status: "error",
             message: "Firebase connection failed",
@@ -112,8 +58,8 @@ app.get('/api/db-debug', async (req, res) => {
             env: {
                 projectId: process.env.FIREBASE_PROJECT_ID || "missing",
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "missing",
-                hasPrivateKey: !!pk,
-                privateKeyDiagnostics: pkDiag
+                hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+                privateKeyLength: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.length : 0
             }
         });
     }
