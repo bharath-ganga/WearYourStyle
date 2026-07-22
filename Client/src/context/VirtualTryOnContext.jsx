@@ -10,7 +10,7 @@ import { ML_BASE_URL } from "../config/apiConfig";
 
 const VirtualTryOnContext = createContext();
 
-const socket = io(ML_BASE_URL, { transports: ["websocket"] });
+const socket = io(ML_BASE_URL, { transports: ["polling", "websocket"] });
 
 export const VirtualTryOnProvider = ({ children }) => {
   const [selectedImage, setSelectedImage] = useState(null);
