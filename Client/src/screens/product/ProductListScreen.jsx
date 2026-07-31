@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import ProductList from "../../components/product/ProductList";
 import Title from "../../components/common/Title";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
+import { defaultFallbackProducts } from "../../data/fallbackProducts";
 import ProductFilter from "../../components/product/ProductFilter";
 
 const ProductsContent = styled.div`
@@ -95,16 +96,20 @@ const ProductListScreen = () => {
     const fetchProducts = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/products`);
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setProducts(data);
-        } else {
-          console.error("Failed to fetch products: expected array but got", data);
-          setProducts([]);
+        const contentType = response.headers.get("content-type");
+
+        if (response.ok && contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setProducts(data);
+            return;
+          }
         }
+        console.warn("API response was not JSON array. Using fallback products.");
+        setProducts(defaultFallbackProducts);
       } catch (error) {
-        console.error("Failed to fetch products", error);
-        setProducts([]);
+        console.warn("Failed to fetch products. Using fallback products:", error);
+        setProducts(defaultFallbackProducts);
       } finally {
         setLoading(false);
       }

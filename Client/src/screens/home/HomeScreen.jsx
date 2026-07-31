@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { API_BASE_URL } from "../../config/apiConfig";
+import { defaultFallbackProducts } from "../../data/fallbackProducts";
 import Hero from "../../components/home/Hero";
 import Featured from "../../components/home/Featured";
 import NewArrival from "../../components/home/NewArrival";
@@ -137,19 +138,21 @@ const HomeScreen = () => {
     const fetchProducts = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/products`);
-        const data = await response.json();
-        
-        if (Array.isArray(data)) {
-          // Shuffle the array to ensure truly mixed and diverse items rather than clumped categories
-          const shuffled = [...data].sort(() => 0.5 - Math.random());
-          setAllProducts(shuffled);
-        } else {
-          console.error("Failed to fetch products: expected array but got", data);
-          setAllProducts([]);
+        const contentType = response.headers.get("content-type");
+
+        if (response.ok && contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const shuffled = [...data].sort(() => 0.5 - Math.random());
+            setAllProducts(shuffled);
+            return;
+          }
         }
+        console.warn("API response was not JSON array. Using fallback products.");
+        setAllProducts(defaultFallbackProducts);
       } catch (error) {
-        console.error("Failed to fetch products", error);
-        setAllProducts([]);
+        console.warn("Failed to fetch products. Using fallback products:", error);
+        setAllProducts(defaultFallbackProducts);
       } finally {
         setLoading(false);
       }

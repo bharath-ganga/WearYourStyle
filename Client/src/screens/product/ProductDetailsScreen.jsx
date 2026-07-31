@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { Container } from "../../styles/styles";
 import { API_BASE_URL } from "../../config/apiConfig";
+import { defaultFallbackProducts } from "../../data/fallbackProducts";
 import Breadcrumb from "../../components/common/Breadcrumb";
 import ProductPreview from "../../components/product/ProductPreview";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
@@ -200,16 +201,23 @@ const ProductDetailsScreen = () => {
         const fetchProduct = async () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
-                if (response.ok) {
+                const contentType = response.headers.get("content-type");
+
+                if (response.ok && contentType && contentType.includes("application/json")) {
                     const foundProduct = await response.json();
-                    setProduct(foundProduct);
-                    if (foundProduct.sizes?.length > 0) setSelectedSize(foundProduct.sizes[0]);
-                    if (foundProduct.colors?.length > 0) setSelectedColor(foundProduct.colors[0]);
-                } else {
-                    setProduct(null);
+                    if (foundProduct && foundProduct.id) {
+                        setProduct(foundProduct);
+                        if (foundProduct.sizes?.length > 0) setSelectedSize(foundProduct.sizes[0]);
+                        if (foundProduct.colors?.length > 0) setSelectedColor(foundProduct.colors[0]);
+                        return;
+                    }
                 }
+                const fallback = defaultFallbackProducts.find(p => p.id === id) || defaultFallbackProducts[0];
+                setProduct(fallback);
             } catch (error) {
-                console.error("Failed to fetch product", error);
+                console.warn("Failed to fetch product, using fallback:", error);
+                const fallback = defaultFallbackProducts.find(p => p.id === id) || defaultFallbackProducts[0];
+                setProduct(fallback);
             } finally {
                 setLoading(false);
             }
