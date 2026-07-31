@@ -23,11 +23,15 @@ ENV PATH="/home/user/.local/bin:$PATH"
 COPY --chown=user requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download MediaPipe model
-RUN wget -O pose_landmarker.task https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task
+# Download MediaPipe models during Docker build for fast & reliable startup
+RUN wget -O pose_landmarker.task https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task && \
+    wget -O classifier.tflite https://storage.googleapis.com/mediapipe-models/image_classifier/efficientnet_lite0/float32/1/efficientnet_lite0.tflite && \
+    wget -O selfie_multiclass_256x256.tflite https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite
 
 # Copy the rest of the code
 COPY --chown=user . .
+
+EXPOSE 7860
 
 # Run the server
 CMD ["python", "main.py"]

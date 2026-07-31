@@ -10,7 +10,12 @@ import { ML_BASE_URL } from "../config/apiConfig";
 
 const VirtualTryOnContext = createContext();
 
-const socket = io(ML_BASE_URL, { transports: ["polling", "websocket"] });
+const socket = io(ML_BASE_URL, {
+  transports: ["polling", "websocket"],
+  autoConnect: false,
+  reconnectionAttempts: 3,
+  timeout: 5000,
+});
 
 export const VirtualTryOnProvider = ({ children }) => {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -19,18 +24,29 @@ export const VirtualTryOnProvider = ({ children }) => {
   const webcamRef = useRef(null);
 
   useEffect(() => {
-    socket.on("frame_processed", (data) => {
-      setSelectedImage(`data:image/png;base64,${data.frame}`);
-    });
+    if (webcamActive) {
+      socket.connect();
+    } else {
+      socket.disconnect();
+    }
 
-    socket.on("error", (error) => {
-      console.error("Error from server:", error.message);
-    });
+    const handleFrame = (data) => {
+      setSelectedImage(`data:image/png;base64,${data.frame}`);
+    };
+
+    const handleError = (error) => {
+      console.error("Error from ML server:", error.message);
+    };
+
+    socket.on("frame_processed", handleFrame);
+    socket.on("error", handleError);
 
     return () => {
+      socket.off("frame_processed", handleFrame);
+      socket.off("error", handleError);
       socket.disconnect();
     };
-  }, []);
+  }, [webcamActive]);
 
   const blobToBase64 = (blob) => {
     return new Promise((resolve, reject) => {
