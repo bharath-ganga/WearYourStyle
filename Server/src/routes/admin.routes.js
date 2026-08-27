@@ -30,10 +30,13 @@ import {
   updateProduct,
   deleteProduct,
   createProductWithBgRemoval,
+  getAnalytics,
+  getCustomers,
 } from "../controller/admin.controller.js";
 
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { isAdmin }   from "../middlewares/admin.middleware.js";
+import { getCoupons, createCoupon, deleteCoupon } from "../controller/coupon.controller.js";
 
 const router = express.Router();
 
@@ -63,6 +66,11 @@ const upload = multer({
 router.get    ("/orders",     getAllOrders);
 router.patch  ("/orders/:id", updateOrderStatus);
 router.delete ("/orders/:id", deleteOrder);
+router.get    ("/analytics", getAnalytics);
+router.get    ("/customers", getCustomers);
+router.get    ("/coupons", getCoupons);
+router.post   ("/coupons", createCoupon);
+router.delete ("/coupons/:id", deleteCoupon);
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Product routes  (PRESERVED)

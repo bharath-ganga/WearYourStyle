@@ -4,38 +4,54 @@ import { Payment } from "../models/payment.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/AsyncHandler.js";
+import { Coupon } from "../models/coupon.model.js";
 
 const placeOrder = asyncHandler(async (req, res) => {
     const { 
         items, 
-        totalAmount, 
         shippingAddress, 
         paymentMethod, 
         phone,
         status, 
         delivery_date,
         payment_details,
-        userId: bodyUserId,
-        userEmail: bodyUserEmail
+        couponCode = ""
     } = req.body;
 
-    const userId = req.user ? req.user.id : (bodyUserId || "guest");
-    const userEmail = req.user ? req.user.email : (bodyUserEmail || "Guest");
+    const userId = req.user.id;
+    const userEmail = req.user.email;
 
     if (!items || items.length === 0) {
         throw new ApiError(400, "Cart is empty");
     }
+
+    if (!shippingAddress || !paymentMethod) throw new ApiError(400, "Shipping address and payment method are required");
+    const coupon = couponCode ? await Coupon.findByCode(couponCode) : null;
+    if (couponCode && !coupon) throw new ApiError(400, "Coupon is invalid or inactive");
+    const safeDiscount = Number(coupon?.discountPercent || 0);
+    let subtotal = 0;
+    const validatedItems = [];
+    for (const item of items) {
+        const quantity = Math.max(1, Number.parseInt(item.quantity, 10) || 1);
+        const productId = item.productId;
+        const product = productId ? await Product.findById(productId) : null;
+        if (!product) throw new ApiError(400, `Product is no longer available: ${item.title || productId}`);
+        if (Number(product.stock) < quantity) throw new ApiError(409, `Only ${product.stock || 0} left for ${product.title}`);
+        subtotal += Number(product.price) * quantity;
+        validatedItems.push({ ...item, productId, title: product.title, name: product.title, price: Number(product.price), quantity, totalPrice: Number(product.price) * quantity });
+    }
+    const serverTotal = Number((subtotal * (1 - safeDiscount / 100) + 50).toFixed(2));
 
     const orderData = {
         userId,
         userEmail,
         phone: phone || "N/A",
         order_no: `ORD-${Date.now()}`,
-        items: items.map(item => ({
-            ...item,
-            name: item.title 
-        })),
-        totalAmount,
+        items: validatedItems,
+        subtotal,
+        shippingFee: 50,
+        discountPercent: safeDiscount,
+        totalAmount: serverTotal,
         shippingAddress,
         paymentMethod,
         order_date: new Date().toLocaleDateString(), 
@@ -57,13 +73,13 @@ const placeOrder = asyncHandler(async (req, res) => {
             transactionId: payment_details.transaction_id,
             paymentType: payment_details.payment_type || paymentMethod,
             customerName: payment_details.customer_name || (req.user ? req.user.firstName : "Guest"),
-            amount: totalAmount,
+            amount: serverTotal,
             timestamp: payment_details.timestamp || new Date().toISOString()
         });
     }
 
     // Decrease product stock
-    for (const item of items) {
+    for (const item of validatedItems) {
         if (item.productId) {
             const product = await Product.findById(item.productId);
             if (product && typeof product.stock !== 'undefined') {
@@ -149,4 +165,13 @@ const cancelOrder = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, updatedOrder, "Order cancelled successfully"));
 });
 
-export { placeOrder, getMyOrders, getOrderById, cancelOrder };
+const requestReturn = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) throw new ApiError(404, "Order not found");
+    if (order.userId !== req.user.id && req.user.role !== "admin") throw new ApiError(403, "You do not have permission to return this order");
+    if (order.status !== "Delivered") throw new ApiError(400, "Returns can be requested after delivery");
+    const updated = await Order.update(order.id, { status: "Return requested", returnReason: req.body.reason || "Changed my mind", returnRequestedAt: new Date().toISOString() });
+    return res.status(200).json(new ApiResponse(200, updated, "Return requested"));
+});
+
+export { placeOrder, getMyOrders, getOrderById, cancelOrder, requestReturn };

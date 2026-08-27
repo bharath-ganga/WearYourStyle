@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./screens/home/HomeScreen";
 // layouts
@@ -25,18 +26,23 @@ import Confirm from "./screens/user/ConfirmScreen";
 import Account from "./screens/user/AccountScreen";
 import Address from "./screens/user/AddressScreen";
 
-import VirtualTryOn from "./screens/VirtualTryOn";
-import Wardrobe from "./screens/wardrobe/WardrobeScreen";
-import AdminLogin from "./screens/admin/AdminLoginScreen";
-import AdminDashboard from "./screens/admin/AdminDashboard";
+const VirtualTryOn = lazy(() => import("./screens/VirtualTryOn"));
+const Wardrobe = lazy(() => import("./screens/wardrobe/WardrobeScreen"));
+const AdminLogin = lazy(() => import("./screens/admin/AdminLoginScreen"));
+const AdminDashboard = lazy(() => import("./screens/admin/AdminDashboard"));
 import { ThemeContextProvider } from "./context/ThemeContext";
+import { AuthProvider } from "./context/AuthContext";
+import { AdminRoute, ProtectedRoute } from "./components/auth/RouteGuards";
+import InfoScreen from "./screens/info/InfoScreen";
+import StyleProfileScreen from "./screens/user/StyleProfileScreen";
 
 function App() {
   return (
     <ThemeContextProvider>
+      <AuthProvider>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <GlobalStyles />
-        <Routes>
+        <Suspense fallback={<div style={{ minHeight:"60vh", display:"grid", placeItems:"center", fontWeight:700 }}>Loading experience…</div>}><Routes>
           {/* main screens */}
           <Route path="/" element={<BaseLayout />}>
             <Route index element={<Home />} />
@@ -44,18 +50,24 @@ function App() {
             <Route path="/product/details/:id" element={<ProductDetails />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/empty_cart" element={<CartEmpty />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order" element={<Order />} />
-            <Route path="/order_detail/:id" element={<OrderDetail />} />
-            <Route path="/wishlist" element={<WishList />} />
             <Route path="/empty_wishlist" element={<WishListEmpty />} />
-            <Route path="/confirm" element={<Confirm />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/account/add" element={<Address />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/order" element={<Order />} />
+              <Route path="/order_detail/:id" element={<OrderDetail />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="/account/add" element={<Address />} />
+              <Route path="/style-profile" element={<StyleProfileScreen />} />
+              <Route path="/wardrobe" element={<Wardrobe />} />
+              <Route path="/confirm" element={<Confirm />} />
+            </Route>
+            <Route path="/wishlist" element={<WishList />} />
             <Route path="/virtual_try_on" element={<VirtualTryOn />} />
-            <Route path="/wardrobe" element={<Wardrobe />} />
             <Route path="/admin" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route element={<AdminRoute />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            </Route>
+            {["contact", "returns_refunds", "faqs", "career", "blog", "media", "tac", "privacy", "shipping", "sitemap"].map((page) => <Route key={page} path={`/${page}`} element={<InfoScreen />} />)}
           </Route>
 
           {/* auth screens */}
@@ -68,8 +80,9 @@ function App() {
             <Route path="verification" element={<Verification />} />
           </Route>
           <Route path="*" element={<NotFound />} />
-        </Routes>
+        </Routes></Suspense>
       </Router>
+      </AuthProvider>
     </ThemeContextProvider>
   );
 }

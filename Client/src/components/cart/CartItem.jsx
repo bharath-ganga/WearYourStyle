@@ -112,7 +112,7 @@ const CartItem = ({ cartItem }) => {
       </td>
       <td>
         <span className="cart-tbl-shipping uppercase text-silver font-bold">
-          {cartItem.shipping === 0 ? "Free" : currencyFormat(cartItem.shipping)}
+          {Number(cartItem.shipping || 0) === 0 ? "Free" : currencyFormat(cartItem.shipping)}
         </span>
       </td>
       <td>

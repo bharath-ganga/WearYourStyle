@@ -112,6 +112,7 @@ const OrderItemWrapper = styled.div`
 `;
 
 const OrderItem = ({ order }) => {
+  const primaryItem = order.items?.[0];
   const handleCancel = async () => {
     if (!window.confirm("Are you sure you want to cancel this order? This action cannot be undone.")) {
         return;
@@ -160,34 +161,34 @@ const OrderItem = ({ order }) => {
         </div>
       </div>
       <div className="order-overview flex justify-between items-center">
-        <div className="order-overview-content grid">
+        {primaryItem ? <div className="order-overview-content grid">
           <div className="order-overview-img">
             <img
-              src={order.items[0].imgSource}
+              src={primaryItem.imgSource}
               alt=""
               className="object-fit-cover"
             />
           </div>
           <div className="order-overview-info">
-            <h4 className="text-xl">{order.items[0].name}</h4>
+            <h4 className="text-xl">{primaryItem.name || primaryItem.title}</h4>
             <ul>
               <li className="font-semibold text-base">
                 <span>Colour:</span>
-                <span className="text-silver">{order.items[0].color}</span>
+                <span className="text-silver">{primaryItem.color || "Default"}</span>
               </li>
               <li className="font-semibold text-base">
                 <span>Qty:</span>
-                <span className="text-silver">{order.items[0].quantity}</span>
+                <span className="text-silver">{primaryItem.quantity}</span>
               </li>
               <li className="font-semibold text-base">
                 <span>Total:</span>
                 <span className="text-silver">
-                  {currencyFormat(order.items[0].price)}
+                  {currencyFormat(primaryItem.price)}
                 </span>
               </li>
             </ul>
           </div>
-        </div>
+        </div> : <p className="text-gray">Order item details are unavailable.</p>}
 
         <div className="order-actions">
             {showCancelButton && (

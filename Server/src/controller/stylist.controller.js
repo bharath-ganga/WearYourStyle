@@ -3,13 +3,13 @@ import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/AsyncHandler.js";
 
 const getStylistRecommendations = asyncHandler(async (req, res) => {
-  const { message } = req.body;
+  const { message, preferences = {} } = req.body;
 
   if (!message || message.trim() === "") {
     return res.status(400).json(new ApiResponse(400, null, "Message query is required"));
   }
 
-  const query = message.toLowerCase();
+  const query = `${message} ${preferences.favoriteColors || ""} ${preferences.occasion || ""} ${(preferences.styles || []).join(" ")}`.toLowerCase();
   console.log(`AI Stylist Query received: "${message}"`);
 
   // Fetch all products from Firestore
@@ -67,7 +67,7 @@ const getStylistRecommendations = asyncHandler(async (req, res) => {
   let replyText = "Hello! I am your AI Fashion Stylist. ";
   if (recommendations.length > 0) {
     const titles = recommendations.map(p => p.title).join(" and ");
-    replyText += `Based on your request, I highly recommend checking out ${titles}. They are curated premium options matching your aesthetic!`;
+    replyText += `Based on your request${preferences.occasion ? ` and your ${preferences.occasion.toLowerCase()} profile` : ""}, I recommend ${titles}.`;
   } else {
     replyText += "I looked through our latest catalog, but couldn't find exact fits. However, check out these trending items!";
   }

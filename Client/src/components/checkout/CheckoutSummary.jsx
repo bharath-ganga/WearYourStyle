@@ -83,14 +83,14 @@ const CheckoutSummaryWrapper = styled.div`
 
 const CheckoutSummary = () => {
   const dispatch = useDispatch();
-  const { carts: cartItems, totalAmount } = useSelector((state) => state.cart);
+  const { carts: cartItems, totalAmount, discountPercent } = useSelector((state) => state.cart);
 
   useEffect(() => {
     dispatch(getCartTotal());
   }, [cartItems, dispatch]);
 
-  const shipping = cartItems.length > 0 ? 5.0 : 0;
-  const savings = 0; // Or calculate if you have discount logic
+  const shipping = cartItems.length > 0 ? 50 : 0;
+  const savings = discountPercent > 0 ? (totalAmount * discountPercent) / 100 : 0;
   const grandTotal = totalAmount + shipping - savings;
 
   return (
@@ -136,7 +136,9 @@ const CheckoutSummary = () => {
           <span className="text-outerspace font-bold text-lg">{currencyFormat(totalAmount)}</span>
         </li>
         <li className="flex items-center justify-between">
-          <span className="text-outerspace font-bold text-lg">Savings</span>
+          <span className="text-outerspace font-bold text-lg">
+            Savings{discountPercent > 0 ? ` (${discountPercent}%)` : ""}
+          </span>
           <span className="text-outerspace font-bold text-lg">-{currencyFormat(savings)}</span>
         </li>
         <li className="flex items-center justify-between">

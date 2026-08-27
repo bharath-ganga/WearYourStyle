@@ -8,8 +8,10 @@ import { FormElement, Input, Textarea } from "../../styles/form";
 import { BaseButtonGreen, BaseButtonWhitesmoke } from "../../styles/button";
 import { defaultTheme } from "../../styles/themes/default";
 import axios from "axios";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { API_BASE_URL } from "../../config/apiConfig";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const AddressScreenWrapper = styled.main`
   .form-elem-control {
@@ -29,6 +31,7 @@ const breadcrumbItems = [
 ];
 
 const AddressScreen = () => {
+  const navigate = useNavigate();
   const firstNameRef = useRef();
   const lastNameRef = useRef();
   const countryRef = useRef();
@@ -40,7 +43,8 @@ const AddressScreen = () => {
   const postalRef = useRef();
   const instructionRef = useRef();
 
-  const handleAddress = async () => {
+  const handleAddress = async (event) => {
+    event.preventDefault();
     const firstName = firstNameRef.current.value;
     const lastName = lastNameRef.current.value;
     const country = countryRef.current.value;
@@ -55,12 +59,14 @@ const AddressScreen = () => {
       const token = localStorage.getItem("accessToken");
       const response = await axios.post(`${API_BASE_URL}/api/address`, { firstName, lastName, country, company, street, city, state, phone, postal, instruction }, {
         headers: {
-          Authorization: token
+          Authorization: `Bearer ${token}`
         }
       });
+      toast.success("Address saved");
+      navigate("/account");
     }
     catch (err) {
-      console.log("Error:", err);
+      toast.error(err.response?.data?.message || "Could not save address");
     }
   }
 
@@ -219,7 +225,7 @@ const AddressScreen = () => {
               </div>
               <div className="form-btns flex">
                 <BaseButtonGreen type="submit">Save</BaseButtonGreen>
-                <BaseButtonWhitesmoke type="button">
+                  <BaseButtonWhitesmoke type="button" onClick={() => navigate("/account")}>
                   Cancel
                 </BaseButtonWhitesmoke>
               </div>

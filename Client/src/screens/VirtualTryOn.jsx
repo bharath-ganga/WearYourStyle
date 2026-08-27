@@ -701,6 +701,7 @@ const VirtualTryOn = () => {
   const [photoPreview,   setPhotoPreview]    = useState(null);    // object URL
   const [photoProcessing, setPhotoProcessing] = useState(false);
   const [photoResult,    setPhotoResult]     = useState(null);    // base64 result
+  const [tryOnHistory, setTryOnHistory] = useState(() => { try { return JSON.parse(localStorage.getItem("tryOnHistory") || "[]"); } catch { return []; } });
   const fileInputRef = useRef(null);
 
   // ── Height calibration ─────────────────────────────────────────────────────
@@ -723,8 +724,8 @@ const VirtualTryOn = () => {
 
   // Filter try-on eligible products
   const tryOnClothes = allProducts.filter((p) => {
-    const t = p.title.toLowerCase();
-    return t.includes("shirt") || t.includes("top") || t.includes("wear") || t.includes("t-shirt");
+    const text = `${p.title} ${p.category || ""}`.toLowerCase();
+    return ["shirt", "top", "t-shirt", "tshirt"].some((term) => text.includes(term));
   });
 
   // ── Socket.IO listeners ─────────────────────────────────────────────────────
@@ -795,15 +796,12 @@ const VirtualTryOn = () => {
   useEffect(() => {
     if (allProducts.length > 0 && location.state?.productId && location.state?.imgSource) {
       const p = allProducts.find((x) => x.id === location.state.productId);
-      if (p && !activeShirt) {
-        const t = p.title.toLowerCase();
-        const isTryOnable =
-          t.includes("shirt") || t.includes("top") ||
-          t.includes("wear") || t.includes("t-shirt");
-        if (isTryOnable) {
-          handleGarmentClick(location.state.imgSource, location.state.productId);
-          setWebcamActive(true);
-        }
+      const text = p ? `${p.title} ${p.category || ""}`.toLowerCase() : "custom top";
+      const isTryOnable = ["shirt", "top", "t-shirt", "tshirt"].some((term) =>
+        text.includes(term)
+      );
+      if (isTryOnable && !activeShirt) {
+        handleGarmentClick(location.state.imgSource, location.state.productId);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -965,6 +963,13 @@ const VirtualTryOn = () => {
     a.href     = src;
     a.download = "MyWearYourStyleFit.jpg";
     a.click();
+  };
+
+  const saveResult = () => {
+    const src = photoResult || selectedImage;
+    if (!src) return;
+    const next = [{ id: Date.now(), src, size: detectedSize, createdAt: new Date().toISOString() }, ...tryOnHistory].slice(0, 3);
+    try { localStorage.setItem("tryOnHistory", JSON.stringify(next)); setTryOnHistory(next); } catch { setAiFeedback("This result is too large to save on your device. Download it instead."); }
   };
 
   // ── Derived state ──────────────────────────────────────────────────────────
@@ -1293,6 +1298,12 @@ const VirtualTryOn = () => {
                               <SparkleIcon /> Retry
                             </IconBtn>
                             <IconBtn
+                              id="btn-save-photo"
+                              onClick={saveResult}
+                            >
+                              <CheckIcon /> Save Look
+                            </IconBtn>
+                            <IconBtn
                               id="btn-download-photo"
                               $bg="rgba(16,185,177,0.15)"
                               $border="rgba(16,185,177,0.4)"
@@ -1404,6 +1415,7 @@ const VirtualTryOn = () => {
             </div>
           ))}
         </div>
+        {tryOnHistory.length > 0 && <div style={{ marginTop:28 }}><h3 style={{ marginBottom:8 }}>Recent try-ons</h3><p style={{ color:"#616666", marginBottom:16 }}>Stored only on this device. Up to three recent results are kept.</p><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,260px))", gap:16 }}>{tryOnHistory.map((item) => <article key={item.id} style={{ border:"1px solid #dedbd3", borderRadius:14, padding:10, background:"#fff" }}><img src={item.src} alt="Saved virtual try-on" style={{ width:"100%", aspectRatio:"4/5", objectFit:"cover", borderRadius:9 }} /><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}><span>{item.size ? `Size ${item.size}` : "Saved look"}</span><button type="button" aria-label="Delete saved try-on" onClick={() => { const next=tryOnHistory.filter((saved)=>saved.id!==item.id); setTryOnHistory(next); localStorage.setItem("tryOnHistory",JSON.stringify(next)); }}><i className="bi bi-trash3"></i></button></div></article>)}</div></div>}
       </Container>
     </Section>
   );

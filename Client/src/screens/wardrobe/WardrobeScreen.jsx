@@ -106,19 +106,22 @@ const OutfitItem = styled.div`
 
 const WardrobeScreen = () => {
     const [weather, setWeather] = useState({ temp: 28, condition: "Partly Cloudy", city: "New York" });
-    const [wardrobeItems, setWardrobeItems] = useState([]);
+    const [wardrobeItems, setWardrobeItems] = useState(() => { try { return JSON.parse(localStorage.getItem("deviceWardrobe") || "[]"); } catch { return []; } });
     const [recommendedOutfit, setRecommendedOutfit] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [classification, setClassification] = useState(null);
     const [preview, setPreview] = useState(null);
     const [selectedItems, setSelectedItems] = useState({ top: null, bottom: null });
-    const [lookbooks, setLookbooks] = useState([]);
+    const [lookbooks, setLookbooks] = useState(() => { try { return JSON.parse(localStorage.getItem("deviceLookbooks") || "[]"); } catch { return []; } });
 
     const [allProducts, setAllProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [designPrompt, setDesignPrompt] = useState("");
     const [designing, setDesigning] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => { try { localStorage.setItem("deviceWardrobe", JSON.stringify(wardrobeItems.slice(0, 12))); } catch { /* storage may be full */ } }, [wardrobeItems]);
+    useEffect(() => { try { localStorage.setItem("deviceLookbooks", JSON.stringify(lookbooks.slice(-8))); } catch { /* storage may be full */ } }, [lookbooks]);
 
     useEffect(() => {
         // Fetch weather (Mock for now, but structured)
@@ -268,7 +271,8 @@ const WardrobeScreen = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        setPreview(URL.createObjectURL(file));
+        const dataUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+        setPreview(dataUrl);
         setUploading(true);
         setClassification(null);
 
@@ -286,7 +290,7 @@ const WardrobeScreen = () => {
             // Add to local wardrobe list
             const newItem = {
                 id: Date.now(),
-                imgSource: URL.createObjectURL(file), // Using local preview for simplicity
+                imgSource: dataUrl,
                 title: `${result.color} ${result.type}`,
                 type: result.type,
                 color: result.color
@@ -344,6 +348,7 @@ const WardrobeScreen = () => {
                 </RecommendationBox>
 
                 <SectionTitle>Elevate Your Style with AI</SectionTitle>
+                <p style={{ marginTop: -20, marginBottom: 26, color: "#616666" }}>Your wardrobe images and lookbooks stay on this device.</p>
 
                 <Grid style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
                     {/* 🔹 AI Classification */}

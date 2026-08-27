@@ -13,13 +13,19 @@ const storeInLocalStorage = (data) => {
     localStorage.setItem("cart", JSON.stringify(data));
 };
 
+const fetchDiscountFromLocalStorage = () => {
+    const discount = Number(localStorage.getItem("cartDiscountPercent"));
+    return [10, 20].includes(discount) ? discount : 0;
+};
+
 const cartSlice = createSlice({
     name: "cart",
     initialState: {
         carts: fetchFromLocalStorage(),
         itemsCount: 0,
         totalAmount: 0,
-        discountPercent: 0,
+        discountPercent: fetchDiscountFromLocalStorage(),
+        couponCode: localStorage.getItem("cartCouponCode") || "",
     },
     reducers: {
         addToCart: (state, action) => {
@@ -92,11 +98,18 @@ const cartSlice = createSlice({
         clearCart: (state) => {
             state.carts = [];
             state.discountPercent = 0;
+            state.couponCode = "";
             storeInLocalStorage(state.carts);
+            localStorage.removeItem("cartDiscountPercent");
+            localStorage.removeItem("cartCouponCode");
         },
 
         applyDiscount: (state, action) => {
-            state.discountPercent = action.payload;
+            const payload = typeof action.payload === "object" ? action.payload : { discountPercent:action.payload, code:"" };
+            state.discountPercent = Number(payload.discountPercent || 0);
+            state.couponCode = payload.code || "";
+            localStorage.setItem("cartDiscountPercent", String(state.discountPercent));
+            if (state.couponCode) localStorage.setItem("cartCouponCode", state.couponCode); else localStorage.removeItem("cartCouponCode");
         },
     },
 });

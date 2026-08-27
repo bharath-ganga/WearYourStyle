@@ -100,6 +100,10 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("orders");
     const [orders, setOrders] = useState([]);
     const [products, setProducts] = useState([]);
+    const [customers, setCustomers] = useState([]);
+    const [analytics, setAnalytics] = useState(null);
+    const [coupons, setCoupons] = useState([]);
+    const [newCoupon, setNewCoupon] = useState({ code:"", discountPercent:10 });
     const [loading, setLoading] = useState(false);
 
     // Form states for adding/editing products
@@ -121,9 +125,18 @@ const AdminDashboard = () => {
             if (activeTab === "orders") {
                 const res = await axios.get(`${API_BASE_URL}/api/admin/orders`, config);
                 setOrders(res.data.data);
-            } else {
+            } else if (activeTab === "inventory") {
                 const res = await axios.get(`${API_BASE_URL}/api/admin/products`, config);
                 setProducts(res.data.data);
+            } else if (activeTab === "customers") {
+                const res = await axios.get(`${API_BASE_URL}/api/admin/customers`, config);
+                setCustomers(res.data.data);
+            } else if (activeTab === "coupons") {
+                const res = await axios.get(`${API_BASE_URL}/api/admin/coupons`, config);
+                setCoupons(res.data.data);
+            } else {
+                const res = await axios.get(`${API_BASE_URL}/api/admin/analytics`, config);
+                setAnalytics(res.data.data);
             }
         } catch (error) {
             toast.error("Access Denied. Please ensure you are logged in as Admin.");
@@ -199,6 +212,32 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleBulkImport = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            let rows;
+            if (file.name.endsWith(".json")) rows = JSON.parse(text);
+            else {
+                const [header, ...lines] = text.trim().split(/\r?\n/).map((line) => line.split(",").map((value) => value.trim()));
+                rows = lines.map((line) => Object.fromEntries(header.map((key, index) => [key, line[index]])));
+            }
+            if (!Array.isArray(rows) || !rows.length) throw new Error("No products found");
+            const token = localStorage.getItem("accessToken");
+            await Promise.all(rows.map((product) => axios.post(`${API_BASE_URL}/api/admin/products`, { ...product, price:Number(product.price), stock:Number(product.stock || 0), sizes:typeof product.sizes === "string" ? product.sizes.split("|") : product.sizes }, { headers:{ Authorization:`Bearer ${token}` } })));
+            toast.success(`${rows.length} products imported`);
+            fetchData();
+        } catch (error) { toast.error(error.message || "Import failed"); }
+        event.target.value = "";
+    };
+
+    const handleAddCoupon = async (event) => {
+        event.preventDefault();
+        try { const token=localStorage.getItem("accessToken"); await axios.post(`${API_BASE_URL}/api/admin/coupons`,newCoupon,{headers:{Authorization:`Bearer ${token}`}}); setNewCoupon({code:"",discountPercent:10}); toast.success("Coupon created"); fetchData(); } catch(error){ toast.error(error.response?.data?.message||"Could not create coupon"); }
+    };
+    const handleDeleteCoupon = async (id) => { try { const token=localStorage.getItem("accessToken"); await axios.delete(`${API_BASE_URL}/api/admin/coupons/${id}`,{headers:{Authorization:`Bearer ${token}`}}); toast.success("Coupon deleted"); fetchData(); } catch { toast.error("Could not delete coupon"); } };
+
     return (
         <AdminWrapper>
             <Container>
@@ -210,9 +249,18 @@ const AdminDashboard = () => {
                 <TabContainer>
                     <Tab active={activeTab === "orders"} onClick={() => setActiveTab("orders")}>Order Management</Tab>
                     <Tab active={activeTab === "inventory"} onClick={() => setActiveTab("inventory")}>Stock & Inventory</Tab>
+                    <Tab active={activeTab === "analytics"} onClick={() => setActiveTab("analytics")}>Analytics</Tab>
+                    <Tab active={activeTab === "customers"} onClick={() => setActiveTab("customers")}>Customers</Tab>
+                    <Tab active={activeTab === "coupons"} onClick={() => setActiveTab("coupons")}>Coupons</Tab>
                 </TabContainer>
 
-                {activeTab === "orders" ? (
+                {activeTab === "analytics" ? (
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:18}}>{analytics && Object.entries(analytics).map(([key,value]) => <div key={key} style={{background:"#fff",border:"1px solid #dedbd3",borderRadius:14,padding:22}}><span style={{color:"#717171",textTransform:"capitalize"}}>{key.replace(/([A-Z])/g," $1")}</span><h2 style={{marginTop:8}}>{key === "revenue" ? currencyFormat(value) : value}</h2></div>)}</div>
+                ) : activeTab === "customers" ? (
+                    <Table><thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Joined</th></tr></thead><tbody>{customers.map((customer)=><tr key={customer.id}><td>{customer.firstName} {customer.lastName}</td><td>{customer.email}</td><td>{customer.phoneNumber || "—"}</td><td>{customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : "—"}</td></tr>)}</tbody></Table>
+                ) : activeTab === "coupons" ? (
+                    <><Form onSubmit={handleAddCoupon}><Input placeholder="Coupon code" value={newCoupon.code} onChange={(e)=>setNewCoupon({...newCoupon,code:e.target.value.toUpperCase()})} required/><Input type="number" min="1" max="80" value={newCoupon.discountPercent} onChange={(e)=>setNewCoupon({...newCoupon,discountPercent:Number(e.target.value)})} required/><button className="btn btn-purple" type="submit" style={{gridColumn:"span 2"}}>Create coupon</button></Form><Table><thead><tr><th>Code</th><th>Discount</th><th>Status</th><th></th></tr></thead><tbody>{coupons.map((coupon)=><tr key={coupon.id}><td><strong>{coupon.code}</strong></td><td>{coupon.discountPercent}%</td><td>{coupon.active===false?"Inactive":"Active"}</td><td>{!String(coupon.id).startsWith("welcome")&&!String(coupon.id).startsWith("style")&&<button onClick={()=>handleDeleteCoupon(coupon.id)} style={{color:"#b42318"}}>Delete</button>}</td></tr>)}</tbody></Table></>
+                ) : activeTab === "orders" ? (
                     <Table>
                         <thead>
                             <tr>
@@ -276,6 +324,7 @@ const AdminDashboard = () => {
                 ) : (
                     <>
                         <h3 style={{marginBottom: '20px'}}>Add New Stock Item</h3>
+                        <label style={{display:"inline-flex",alignItems:"center",gap:8,border:"1px solid #263333",borderRadius:999,padding:"10px 16px",fontWeight:700,cursor:"pointer",marginBottom:20}}><i className="bi bi-upload"></i> Bulk import JSON/CSV<input type="file" accept=".json,.csv" hidden onChange={handleBulkImport}/></label>
                         <Form onSubmit={handleAddProduct}>
                             <Input placeholder="Product Title" value={newProduct.title} onChange={e => setNewProduct({...newProduct, title: e.target.value})} required />
                             <Input placeholder="Brand" value={newProduct.brand} onChange={e => setNewProduct({...newProduct, brand: e.target.value})} required />

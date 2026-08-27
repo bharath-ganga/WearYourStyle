@@ -26,6 +26,7 @@ import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
 import { Payment } from "../models/payment.model.js";
 import { uploadToCloudinary } from "../utils/cloudinary.util.js";
+import { User } from "../models/user.model.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -117,6 +118,20 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 const deleteOrder = asyncHandler(async (req, res) => {
   await Order.delete(req.params.id);
   res.status(200).json({ success: true, message: "Order deleted successfully" });
+});
+
+const getAnalytics = asyncHandler(async (_req, res) => {
+  const [orders, products, users] = await Promise.all([Order.getAll(), Product.getAll(), User.getAll()]);
+  const delivered = orders.filter((order) => order.status === "Delivered");
+  const revenue = delivered.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
+  const lowStock = products.filter((product) => Number(product.stock || 0) <= 5).length;
+  const returns = orders.filter((order) => String(order.status).toLowerCase().includes("return")).length;
+  res.status(200).json({ success: true, data: { revenue, orders: orders.length, customers: users.filter((user) => user.role !== "admin").length, products: products.length, lowStock, returns } });
+});
+
+const getCustomers = asyncHandler(async (_req, res) => {
+  const users = (await User.getAll()).map(User.sanitizeUser).filter((user) => user.role !== "admin");
+  res.status(200).json({ success: true, data: users });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -254,6 +269,8 @@ export {
   getAllOrders,
   updateOrderStatus,
   deleteOrder,
+  getAnalytics,
+  getCustomers,
 
   // Products (preserved)
   getAllProducts,

@@ -159,8 +159,9 @@ import { useState } from "react";
 const ShippingPayment = ({ billingDetails }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { carts, totalAmount, discountPercent } = useSelector((state) => state.cart);
+    const { carts, totalAmount, discountPercent, couponCode } = useSelector((state) => state.cart);
     const [paymentMethod, setPaymentMethod] = useState("");
+    const [processing, setProcessing] = useState(false);
 
     const getDeliveryDate = () => {
         const minDate = new Date();
@@ -180,6 +181,13 @@ const ShippingPayment = ({ billingDetails }) => {
             toast.error("Please select at least one mode of payment.");
             return;
         }
+        if (paymentMethod === "Credit Card") {
+            const number = document.getElementById("checkout-card-number")?.value || "";
+            const expiry = document.getElementById("checkout-card-expiry")?.value || "";
+            const cvv = document.getElementById("checkout-card-cvv")?.value || "";
+            if (!/^\d{16}$/.test(number) || !/^\d{2}\/\d{2}$/.test(expiry) || !/^\d{3,4}$/.test(cvv)) return toast.error("Enter valid test card details");
+        }
+        if (paymentMethod === "UPI" && !/^\d{10}$/.test(document.getElementById("checkout-upi")?.value || "")) return toast.error("Enter a valid 10-digit UPI mobile number");
 
         const token = localStorage.getItem("accessToken");
         const headers = {};
@@ -188,6 +196,7 @@ const ShippingPayment = ({ billingDetails }) => {
         }
 
         try {
+            setProcessing(true);
             const discountAmount = discountPercent > 0 ? (totalAmount * discountPercent) / 100 : 0;
             const finalAmount = totalAmount - discountAmount + 50;
 
@@ -196,6 +205,8 @@ const ShippingPayment = ({ billingDetails }) => {
             const orderData = {
                 items: carts,
                 totalAmount: finalAmount, 
+                discountPercent,
+                couponCode,
                 shippingAddress: billingDetails?.address || "Default Address", 
                 paymentMethod: paymentMethod,
                 status: "Order Placed", 
@@ -221,7 +232,9 @@ const ShippingPayment = ({ billingDetails }) => {
             navigate("/confirm");
         } catch (error) {
             console.error("Error placing order:", error);
-            toast.error("Failed to place order. Please try again.");
+            toast.error(error.response?.data?.message || "Failed to place order. Please try again.");
+        } finally {
+            setProcessing(false);
         }
     };
 
@@ -284,7 +297,7 @@ const ShippingPayment = ({ billingDetails }) => {
       <div className="payment-method">
         <h3 className="text-xxl payment-method-title">Payment Method</h3>
         <p className="text-base text-outerspace">
-          All transactions are secure and encrypted.
+          Cash on delivery is live. Card, PayPal and UPI run in test mode and do not charge funds.
         </p>
         <div className="list-group">
           <div className="list-group-item">
@@ -325,6 +338,7 @@ const ShippingPayment = ({ billingDetails }) => {
             <div className="payment-details">
               <div className="form-elem-group">
                 <Input
+                  id="checkout-card-number"
                   type="text"
                   className="form-elem"
                   placeholder="Card number (16 digits)"
@@ -345,6 +359,7 @@ const ShippingPayment = ({ billingDetails }) => {
               </div>
               <div className="form-elem-group">
                 <Input
+                  id="checkout-card-expiry"
                   type="text"
                   className="form-elem"
                   placeholder="Expiration date (MM/YY)"
@@ -358,6 +373,7 @@ const ShippingPayment = ({ billingDetails }) => {
                   }}
                 />
                 <Input
+                  id="checkout-card-cvv"
                   type="text"
                   className="form-elem"
                   placeholder="CVV"
@@ -421,6 +437,7 @@ const ShippingPayment = ({ billingDetails }) => {
               <div className="payment-details" style={{ marginTop: '20px' }}>
                 <div className="form-elem-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <Input 
+                        id="checkout-upi"
                         type="text" 
                         className="form-elem" 
                         placeholder="10-digit mobile number" 
@@ -449,8 +466,8 @@ const ShippingPayment = ({ billingDetails }) => {
           </div>
         </div>
       </div>
-      <BaseButtonGreen onClick={handlePayNow} className="pay-now-btn">
-        Pay Now
+      <BaseButtonGreen onClick={handlePayNow} className="pay-now-btn" disabled={processing}>
+        {processing ? "Placing order…" : paymentMethod === "Cash on delivery" ? "Place order" : "Complete test payment"}
       </BaseButtonGreen>
     </ShippingPaymentWrapper>
   );

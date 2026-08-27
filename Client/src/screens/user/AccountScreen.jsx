@@ -67,6 +67,14 @@ const AccountScreen = () => {
   const [add, setAdd] = useState();
   const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const removeAddress = async (id) => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        await axios.delete(`${API_BASE_URL}/api/address/${id}`, { headers:{ Authorization:`Bearer ${token}` } });
+        setAdd((items) => items.filter((item) => item.id !== id));
+        toast.success("Address removed");
+      } catch (error) { toast.error(error.response?.data?.message || "Could not remove address"); }
+    };
       useEffect(() => {
         const authenticateUser = async () => {
             let token = localStorage.getItem("accessToken");
@@ -278,12 +286,13 @@ const AccountScreen = () => {
                        {item.street || ""}, {item.city || ""}, {item.state || ""}
                       </p>
                       <div className="address-btns flex">
-                        <Link
-                          to="/"
+                        <button
+                          type="button"
+                          onClick={() => removeAddress(item.id)}
                           className="text-base text-outerspace font-semibold"
                         >
                           Remove
-                        </Link>
+                        </button>
                         <div className="btn-separator"></div>
                         <Link
                           to="/"

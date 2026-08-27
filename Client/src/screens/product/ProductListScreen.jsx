@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import styled from "styled-components";
 import { API_BASE_URL } from "../../config/apiConfig";
 import { Container, ContentStylings, Section } from "../../styles/styles";
@@ -92,6 +92,10 @@ const DescriptionContent = styled.div`
 const ProductListScreen = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState(new URLSearchParams(window.location.search).get("q") || "");
+  const [sort, setSort] = useState("featured");
+  const initialFilters = { category: "", size: "", maxPrice: null, inStock: false };
+  const [filters, setFilters] = useState(initialFilters);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -118,6 +122,25 @@ const ProductListScreen = () => {
     fetchProducts();
   }, []);
 
+  const facets = useMemo(() => ({
+    categories: [...new Set(products.map((product) => product.category).filter(Boolean))].sort(),
+    sizes: [...new Set(products.flatMap((product) => Array.isArray(product.sizes) ? product.sizes : []).filter(Boolean))].sort(),
+    maxPrice: Math.max(1000, Math.ceil(Math.max(...products.map((product) => Number(product.price) || 0), 1000) / 100) * 100),
+  }), [products]);
+
+  const visibleProducts = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    const matches = products.filter((product) => {
+      const searchable = `${product.title || ""} ${product.brand || ""} ${product.category || ""}`.toLowerCase();
+      return (!normalized || searchable.includes(normalized)) &&
+        (!filters.category || product.category === filters.category) &&
+        (!filters.size || (product.sizes || []).includes(filters.size)) &&
+        (filters.maxPrice == null || (Number(product.price) || 0) <= filters.maxPrice) &&
+        (!filters.inStock || Number(product.stock) > 0);
+    });
+    return [...matches].sort((a, b) => sort === "price-low" ? Number(a.price) - Number(b.price) : sort === "price-high" ? Number(b.price) - Number(a.price) : sort === "rating" ? Number(b.rating || 0) - Number(a.rating || 0) : 0);
+  }, [products, query, filters, sort]);
+
   const breadcrumbItems = [
     { label: "Home", link: "/" },
     { label: "Products", link: "" },
@@ -128,11 +151,15 @@ const ProductListScreen = () => {
         <Breadcrumb items={breadcrumbItems} />
         <ProductsContent className="grid items-start">
           <ProductsContentLeft>
-            <ProductFilter />
+            <ProductFilter facets={facets} filters={filters} onChange={setFilters} onClear={() => setFilters(initialFilters)} />
           </ProductsContentLeft>
           <ProductsContentRight>
             <div className="products-right-top flex items-center justify-between">
-              <h4 className="text-xxl">Women&apos;s Clothing</h4>
+              <div><h4 className="text-xxl">The full collection</h4><p className="text-gray text-sm">{visibleProducts.length} products</p></div>
+              <div className="flex items-center" style={{ gap: 10, flexWrap: "wrap" }}>
+                <input aria-label="Search products" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search styles, brands…" style={{ border:"1px solid #c9c5bc", borderRadius:999, padding:"10px 15px", minWidth:220 }} />
+                <select aria-label="Sort products" value={sort} onChange={(event) => setSort(event.target.value)} style={{ border:"1px solid #c9c5bc", borderRadius:999, padding:"10px 15px", background:"white" }}><option value="featured">Featured</option><option value="rating">Top rated</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select>
+              </div>
             </div>
             {loading ? (
               <div className="flex justify-center items-center py-20">
@@ -140,7 +167,7 @@ const ProductListScreen = () => {
                 <span className="ml-3 text-lg font-semibold">Loading...</span>
               </div>
             ) : (
-              <ProductList products={products} />
+              visibleProducts.length ? <ProductList products={visibleProducts} /> : <div style={{ padding:"70px 20px", textAlign:"center", border:"1px dashed #c9c5bc", borderRadius:18 }}><h3>No exact matches</h3><p>Try removing a filter or searching another term.</p></div>
             )}
           </ProductsContentRight>
         </ProductsContent>
@@ -150,34 +177,21 @@ const ProductListScreen = () => {
           <DescriptionContent>
             <Title titleText={"Clothing for Everyone Online"} />
             <ContentStylings className="text-base content-stylings">
-              <h4>Reexplore Clothing Collection Online at WearYourStyle.</h4>
+              <h4>A considered collection for real wardrobes.</h4>
               <p>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Sed,
-                molestiae ex atque similique consequuntur ipsum sapiente
-                inventore magni ducimus sequi nemo id, numquam officiis fugit
-                pariatur esse, totam facere ullam?
+                Discover everyday staples, statement pieces, footwear, and
+                easy layers selected for comfort, repeat wear, and personal style.
               </p>
               <p>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                Consequatur nam magnam placeat nesciunt ipsa amet, vel illo
-                veritatis eligendi voluptatem!
+                Search by name or brand, then refine the collection by category,
+                size, availability, and price. Save favourites to compare later.
               </p>
-              <h4>
-                One-stop Destination to Shop Every Clothing for Everyone:
-                WearYourStyle.
-              </h4>
+              <h4>Make a confident choice before checkout.</h4>
               <p>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Nemo
-                iure doloribus optio aliquid id. Quos quod delectus, dolor est
-                ab exercitationem odio quae quas qui doloremque. Esse natus
-                minima ratione reiciendis nostrum, quam, quisquam modi aut,
-                neque hic provident dolorem.
+                Open a product to review stock, delivery timing, community fit
+                notes, your recommended size, and virtual try-on eligibility.
               </p>
-              <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quasi
-                laborum dolorem deserunt aperiam voluptate mollitia.
-              </p>
-              <Link to="/">See More</Link>
+              <Link to="/faqs">Shopping guide</Link>
             </ContentStylings>
           </DescriptionContent>
         </Container>

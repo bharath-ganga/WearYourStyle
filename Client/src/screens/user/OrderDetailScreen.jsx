@@ -264,6 +264,22 @@ const OrderDetailScreen = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const updateOrder = async (action, body = {}) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await axios.patch(`${API_BASE_URL}/api/orders/${action}/${id}`, body, { headers:{ Authorization:`Bearer ${token}` } });
+      setOrder(response.data.data);
+      toast.success(action === "return" ? "Return requested" : "Order cancelled");
+    } catch (error) { toast.error(error.response?.data?.message || "Could not update order"); }
+  };
+
+  const downloadInvoice = () => {
+    const rows = order.items.map((item) => `<tr><td>${item.title || item.name}</td><td>${item.quantity}</td><td>₹${Number(item.price).toFixed(2)}</td></tr>`).join("");
+    const html = `<!doctype html><meta charset="utf-8"><title>Invoice ${order.order_no}</title><style>body{font-family:Arial;padding:40px;color:#263333}h1{margin-bottom:4px}table{width:100%;border-collapse:collapse;margin:30px 0}td,th{padding:12px;border-bottom:1px solid #ddd;text-align:left}</style><h1>WearYourStyle</h1><p>Invoice ${order.order_no} · ${order.order_date}</p><p>${order.userEmail}<br>${order.shippingAddress}</p><table><tr><th>Item</th><th>Qty</th><th>Price</th></tr>${rows}</table><h2>Total: ₹${Number(order.totalAmount).toFixed(2)}</h2>`;
+    const url = URL.createObjectURL(new Blob([html], { type:"text/html" }));
+    const link = document.createElement("a"); link.href=url; link.download=`${order.order_no}-invoice.html`; link.click(); URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     const authenticateUserAndFetchOrder = async () => {
       try {
@@ -354,7 +370,8 @@ const OrderDetailScreen = () => {
               <Title titleText={"Order Details"} />
             </div>
 
-            <div className="order-d-wrapper">
+              <div className="order-d-wrapper">
+              <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginBottom:16, flexWrap:"wrap" }}><button type="button" onClick={downloadInvoice} style={{border:"1px solid #263333",borderRadius:999,padding:"10px 16px",fontWeight:700}}>Download invoice</button>{order.status === "Order Placed" && <button type="button" onClick={()=>updateOrder("cancel")} style={{border:"1px solid #b42318",color:"#b42318",borderRadius:999,padding:"10px 16px",fontWeight:700}}>Cancel order</button>}{order.status === "Delivered" && <button type="button" onClick={()=>updateOrder("return",{reason:"Customer requested return"})} style={{border:"1px solid #263333",borderRadius:999,padding:"10px 16px",fontWeight:700}}>Request return</button>}</div>
               <div className="order-d-top flex justify-between items-start">
                 <div className="order-d-top-l">
                   <h4 className="text-3xl order-d-no">

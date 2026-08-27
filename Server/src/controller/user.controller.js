@@ -1,4 +1,5 @@
 import { User } from "../models/user.model.js";
+import { Product } from "../models/product.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/AsyncHandler.js";
@@ -39,7 +40,7 @@ const validatePassword = (password) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, password, email, phoneNumber, address, role } = req.body;
+  const { firstName, lastName, password, email, phoneNumber, address } = req.body;
 
   if (!firstName || !lastName || !email || !password || !phoneNumber) {
     throw new ApiError(400, "All fields (First Name, Last Name, Email, Password, and Phone) are mandatory");
@@ -66,7 +67,7 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     phoneNumber,
     address: address || "",
-    role: role || "customer",
+    role: "customer",
   });
 
   if (!user) {
@@ -147,4 +148,52 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, { user }, "User profile fetched successfully"));
 });
 
-export { registerUser, loginUser, logoutUser, getAllUsers, getCurrentUser };
+const updateCurrentUser = asyncHandler(async (req, res) => {
+  const allowed = ["firstName", "lastName", "phoneNumber", "stylePreferences", "measurements"];
+  const updates = Object.fromEntries(
+    Object.entries(req.body).filter(([key]) => allowed.includes(key))
+  );
+  const user = await User.update(req.user.id, updates);
+  return res.status(200).json(new ApiResponse(200, { user: User.sanitizeUser(user) }, "Profile updated"));
+});
+
+const getWishlist = asyncHandler(async (req, res) => {
+  const ids = Array.isArray(req.user.wishlist) ? req.user.wishlist : [];
+  const products = (await Promise.all(ids.map((id) => Product.findById(id)))).filter(Boolean);
+  return res.status(200).json(new ApiResponse(200, products, "Wishlist fetched"));
+});
+
+const addWishlistItem = asyncHandler(async (req, res) => {
+  const { productId } = req.body;
+  if (!productId) throw new ApiError(400, "Product ID is required");
+  const product = await Product.findById(productId);
+  if (!product) throw new ApiError(404, "Product not found");
+  const wishlist = [...new Set([...(req.user.wishlist || []), productId])];
+  await User.update(req.user.id, { wishlist });
+  return res.status(200).json(new ApiResponse(200, wishlist, "Added to wishlist"));
+});
+
+const removeWishlistItem = asyncHandler(async (req, res) => {
+  const wishlist = (req.user.wishlist || []).filter((id) => id !== req.params.productId);
+  await User.update(req.user.id, { wishlist });
+  return res.status(200).json(new ApiResponse(200, wishlist, "Removed from wishlist"));
+});
+
+const addAddress = asyncHandler(async (req, res) => {
+  const required = ["firstName", "lastName", "country", "street", "city", "state", "phone", "postal"];
+  if (required.some((field) => !String(req.body[field] || "").trim())) {
+    throw new ApiError(400, "Please complete all required address fields");
+  }
+  const address = { ...req.body, id: `addr-${Date.now()}`, isDefault: (req.user.addresses || []).length === 0 };
+  const addresses = [...(req.user.addresses || []), address];
+  await User.update(req.user.id, { addresses });
+  return res.status(201).json(new ApiResponse(201, address, "Address saved"));
+});
+
+const removeAddress = asyncHandler(async (req, res) => {
+  const addresses = (req.user.addresses || []).filter((address) => address.id !== req.params.id);
+  await User.update(req.user.id, { addresses });
+  return res.status(200).json(new ApiResponse(200, addresses, "Address removed"));
+});
+
+export { registerUser, loginUser, logoutUser, getAllUsers, getCurrentUser, updateCurrentUser, getWishlist, addWishlistItem, removeWishlistItem, addAddress, removeAddress };

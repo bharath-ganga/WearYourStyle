@@ -65,6 +65,9 @@ const ProductPreviewWrapper = styled.div`
   .preview-display {
     height: 600px;
     overflow: hidden;
+    cursor: zoom-in;
+    img { transition: transform .3s ease; }
+    &.zoomed { cursor: zoom-out; img { transform: scale(1.7); } }
 
     @media (max-width: ${breakpoints.md}) {
       height: 520px;
@@ -84,6 +87,7 @@ const ProductPreview = ({ previewImages }) => {
   const [activePreviewImage, setActivePreviewImage] = useState(
     previewImages[0].imgSource
   );
+  const [zoomed, setZoomed] = useState(false);
 
   const handlePreviewImageChange = (previewImage) => {
     setActivePreviewImage(previewImage);
@@ -110,8 +114,8 @@ const ProductPreview = ({ previewImages }) => {
           );
         })}
       </div>
-      <div className="preview-display">
-        <img src={activePreviewImage} className="object-fit-cover" alt="" />
+      <div className={`preview-display ${zoomed ? "zoomed" : ""}`} onClick={() => setZoomed((value) => !value)}>
+        <img src={activePreviewImage} className="object-fit-cover" alt="Product preview" />
       </div>
     </ProductPreviewWrapper>
   );

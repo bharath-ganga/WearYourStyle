@@ -9,7 +9,6 @@ import SavingZone from "../../components/home/SavingZone";
 import Catalog from "../../components/home/Catalog";
 import Brands from "../../components/home/Brands";
 import Feedback from "../../components/home/Feedback";
-import VirtualTryOn from "../VirtualTryOn";
 
 const HomeScreenWrapper = styled.main``;
 

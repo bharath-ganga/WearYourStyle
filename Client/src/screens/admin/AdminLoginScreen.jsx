@@ -4,6 +4,7 @@ import { Container } from "../../styles/styles";
 import axios from "axios";
 import { API_BASE_URL } from "../../config/apiConfig";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const LoginBox = styled.div`
   max-width: 400px;
@@ -24,6 +25,7 @@ const Input = styled.input`
 `;
 
 const AdminLogin = () => {
+    const navigate = useNavigate();
     const [credentials, setCredentials] = useState({ email: "", password: "" });
 
     const handleLogin = async (e) => {
@@ -35,8 +37,11 @@ const AdminLogin = () => {
             };
             const res = await axios.post(`${API_BASE_URL}/api/login`, trimmedCredentials, { withCredentials: true });
             if (res.data.data.user.role === "admin") {
+                localStorage.setItem("accessToken", res.data.token);
+                localStorage.setItem("userId", res.data.data.user.id);
+                window.dispatchEvent(new Event("auth-changed"));
                 toast.success("Welcome, Admin!");
-                window.location.href = '/admin/dashboard';
+                navigate('/admin/dashboard');
             } else {
                 toast.error("You are not authorized to access the Admin panel.");
             }

@@ -161,13 +161,15 @@ const Footer = () => {
           <div className="ftr-social-links flex items-center">
             {socialLinksData?.map((socialLink) => {
               return (
-                <Link
-                  to={socialLink.site_url}
+                <a
+                  href={socialLink.site_url}
+                  target="_blank"
+                  rel="noreferrer"
                   key={socialLink.id}
                   className="ftr-social-link bg-white flex items-center justify-center"
                 >
                   <i className={socialLink.site_icon}></i>
-                </Link>
+                </a>
               );
             })}
           </div>

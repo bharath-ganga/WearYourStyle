@@ -9,7 +9,7 @@ const navMenuData = [
   {
     id: "nav-menu-3",
     menuLink: "/virtual_try_on",
-    menuText: "Try VitueAI",
+    menuText: "Virtual Try-On",
   },
   {
     id: "nav-menu-w",
@@ -23,7 +23,7 @@ const navMenuData = [
   },
   {
     id: "nav-menu-5",
-    menuLink: "/",
+    menuLink: "/contact",
     menuText: "Contact",
   },
 ];
@@ -578,25 +578,25 @@ const socialLinksData = [
     id: "social_link_1",
     site_name: "facebook",
     site_icon: "bi bi-facebook",
-    site_url: "www.facbook.com",
+    site_url: "https://www.facebook.com",
   },
   {
     id: "social_link_2",
     site_name: "instagram",
     site_icon: "bi bi-instagram",
-    site_url: "www.instagram.com",
+    site_url: "https://www.instagram.com",
   },
   {
     id: "social_link_3",
     site_name: "twitter",
     site_icon: "bi bi-twitter",
-    site_url: "www.twitter.com",
+    site_url: "https://www.x.com",
   },
   {
     id: "social_link_4",
     site_name: "linkedin",
     site_icon: "bi bi-linkedin",
-    site_url: "www.linkedin.com",
+    site_url: "https://www.linkedin.com",
   },
 ];
 

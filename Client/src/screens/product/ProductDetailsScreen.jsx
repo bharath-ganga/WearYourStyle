@@ -15,6 +15,9 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../redux/slices/cartSlice";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
+import ProductReviews from "../../components/product/ProductReviews";
+import RecentlyViewed from "../../components/product/RecentlyViewed";
 
 const DetailsScreenWrapper = styled.main`
   margin: 52px 0 80px;
@@ -196,6 +199,7 @@ const ProductDetailsScreen = () => {
     const location = useLocation();
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { user, wishlist, toggleWishlist } = useAuth();
     const [product, setProduct] = useState(null);
     const [selectedSize, setSelectedSize] = useState("");
     const [selectedColor, setSelectedColor] = useState("");
@@ -212,6 +216,8 @@ const ProductDetailsScreen = () => {
                     const foundProduct = await response.json();
                     if (foundProduct && foundProduct.id) {
                         setProduct(foundProduct);
+                        const recent = JSON.parse(localStorage.getItem("recentlyViewed") || "[]").filter((item) => item.id !== foundProduct.id);
+                        localStorage.setItem("recentlyViewed", JSON.stringify([foundProduct, ...recent].slice(0, 8)));
                         if (foundProduct.sizes?.length > 0) setSelectedSize(foundProduct.sizes[0]);
                         if (foundProduct.colors?.length > 0) setSelectedColor(foundProduct.colors[0]);
                         return;
@@ -279,10 +285,15 @@ const ProductDetailsScreen = () => {
         { label: product.title, link: "" },
     ];
 
-    const isTryOnable = product.title.toLowerCase().includes("shirt") || 
-                        product.title.toLowerCase().includes("top") ||
-                        product.title.toLowerCase().includes("wear") ||
-                        product.title.toLowerCase().includes("t-shirt");
+    const tryOnText = `${product.title} ${product.category || ""}`.toLowerCase();
+    const isTryOnable = ["shirt", "top", "t-shirt", "tshirt"].some((term) =>
+        tryOnText.includes(term)
+    );
+    const chest = Number(user?.measurements?.chest || 0);
+    const recommendedSize = chest && product.sizes?.length
+        ? product.sizes[Math.min(product.sizes.length - 1, chest < 86 ? 0 : chest < 94 ? 1 : chest < 102 ? 2 : 3)]
+        : null;
+    const saved = wishlist.some((item) => item.id === product.id);
 
     return (
         <DetailsScreenWrapper>
@@ -292,6 +303,7 @@ const ProductDetailsScreen = () => {
                     <ProductPreview previewImages={product.previewImages || [{ id: "1", imgSource: product.imgSource }]} />
                     <ProductDetailsWrapper>
                         <h2 className="prod-title">{product.title}</h2>
+                        <p style={{ color:Number(product.stock) > 0 ? "#187a58" : "#b42318", fontWeight:700, marginBottom:12 }}>{Number(product.stock) > 0 ? `${product.stock} in stock · Delivery in 3–7 days` : "Currently unavailable"}</p>
                         <div className="flex items-center rating-and-comments">
                             <div className="prod-rating flex items-center">
                                 {stars}
@@ -304,7 +316,7 @@ const ProductDetailsScreen = () => {
                                 <p className="text-lg font-semibold text-outerspace">
                                     Select size
                                 </p>
-                                <Link to="/" className="text-lg text-gray font-medium">
+                                <Link to="/faqs" className="text-lg text-gray font-medium">
                                     Size Guide &nbsp; <i className="bi bi-arrow-right"></i>
                                 </Link>
                             </div>
@@ -318,6 +330,7 @@ const ProductDetailsScreen = () => {
                                     </div>
                                 ))}
                             </div>
+                            <p style={{ marginTop:12, color:"#616666" }}>{recommendedSize ? <>Recommended from your measurements: <strong>{recommendedSize}</strong></> : <Link to="/style-profile">Add measurements for a size recommendation →</Link>}</p>
                         </ProductSizeWrapper>
 
                         <ProductColorWrapper>
@@ -349,6 +362,7 @@ const ProductDetailsScreen = () => {
                                 </span>
                                 <span className="prod-add-btn-text">Add to cart</span>
                             </BaseButtonGreen>
+                            <button type="button" onClick={() => toggleWishlist(product)} aria-pressed={saved} style={{ minHeight:44, border:"1px solid #c9c5bc", borderRadius:999, padding:"0 17px", fontWeight:700 }}><i className={`bi ${saved ? "bi-heart-fill" : "bi-heart"}`} style={{ color:saved ? "#d45b3f" : "inherit", marginRight:7 }}></i>{saved ? "Saved" : "Save"}</button>
 
                             {isTryOnable && (
                                 <BaseLinkGreen
@@ -375,7 +389,9 @@ const ProductDetailsScreen = () => {
                     </ProductDetailsWrapper>
                 </DetailsContent>
                 <CompleteLook currentProduct={product} />
+                <ProductReviews productId={product.id} />
                 <ProductSimilar />
+                <RecentlyViewed excludeId={product.id} />
             </Container>
         </DetailsScreenWrapper>
     );

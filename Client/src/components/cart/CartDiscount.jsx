@@ -9,6 +9,8 @@ import {
   BaseLinkOutlinePlatinum,
 } from "../../styles/button";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
+import axios from "axios";
+import { API_BASE_URL } from "../../config/apiConfig";
 
 const CartDiscountWrapper = styled.div`
   @media (max-width: ${breakpoints.xl}) {
@@ -51,17 +53,11 @@ const CartDiscount = () => {
   const [couponCode, setCouponCode] = useState("");
   const dispatch = useDispatch();
 
-  const handleApplyCoupon = (e) => {
+  const handleApplyCoupon = async (e) => {
     e.preventDefault();
-    if (couponCode.trim().toUpperCase() === "HARANADHABABU40") {
-      dispatch(applyDiscount(40));
-      toast.success("Coupon APPLIED! 40% OFF");
-    } else if (couponCode.trim() !== "") {
-      dispatch(applyDiscount(0));
-      toast.error("Invalid coupon code");
-    } else {
-      dispatch(applyDiscount(0));
-    }
+    if (!couponCode.trim()) return dispatch(applyDiscount({ discountPercent:0, code:"" }));
+    try { const response=await axios.post(`${API_BASE_URL}/api/coupons/validate`,{code:couponCode}); const coupon=response.data.data; dispatch(applyDiscount(coupon)); toast.success(`${coupon.code} applied: ${coupon.discountPercent}% off`); }
+    catch(error){ dispatch(applyDiscount({discountPercent:0,code:""})); toast.error(error.response?.data?.message||"Invalid coupon code"); }
   };
 
   return (

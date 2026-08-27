@@ -7,6 +7,7 @@ import { exec } from 'child_process';
 import userRouter from './routes/user.routes.js';
 import orderRouter from './routes/order.routes.js';
 import adminRouter from './routes/admin.routes.js';
+import reviewRouter from './routes/review.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,6 +66,8 @@ app.get('/api/db-debug', async (req, res) => {
     }
 });
 
+
+
 import { Product } from "./models/product.model.js";
 
 // Product Routes - Moved up for priority
@@ -100,6 +103,7 @@ app.get('/api/products/:id', async (req, res) => {
 app.use('/api', userRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/reviews', reviewRouter);
 
 
 const mlModel = (req, res) => {

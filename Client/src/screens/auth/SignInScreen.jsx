@@ -5,7 +5,7 @@ import { staticImages } from "../../utils/images";
 import AuthOptions from "../../components/auth/AuthOptions";
 import { FormElement, Input } from "../../styles/form";
 import PasswordInput from "../../components/auth/PasswordInput";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { BaseButtonBlack } from "../../styles/button";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
 import { useRef } from "react";
@@ -45,6 +45,7 @@ const SignInScreenWrapper = styled.section`
 
 const SignInScreen = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const emailRef = useRef();
   const passwordRef = useRef();
 
@@ -58,9 +59,10 @@ const SignInScreen = () => {
       const userId = response.data.data.user.id;
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("userId", userId);
+      window.dispatchEvent(new Event("auth-changed"));
       toast.success("Successfully Logged In!");
       setTimeout(() => {
-        navigate("/account");
+        navigate(location.state?.from || "/account", { replace: true });
       }, 100);
     }
     catch (err) {

@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../../config/apiConfig";
+import { useAuth } from "../../context/AuthContext";
 
 const ChatContainer = styled.div`
   position: fixed;
@@ -180,6 +181,7 @@ const SendButton = styled.button`
 `;
 
 const ChatbotWidget = () => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { sender: "stylist", text: "Hi! I am your Antigravity Stylist. Tell me what outfit style or look you are searching for today!" }
@@ -204,7 +206,7 @@ const ChatbotWidget = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/stylist`, { message: userMessage });
+      const response = await axios.post(`${API_BASE_URL}/api/stylist`, { message: userMessage, preferences:user?.stylePreferences || {} });
       const { reply, products } = response.data.data;
       setMessages((prev) => [...prev, { sender: "stylist", text: reply, products }]);
     } catch (error) {

@@ -3,6 +3,7 @@ import styled from "styled-components";
 import Title from "../common/Title";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
 import toast from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
 
 const NavMenuWrapper = styled.nav`
   margin-top: 32px;
@@ -66,10 +67,10 @@ const NavMenuWrapper = styled.nav`
 
 const UserMenu = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const handleLogout = async () => {
     try {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("userId");
+      await logout();
       toast.success("Successfully Logged Out!");
       navigate("/");
     } catch (err) {
@@ -85,6 +86,9 @@ const UserMenu = () => {
 
       <NavMenuWrapper>
         <ul className="nav-menu-list grid">
+          <li className="nav-menu-item">
+            <Link to="/style-profile" className={`nav-menu-link flex items-center ${location.pathname === "/style-profile" ? "active" : ""}`}><span className="nav-link-icon flex items-center justify-center"><i className="bi bi-stars"></i></span><span className="text-base font-semibold nav-link-text no-wrap">Fit & style</span></Link>
+          </li>
           <li className="nav-menu-item">
             <Link
               to="/order"

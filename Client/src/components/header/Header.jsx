@@ -8,9 +8,10 @@ import { Input, InputGroupWrapper } from "../../styles/form";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleSidebar } from "../../redux/slices/sidebarSlice";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { getCartTotal } from "../../redux/slices/cartSlice";
 import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
 
 const NavigationAndSearchWrapper = styled.div`
   column-gap: 20px;
@@ -144,14 +145,9 @@ const IconLinksWrapper = styled.div`
 const Header = () => {
   const location = useLocation();
   const dispatch = useDispatch();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated: isLoggedIn, wishlist, loading: authLoading } = useAuth();
   const { carts, itemsCount } = useSelector((state) => state.cart);
   const { themeMode, toggleTheme } = useTheme();
-
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    setIsLoggedIn(!!token);
-  }, [location]);
 
   useEffect(() => {
     dispatch(getCartTotal());
@@ -201,7 +197,7 @@ const Header = () => {
           </NavigationAndSearchWrapper>
 
           <IconLinksWrapper className="flex items-center">
-            {!isLoggedIn && (
+            {!authLoading && !isLoggedIn && (
               <Link to="/sign_in" className="login-link text-base font-semibold text-outerspace">
                 Login
               </Link>
@@ -209,10 +205,11 @@ const Header = () => {
             <Link
               to="/wishlist"
               className={`icon-link ${location.pathname === "/wishlist" ? "active" : ""
-                } inline-flex items-center justify-center`}
+                } inline-flex items-center justify-center relative`}
               aria-label="Wishlist"
             >
               <img src={staticImages.heart} alt="" />
+              {wishlist.length > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold" style={{ backgroundColor: "#d45b3f" }}>{wishlist.length}</span>}
             </Link>
             <Link
               to="/account"
