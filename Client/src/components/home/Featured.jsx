@@ -6,25 +6,26 @@ import { breakpoints, defaultTheme } from "../../styles/themes/default";
 
 const FeaturedContent = styled.div`
   grid-template-columns: repeat(2, 1fr);
-  gap: 30px;
+  gap: 22px;
 
   @media (max-width: ${breakpoints.lg}) {
     grid-template-columns: 100%;
   }
 `;
 const FeaturedCardWrapper = styled.div`
-  height: 380px;
-  border-radius: 12px;
+  height: 430px;
+  border-radius: 22px;
   overflow: hidden;
   position: relative;
-  box-shadow: 2px 2px 10px 0px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 16px 34px rgba(35, 35, 31, 0.12);
 
   .feat-text-top {
     margin-bottom: 24px;
   }
 
   .feat-text-large {
-    font-size: 38px;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 44px;
     line-height: 1.2;
   }
 

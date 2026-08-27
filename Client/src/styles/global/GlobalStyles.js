@@ -14,16 +14,30 @@ export const GlobalStyles = createGlobalStyle`
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
         -webkit-text-size-adjust: 100%;
+        scroll-behavior: smooth;
     }
     body{
         min-height: 100vh;
         font-size: 14px;
         font-weight: 400;
-        line-height: 1.6;
+        line-height: 1.55;
         font-family: ${(props) => props.theme.font_family_inter};
         color: ${(props) => props.theme.color_jet};
-        background-color: ${(props) => props.theme.color_white};
+        background-color: ${(props) => props.theme.color_whitesmoke};
+        overflow-x: hidden;
     }
+
+    ::selection { background: ${(props) => props.theme.color_sea_green}; color: #fff; }
+    img { max-width: 100%; }
+    h1, h2, h3, h4, h5, h6 { line-height: 1.12; color: ${(props) => props.theme.color_outerspace}; }
+    input, textarea, select, button { font: inherit; }
+    :focus-visible { outline: 3px solid ${(props) => props.theme.color_sea_green}; outline-offset: 3px; }
+    main { min-height: 55vh; }
+    .py-20 { padding-top: 5rem; padding-bottom: 5rem; }
+    .py-40 { padding-top: 10rem; padding-bottom: 10rem; }
+    .relative { position: relative; }
+    .absolute { position: absolute; }
+    .rounded-full { border-radius: 999px; }
 
     // common reset
     ul {
@@ -210,8 +224,8 @@ export const GlobalStyles = createGlobalStyle`
 
     // page
     .page-py-spacing {
-        padding-top: 48px !important;
-        padding-bottom: 48px !important;
+        padding-top: 52px !important;
+        padding-bottom: 72px !important;
 
         @media(max-width: ${breakpoints.lg}){
             padding-top: 36px!important;
@@ -252,7 +266,19 @@ export const GlobalStyles = createGlobalStyle`
         font-size: 20px;
     }
     .text-4xl{
-        font-size: 24px;
+        font-size: 28px;
+    }
+
+    .slick-dots li button::before { color: ${(props) => props.theme.color_gray}; }
+    .slick-dots li.slick-active button::before { color: ${(props) => props.theme.color_sea_green}; }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
     }
 
     .title-sm{

@@ -53,18 +53,20 @@ const ArrivalSliderWrapper = styled.div`
 `;
 
 const ButtonWrapper = styled.div`
-background-color: #14c4b5; /* Initial color */
+background-color: #23231f;
   color: white;
   padding: 10px 20px;
-  border-radius: 5px;
+  border-radius: 999px;
   border: none;
   cursor: pointer;
   font-weight: bold;
   transition: all 0.3s ease;
+  width: max-content;
+  margin: 28px auto 0;
 
   &:hover {
-    background-color: #10b9b0; /* Lighter shade on hover */
-    transform: scale(1.05);
+    background-color: #d45b3f;
+    transform: translateY(-2px);
   }
 
   &:active {
@@ -79,11 +81,11 @@ const WebcamContainer = styled.div`
   align-items: center;
   width: 100%;
   height: 25rem;
-  border: 2px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid #dedbd3;
+  border-radius: 20px;
   background-color: #000;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.16);
 `;
 
 
@@ -277,7 +279,7 @@ useEffect(() => {
         <img src={selectedImage} alt="Virtual Try-On" className="overlay-image" style={{display: 'block', margin: '0 auto'}} />
         <div style={{marginTop: '20px', textAlign: 'center'}}>
           {detectedSize && detectedSize !== "Unknown" && (
-            <p className="font-bold text-xl" style={{color: '#14c4b5', marginBottom: '10px'}}>
+            <p className="font-bold text-xl" style={{color: '#d45b3f', marginBottom: '10px'}}>
               ✨ AI Smart Fit Estimate: Size {detectedSize} ✨
             </p>
           )}

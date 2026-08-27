@@ -44,7 +44,7 @@ const CardTitle = styled.h3`
 `;
 
 const RecommendationBox = styled.div`
-  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  background: #d45b3f;
   color: #fff;
   padding: 30px;
   border-radius: 16px;
@@ -231,7 +231,7 @@ const WardrobeScreen = () => {
             } else {
                 // Stylish gradient fallback
                 const grad = ctx.createLinearGradient(0, 0, 400, 400);
-                grad.addColorStop(0, "#8a33fd");
+                grad.addColorStop(0, "#d45b3f");
                 grad.addColorStop(1, "#00f2fe");
                 ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, 400, 400);
@@ -452,7 +452,7 @@ const WardrobeScreen = () => {
                                 </div>
                                 <button 
                                     className="btn btn-sm btn-dark" 
-                                    style={{ position: 'absolute', top: '10px', right: '10px', padding: '4px 8px', fontSize: '11px', background: '#8a33fd', border: 'none' }}
+                                    style={{ position: 'absolute', top: '10px', right: '10px', padding: '4px 8px', fontSize: '11px', background: '#d45b3f', border: 'none' }}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         navigate("/virtual_try_on", { state: { productId: item.id, imgSource: item.imgSource } });

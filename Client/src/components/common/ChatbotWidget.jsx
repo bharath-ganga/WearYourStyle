@@ -16,11 +16,11 @@ const ChatButton = styled.button`
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8a33fd 0%, #a29bfe 100%);
+  background: #d45b3f;
   color: white;
   border: none;
   cursor: pointer;
-  box-shadow: 0 5px 20px rgba(138, 51, 253, 0.4);
+  box-shadow: 0 12px 26px rgba(113, 45, 29, 0.28);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,17 +28,16 @@ const ChatButton = styled.button`
   transition: transform 0.2s, box-shadow 0.2s;
   &:hover {
     transform: scale(1.05);
-    box-shadow: 0 8px 25px rgba(138, 51, 253, 0.5);
+    box-shadow: 0 16px 30px rgba(113, 45, 29, 0.34);
   }
 `;
 
 const ChatWindow = styled.div`
   width: 380px;
   height: 500px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 20px;
+  background: #f7f5ef;
+  border: 1px solid #dedbd3;
+  border-radius: 18px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
@@ -61,7 +60,7 @@ const ChatWindow = styled.div`
 `;
 
 const ChatHeader = styled.div`
-  background: linear-gradient(135deg, #8a33fd 0%, #6c5ce7 100%);
+  background: #23231f;
   color: white;
   padding: 15px 20px;
   display: flex;
@@ -89,7 +88,7 @@ const ChatBody = styled.div`
 
 const Message = styled.div`
   align-self: ${(props) => (props.$sender === "user" ? "flex-end" : "flex-start")};
-  background: ${(props) => (props.$sender === "user" ? "#8a33fd" : "white")};
+  background: ${(props) => (props.$sender === "user" ? "#d45b3f" : "white")};
   color: ${(props) => (props.$sender === "user" ? "white" : "#333")};
   padding: 10px 14px;
   border-radius: 12px;
@@ -130,15 +129,15 @@ const ProductRecommendation = styled.div`
     }
   }
   a {
-    color: #8a33fd;
+    color: #d45b3f;
     font-size: 12px;
     font-weight: bold;
     text-decoration: none;
     padding: 4px 8px;
     border-radius: 4px;
-    background: #f0f0ff;
+    background: #f2e4df;
     &:hover {
-      background: #8a33fd;
+      background: #d45b3f;
       color: white;
     }
   }
@@ -160,12 +159,12 @@ const Input = styled.input`
   font-size: 14px;
   outline: none;
   &:focus {
-    border-color: #8a33fd;
+    border-color: #d45b3f;
   }
 `;
 
 const SendButton = styled.button`
-  background: #8a33fd;
+  background: #d45b3f;
   color: white;
   border: none;
   border-radius: 8px;
@@ -176,7 +175,7 @@ const SendButton = styled.button`
   align-items: center;
   justify-content: center;
   &:hover {
-    background: #6c5ce7;
+    background: #b8472f;
   }
 `;
 
@@ -273,7 +272,7 @@ const ChatbotWidget = () => {
           </ChatInputArea>
         </ChatWindow>
       )}
-      <ChatButton onClick={() => setIsOpen(!isOpen)}>
+      <ChatButton onClick={() => setIsOpen(!isOpen)} aria-label={isOpen ? "Close AI stylist" : "Open AI stylist"}>
         <i className="bi bi-chat-left-dots-fill"></i>
       </ChatButton>
     </ChatContainer>

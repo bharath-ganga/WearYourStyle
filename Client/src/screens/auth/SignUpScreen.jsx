@@ -166,7 +166,7 @@ const SignUpScreen = () => {
 
                 <div className="flex items-center" style={{ marginBottom: '16px', gap: '8px' }}>
                     <input type="checkbox" ref={termsRef} id="terms" required />
-                    <label htmlFor="terms" className="text-sm">I agree to the <Link to="/terms" style={{ color: '#8a33fd' }}>Terms & Conditions</Link></label>
+                    <label htmlFor="terms" className="text-sm">I agree to the <Link to="/terms" style={{ color: '#d45b3f' }}>Terms & Conditions</Link></label>
                 </div>
 
                 <BaseButtonBlack type="submit" className="form-submit-btn">

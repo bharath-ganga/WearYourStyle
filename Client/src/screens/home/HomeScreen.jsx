@@ -14,16 +14,15 @@ import VirtualTryOn from "../VirtualTryOn";
 const HomeScreenWrapper = styled.main``;
 
 const TopBar = styled.div`
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-  padding: 12px 24px;
+  background: #23231f;
+  padding: 9px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 15px;
+  font-size: 13px;
   font-family: 'Inter', sans-serif;
   color: #fff;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #3c3b35;
   animation: slideDown 0.5s ease-out;
 
   @keyframes slideDown {
@@ -35,11 +34,10 @@ const TopBar = styled.div`
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 6px 12px;
-    border-radius: 20px;
-    backdrop-filter: blur(5px);
+    padding: 3px 0;
   }
+
+  @media (max-width: 576px) { padding: 8px 16px; font-size: 11px; gap: 12px; }
 `;
 
 const ModalOverlay = styled.div`
@@ -48,8 +46,7 @@ const ModalOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(8px);
+  background: rgba(18,18,15,0.78);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -65,10 +62,10 @@ const ModalOverlay = styled.div`
 const ModalContent = styled.div`
   background: #ffffff;
   padding: 40px;
-  border-radius: 16px;
-  max-width: 450px;
+  border-radius: 20px;
+  width: min(470px, calc(100% - 32px));
   text-align: center;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 28px 70px rgba(0,0,0,0.28);
   transform: scale(1);
   animation: scaleUp 0.3s ease-out;
 
@@ -80,7 +77,8 @@ const ModalContent = styled.div`
   h2 {
     margin-top: 0;
     margin-bottom: 16px;
-    font-size: 24px;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 32px;
     color: #111;
     font-weight: 700;
   }
@@ -103,7 +101,7 @@ const ModalContent = styled.div`
     color: #fff;
     border: none;
     padding: 12px 24px;
-    border-radius: 8px;
+    border-radius: 999px;
     cursor: pointer;
     font-weight: 600;
     font-size: 15px;
@@ -269,9 +267,9 @@ const HomeScreen = () => {
                     value={manualCity} 
                     onChange={(e) => setManualCity(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleManualLocation()}
-                    style={{ padding: '12px', width: '60%', borderRadius: '8px', border: '1px solid #ccc', marginRight: '8px', fontSize: '15px' }}
+                    style={{ padding: '12px 16px', width: '60%', borderRadius: '999px', border: '1px solid #dedbd3', marginRight: '8px', fontSize: '15px', background: '#f7f5ef' }}
                 />
-                <button onClick={handleManualLocation} style={{ padding: '12px 20px', background: '#333', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                <button onClick={handleManualLocation} style={{ padding: '12px 20px', background: '#d45b3f', color: 'white', borderRadius: '999px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
                     Search
                 </button>
             </div>

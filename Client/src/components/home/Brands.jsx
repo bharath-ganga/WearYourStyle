@@ -15,11 +15,10 @@ const StyledSectionTitle = styled(TitleWrapper)`
 `;
 
 const BrandsContent = styled.div`
-  border-radius: 20px;
-  padding: 60px 20px;
+  border-radius: 24px;
+  padding: 64px 20px;
   background-color: ${(props) => props.theme.color_white};
-  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid ${(props) => props.theme.color_anti_flash_white};
 
   @media (max-width: ${breakpoints.lg}) {
     padding: 40px 20px;

@@ -46,7 +46,8 @@ const scanLine = keyframes`
 const PageHeader = styled.div`
   margin-bottom: 28px;
   h2 {
-    font-size: 30px;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(34px, 5vw, 52px);
     font-weight: 700;
     color: ${defaultTheme.color_jet};
     letter-spacing: -0.5px;
@@ -64,7 +65,7 @@ const TryOnWrapper = styled.div`
   display: grid;
   grid-template-columns: 1fr 280px;
   gap: 0;
-  border-radius: 16px;
+  border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
   background: #0a0a0f;
@@ -82,12 +83,12 @@ const TryOnWrapper = styled.div`
 const ModeBar = styled.div`
   display: flex;
   gap: 0;
-  background: rgba(255, 255, 255, 0.06);
+  background: #18181f;
   border-radius: 10px;
   padding: 4px;
   margin-bottom: 20px;
   width: fit-content;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #2d2d35;
 `;
 
 const ModeBtn = styled.button`
@@ -104,11 +105,11 @@ const ModeBtn = styled.button`
   letter-spacing: 0.2px;
   background: ${(p) => (p.$active ? defaultTheme.color_sea_green : "transparent")};
   color: ${(p) => (p.$active ? "#fff" : "rgba(255,255,255,0.55)")};
-  box-shadow: ${(p) => (p.$active ? "0 4px 14px rgba(16,185,177,0.35)" : "none")};
+  box-shadow: none;
 
   &:hover:not(:disabled) {
     color: #fff;
-    background: ${(p) => (p.$active ? defaultTheme.color_sea_green : "rgba(255,255,255,0.1)")};
+    background: ${(p) => (p.$active ? defaultTheme.color_sea_green : "#292932")};
   }
   svg { width: 16px; height: 16px; flex-shrink: 0; }
 `;
@@ -258,8 +259,7 @@ const SilhouetteGuide = styled.div`
 const HudBadge = styled.div`
   position: absolute;
   right: 16px;
-  background: rgba(8, 8, 14, 0.82);
-  backdrop-filter: blur(10px);
+  background: #18181f;
   border: 1px solid ${(p) => p.$color || "rgba(255,255,255,0.15)"};
   border-radius: 10px;
   padding: 9px 14px;
@@ -282,7 +282,7 @@ const HudBadge = styled.div`
 `;
 
 const SizeBadge = styled(HudBadge)`
-  background: linear-gradient(135deg, rgba(16,185,177,0.22), rgba(16,185,177,0.06));
+  background: #183a35;
   border-color: ${defaultTheme.color_sea_green};
   top: ${(p) => p.$top};
 
@@ -298,16 +298,16 @@ const SizeBadge = styled(HudBadge)`
 `;
 
 const HQBadge = styled(HudBadge)`
-  background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(139,92,246,0.06));
-  border-color: #8b5cf6;
+  background: #34293b;
+  border-color: #b785c9;
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
 
-  &:hover { background: rgba(139,92,246,0.28); transform: scale(1.03); }
+  &:hover { background: #44334e; transform: translateY(-1px); }
   &:active { transform: scale(0.98); }
 
-  .dot { background: #8b5cf6; }
+  .dot { background: #d9a3e8; }
 `;
 
 // Bottom controls bar
@@ -317,7 +317,7 @@ const ControlsBar = styled.div`
   left: 0;
   right: 0;
   padding: 20px 24px;
-  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
+  background: #111118;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -338,17 +338,16 @@ const IconBtn = styled.button`
   padding: 9px 18px;
   border-radius: 8px;
   border: 1px solid ${(p) => p.$border || "rgba(255,255,255,0.2)"};
-  background: ${(p) => p.$bg || "rgba(255,255,255,0.1)"};
+  background: ${(p) => p.$bg || "#292932"};
   color: ${(p) => p.$color || "#fff"};
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  backdrop-filter: blur(8px);
   transition: all 0.2s ease;
   white-space: nowrap;
 
   &:hover:not(:disabled) {
-    background: ${(p) => p.$hoverBg || "rgba(255,255,255,0.18)"};
+    background: ${(p) => p.$hoverBg || "#363640"};
     transform: translateY(-1px);
   }
   &:active { transform: scale(0.97); }
@@ -448,8 +447,7 @@ const PhotoPreview = styled.div`
 const ProcessingOverlay = styled.div`
   position: absolute;
   inset: 0;
-  background: rgba(8, 8, 14, 0.82);
-  backdrop-filter: blur(6px);
+  background: #08080e;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -476,8 +474,8 @@ const HeightSliderWrap = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: #1a1a22;
+  border: 1px solid #2d2d35;
   border-radius: 10px;
   padding: 8px 14px;
   width: 100%;
@@ -555,7 +553,7 @@ const SidebarScroll = styled.div`
 const GarmentCard = styled.div`
   border-radius: 10px;
   border: 2px solid ${(p) => (p.$active ? defaultTheme.color_sea_green : "rgba(255,255,255,0.07)")};
-  background: ${(p) => (p.$active ? "rgba(16,185,177,0.08)" : "rgba(255,255,255,0.03)")};
+  background: ${(p) => (p.$active ? "#183a35" : "#191920")};
   cursor: pointer;
   overflow: hidden;
   transition: all 0.2s ease;
@@ -563,7 +561,7 @@ const GarmentCard = styled.div`
 
   &:hover {
     border-color: ${(p) => (p.$active ? defaultTheme.color_sea_green : "rgba(255,255,255,0.2)")};
-    background: rgba(255,255,255,0.06);
+    background: #25252d;
   }
 
   img {

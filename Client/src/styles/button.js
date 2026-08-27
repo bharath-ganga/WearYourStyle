@@ -5,23 +5,24 @@ import { Link } from "react-router-dom";
 // writing button stylings in normal css
 const commonButtonStyles = css`
   font-family: inherit;
-  min-width: 110px;
-  height: 36px;
+  min-width: 124px;
+  height: 46px;
   display: inline-flex;
   justify-content: center;
   align-items: center;
   text-align: center;
-  border-radius: 4px;
+  border-radius: 999px;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 700;
   font-size: 14px;
   border: 1px solid transparent;
   text-transform: capitalize;
-  padding-left: 12px;
-  padding-right: 12px;
+  padding-left: 22px;
+  padding-right: 22px;
   transition: ${defaultTheme.default_transition};
   &:hover {
-    transform: scale(0.97);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(31, 30, 26, 0.14);
   }
 `;
 

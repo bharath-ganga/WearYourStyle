@@ -11,12 +11,19 @@ import CustomNextArrow from "../common/CustomNextArrow";
 import CustomPrevArrow from "../common/CustomPrevArrow";
 
 const SectionHeroWrapper = styled.section`
-  background-color: #f2f2f2;
+  background-color: ${defaultTheme.color_whitesmoke};
+  padding: 18px 24px 0;
+
+  @media (max-width: ${breakpoints.sm}) { padding: 10px 10px 0; }
 `;
 
 const HeroSliderWrapper = styled.div`
+  max-width: 1540px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 24px;
   .custom-prev-arrow {
-    left: 30px !important;
+    left: 24px !important;
     background-color: ${defaultTheme.color_white};
     svg {
       color: ${defaultTheme.color_outerspace};
@@ -28,7 +35,7 @@ const HeroSliderWrapper = styled.div`
   }
 
   .custom-next-arrow {
-    right: 30px !important;
+    right: 24px !important;
     background-color: ${defaultTheme.color_white};
     svg {
       color: ${defaultTheme.color_outerspace};
@@ -42,7 +49,8 @@ const HeroSliderWrapper = styled.div`
 
 const HeroSliderItemWrapper = styled.div`
   position: relative;
-  height: 716px;
+  height: min(710px, calc(100vh - 116px));
+  min-height: 560px;
   overflow: hidden;
 
   &::after {
@@ -52,12 +60,15 @@ const HeroSliderItemWrapper = styled.div`
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: ${defaultTheme.color_black_04};
+    background: linear-gradient(90deg, rgba(17,17,14,.72) 0%, rgba(17,17,14,.32) 50%, rgba(17,17,14,.05) 100%);
   }
 
   img {
     display: block;
+    object-position: center 22%;
   }
+
+  @media (max-width: ${breakpoints.sm}) { height: 620px; min-height: 0; }
 `;
 
 const fadeUp = keyframes`
@@ -81,7 +92,7 @@ const HeroSlideContent = styled.div`
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  max-width: 1100px;
+  max-width: 1380px;
   z-index: 10;
   animation: ${fadeUp} 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 
@@ -95,11 +106,11 @@ const HeroSlideContent = styled.div`
   }
 
   .container {
-    max-width: 840px;
+    max-width: 760px;
     margin-left: 0;
 
     @media (max-width: ${breakpoints.xxl}) {
-      margin-left: 80px;
+      margin-left: 40px;
     }
     @media (max-width: ${breakpoints.md}) {
       margin-left: 16px;
@@ -112,7 +123,11 @@ const HeroSlideContent = styled.div`
   }
 
   .hero-text-top {
-    font-size: 32px;
+    display: inline-flex;
+    font-size: 14px;
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: .18em;
     animation: ${textSlide} 1s ease-out 0.2s backwards;
     @media (max-width: ${breakpoints.lg}) {
       font-size: 26px;
@@ -120,9 +135,10 @@ const HeroSlideContent = styled.div`
   }
 
   .hero-text-large {
-    font-size: 78px;
-    letter-spacing: 0.315px;
-    line-height: 1.2;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(58px, 7vw, 94px);
+    letter-spacing: -0.045em;
+    line-height: .98;
     margin-bottom: 20px;
     animation: ${textSlide} 1s ease-out 0.4s backwards;
 
@@ -141,7 +157,8 @@ const HeroSlideContent = styled.div`
   }
 
   .hero-text-bottom {
-    font-size: 26px;
+    font-size: 17px;
+    letter-spacing: .08em;
     margin-bottom: 24px;
     animation: ${textSlide} 1s ease-out 0.6s backwards;
 
@@ -151,9 +168,9 @@ const HeroSlideContent = styled.div`
   }
 
   .hero-btn {
-    font-size: 18px;
-    height: 46px;
-    min-width: 160px;
+    font-size: 15px;
+    height: 52px;
+    min-width: 174px;
     animation: ${textSlide} 1s ease-out 0.8s backwards;
   }
 `;

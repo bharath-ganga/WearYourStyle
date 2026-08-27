@@ -6,8 +6,10 @@ import { staticImages } from "../../utils/images";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
 
 const FooterWrapper = styled.footer`
-  padding-top: 60px;
-  padding-bottom: 32px;
+  padding-top: 72px;
+  padding-bottom: 28px;
+  margin-top: 40px;
+  background: #23231f !important;
 
   @media (max-width: ${breakpoints.lg}) {
     padding-top: 30px;
@@ -16,7 +18,7 @@ const FooterWrapper = styled.footer`
 
   .footer-top {
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+    gap: 36px;
 
     @media (max-width: ${breakpoints.md}) {
       grid-template-columns: repeat(2, 1fr);
@@ -30,16 +32,18 @@ const FooterWrapper = styled.footer`
 
   .footer-item {
     &-title {
-      margin-bottom: 8px;
+      margin-bottom: 16px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 20px;
     }
   }
 
   .ftr-links {
     .ftr-link-item {
-      margin-bottom: 8px;
+      margin-bottom: 10px;
 
       a {
-        color: ${defaultTheme.color_whitesmoke};
+        color: #c8c4ba;
         &:hover {
           color: ${defaultTheme.color_yellow};
         }
@@ -106,7 +110,7 @@ const FooterWrapper = styled.footer`
   }
 
   .footer-bottom {
-    padding-top: 36px;
+    padding-top: 26px;
     border-top: 1px solid rgba(190, 188, 189, 0.4);
 
     @media (max-width: ${breakpoints.lg}) {
@@ -170,7 +174,7 @@ const Footer = () => {
         </div>
         <div className="footer-bottom text-center">
           <p className="text-base text-white">
-            Copyright &copy; 2024 &nbsp;
+            Copyright &copy; {new Date().getFullYear()} &nbsp;
             <Link to="/" className="text-white">
               WearYourStyle
             </Link>

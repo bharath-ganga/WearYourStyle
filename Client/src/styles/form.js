@@ -6,6 +6,7 @@ export const Input = styled.input`
   border: none;
   outline: 0;
   color: ${defaultTheme.color_dim_gray};
+  background: transparent;
 
   &::placeholder {
     color: ${defaultTheme.color_silver};
@@ -37,16 +38,17 @@ export const Textarea = styled.textarea`
 export const InputGroupWrapper = styled.div`
   min-width: 400px;
   width: 100%;
-  border-radius: 4px;
+  border-radius: 999px;
   display: grid;
   align-items: stretch;
   grid-template-columns: 40px auto;
   gap: 12px;
-  background-color: ${defaultTheme.color_whitesmoke};
+  background-color: ${defaultTheme.color_flash_white};
+  border: 1px solid ${defaultTheme.color_anti_flash_white};
 
   .input-icon {
     width: 40px;
-    height: 40px;
+    height: 46px;
     @media (max-width: ${breakpoints.lg}) {
       height: 36px;
     }
@@ -75,13 +77,14 @@ export const FormElement = styled.div`
     height: 40px;
     border: 1px solid ${defaultTheme.color_platinum};
     width: 100%;
-    border-radius: 5px;
+    border-radius: 10px;
     padding: 2px 14px;
     margin: 4px 0;
     transition: ${defaultTheme.default_transition};
 
     &:focus {
       border-color: ${defaultTheme.color_sea_green};
+      box-shadow: 0 0 0 3px rgba(212, 91, 63, 0.12);
     }
   }
 

@@ -2,31 +2,31 @@ const commonStyles = {
     // default transition
     default_transition: "all 300ms ease-in-out",
     // font family
-    font_family_inter: "'Inter', sans-serif",
+    font_family_inter: "'Manrope', 'Segoe UI', sans-serif",
 };
 
 const lightTheme = {
     ...commonStyles,
     // colors
-    color_white: "#fff",
-    color_black: "#000",
-    color_platinum: "#d9d9d9",
-    color_jet: "#333333",
-    color_yellow: "#fdc419",
+    color_white: "#ffffff",
+    color_black: "#151513",
+    color_platinum: "#dedbd3",
+    color_jet: "#23231f",
+    color_yellow: "#e9a23b",
     color_yellow_green: "#7ad005",
-    color_sea_green: "#10b9b0",
-    color_sea_green_v1: "#14c4b5",
-    color_flash_white: "#eef4f4",
-    color_anti_flash_white: "#edeef2",
-    color_purple: "#a149b6",
-    color_red: "#f00",
-    color_gray: "#807d7e",
-    color_dim_gray: "#6d6d6d",
-    color_outerspace: "#3c4242",
-    color_silver: "#bebcbd",
-    color_whitesmoke: "#f6f6f6",
-    color_brown: "#fb9f4c",
-    color_black_04: "rgba(0, 0, 0, 0.4)",
+    color_sea_green: "#d45b3f",
+    color_sea_green_v1: "#c84e33",
+    color_flash_white: "#f3f1eb",
+    color_anti_flash_white: "#e9e5dc",
+    color_purple: "#d45b3f",
+    color_red: "#c4412d",
+    color_gray: "#747169",
+    color_dim_gray: "#5f5c55",
+    color_outerspace: "#23231f",
+    color_silver: "#b6b1a7",
+    color_whitesmoke: "#f7f5ef",
+    color_brown: "#b87545",
+    color_black_04: "rgba(17, 17, 14, 0.46)",
 };
 
 const darkTheme = {
@@ -38,11 +38,11 @@ const darkTheme = {
     color_jet: "#eeeeee",
     color_yellow: "#fdc419",
     color_yellow_green: "#7ad005",
-    color_sea_green: "#10b9b0",
-    color_sea_green_v1: "#14c4b5",
+    color_sea_green: "#ef775b",
+    color_sea_green_v1: "#ff876d",
     color_flash_white: "#121212",
     color_anti_flash_white: "#252525",
-    color_purple: "#bb86fc",
+    color_purple: "#ef775b",
     color_red: "#cf6679",
     color_gray: "#a0a0a0",
     color_dim_gray: "#cccccc",
@@ -66,4 +66,3 @@ const darkTheme = {
   
   const defaultTheme = lightTheme;
 export { lightTheme, darkTheme, defaultTheme, breakpoints };
-  

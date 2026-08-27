@@ -15,10 +15,10 @@ const SideNavigationWrapper = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  width: 280px;
+  width: 310px;
   z-index: 999;
-  box-shadow: rgba(0, 0, 0, 0.25) 0px 25px 50px -12px;
-  padding: 16px;
+  box-shadow: 24px 0 60px rgba(18, 18, 15, 0.18);
+  padding: 24px;
   transform: translateX(-100%);
   transition: ${defaultTheme.default_transition};
 
@@ -37,7 +37,7 @@ const SideNavigationWrapper = styled.div`
 
   .sidenav-search-form {
     border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
+    border-radius: 12px;
     margin-top: 20px;
 
     .input-group {
@@ -47,18 +47,18 @@ const SideNavigationWrapper = styled.div`
   }
 
   .sidenav-menu-list {
-    gap: 14px;
+    gap: 8px;
     margin: 20px 0;
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     padding: 24px 0;
 
     li {
-      padding: 5px 5px 5px 12px;
-      border-radius: 4px;
+      padding: 10px 12px;
+      border-radius: 10px;
       transition: ${defaultTheme.default_transition};
 
       &:hover {
-        background: rgba(0, 0, 0, 0.05);
+        background: ${(props) => props.theme.color_flash_white};
 
         a {
           span {
@@ -89,10 +89,12 @@ const Sidebar = () => {
   return (
     <SideNavigationWrapper
       className={`bg-white h-full ${isSidebarOpen ? "show" : ""}`}
+      aria-hidden={!isSidebarOpen}
     >
       <button
         className="sidebar-close-btn text-3xl"
         onClick={() => dispatch(toggleSidebar())}
+        aria-label="Close navigation menu"
       >
         <i className="bi bi-x-square"></i>
       </button>

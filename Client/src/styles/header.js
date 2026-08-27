@@ -4,9 +4,12 @@ import { breakpoints } from "./themes/default";
 
 // common header stylings for both auth & main pages
 export const HeaderMainWrapper = styled.header`
-  min-height: 72px;
-  box-shadow: rgba(17, 17, 26, 0.05) 0px 4px 16px,
-    rgba(17, 17, 26, 0.05) 0px 8px 24px, rgba(17, 17, 26, 0.05) 0px 16px 56px;
+  min-height: 82px;
+  background: ${(props) => props.theme.color_whitesmoke};
+  border-bottom: 1px solid ${(props) => props.theme.color_anti_flash_white};
+  position: sticky;
+  top: 0;
+  z-index: 120;
 
   .header-wrap {
     column-gap: 20px;
@@ -17,8 +20,8 @@ export const HeaderMainWrapper = styled.header`
   }
 
   .sidebar-toggler {
-    font-size: 26px;
-    margin-right: 10px;
+    font-size: 24px;
+    margin-right: 14px;
     margin-bottom: -1px;
   }
 `;
@@ -34,8 +37,10 @@ export const SiteBrandWrapper = styled(Link)`
   }
 
   .site-brand-text {
-    font-size: 24px;
-    font-weight: 600;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: -0.035em;
 
     @media (max-width: ${breakpoints.xl}) {
       font-size: 20px;

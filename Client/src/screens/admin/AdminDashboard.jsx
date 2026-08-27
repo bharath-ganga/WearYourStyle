@@ -9,7 +9,7 @@ import OrderStatusTracker from "../../components/common/OrderStatusTracker";
 
 const AdminWrapper = styled.div`
   padding: 40px 0;
-  background: #f4f6f8;
+  background: #f7f5ef;
   min-height: 100vh;
 `;
 
@@ -29,12 +29,12 @@ const TabContainer = styled.div`
 const Tab = styled.button`
   padding: 10px 20px;
   border: none;
-  background: ${props => props.active ? "#8a33fd" : "#fff"};
+  background: ${props => props.active ? "#d45b3f" : "#fff"};
   color: ${props => props.active ? "#fff" : "#333"};
-  border-radius: 8px;
+  border-radius: 999px;
   cursor: pointer;
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border: 1px solid ${props => props.active ? "#d45b3f" : "#dedbd3"};
 `;
 
 const Table = styled.table`

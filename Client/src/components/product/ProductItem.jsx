@@ -13,26 +13,37 @@ const ProductCardWrapper = styled(Link)`
   }
 
   .product-img {
-    height: 393px;
+    aspect-ratio: 4 / 5;
+    height: auto;
     position: relative;
 
     @media (max-width: ${breakpoints.sm}) {
-      height: 320px;
+      height: auto;
     }
   }
 
   .product-wishlist-icon {
     position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 32px;
-    height: 32px;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
     border-radius: 100%;
 
     &:hover {
-      background-color: ${defaultTheme.color_yellow};
+      background-color: ${defaultTheme.color_sea_green};
       color: ${defaultTheme.color_white};
     }
+  }
+
+  .product-info { padding: 0 4px; }
+  .product-info > p {
+    font-size: 15px;
+    line-height: 1.4;
+    margin-bottom: 7px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;
 
@@ -44,6 +55,7 @@ const ProductItem = ({ product }) => {
         <button
           type="button"
           className="product-wishlist-icon flex items-center justify-center bg-white"
+          aria-label={`Add ${product.title} to wishlist`}
         >
           <i className="bi bi-heart"></i>
         </button>

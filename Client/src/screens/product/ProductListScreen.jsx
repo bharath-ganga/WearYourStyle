@@ -11,8 +11,9 @@ import { defaultFallbackProducts } from "../../data/fallbackProducts";
 import ProductFilter from "../../components/product/ProductFilter";
 
 const ProductsContent = styled.div`
-  grid-template-columns: 320px auto;
-  margin: 20px 0;
+  grid-template-columns: 280px minmax(0, 1fr);
+  margin: 32px 0;
+  gap: 30px;
 
   @media (max-width: ${breakpoints.xl}) {
     grid-template-columns: 260px auto;
@@ -26,8 +27,8 @@ const ProductsContent = styled.div`
 
 const ProductsContentLeft = styled.div`
   border: 1px solid rgba(190, 188, 189, 0.4);
-  border-radius: 12px;
-  box-shadow: rgba(0, 0, 0, 0.05) 0 10px 50px;
+  border-radius: 18px;
+  background: ${(props) => props.theme.color_white};
   overflow: hidden;
 
   @media (max-width: ${breakpoints.lg}) {
@@ -36,7 +37,7 @@ const ProductsContentLeft = styled.div`
 `;
 
 const ProductsContentRight = styled.div`
-  padding: 16px 40px;
+  padding: 4px 0 4px 8px;
 
   .products-right-top {
     margin-bottom: 40px;
@@ -54,7 +55,7 @@ const ProductsContentRight = styled.div`
     column-gap: 16px;
     li {
       a.active {
-        color: ${defaultTheme.color_purple};
+        color: ${defaultTheme.color_sea_green};
       }
     }
   }
@@ -70,7 +71,7 @@ const ProductsContentRight = styled.div`
   }
 
   .product-card-list {
-    grid-template-columns: repeat(auto-fill, repeat(290px, auto));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 
   .product-card {

@@ -69,9 +69,21 @@ const NavigationMenuWrapper = styled.nav`
   }
 
   .nav-menu-link {
+    position: relative;
+    padding: 30px 0 27px;
+    letter-spacing: -0.01em;
     &.active {
-      color: ${(props) => props.theme.color_outerspace};
+      color: ${(props) => props.theme.color_sea_green};
       font-weight: 700;
+      &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2px;
+        background: ${(props) => props.theme.color_sea_green};
+      }
     }
 
     &:hover {
@@ -92,11 +104,12 @@ const NavigationMenuWrapper = styled.nav`
 `;
 
 const IconLinksWrapper = styled.div`
-  column-gap: 18px;
+  column-gap: 8px;
   .icon-link {
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid transparent;
 
     &.active {
       background-color: ${(props) => props.theme.color_sea_green};
@@ -106,8 +119,17 @@ const IconLinksWrapper = styled.div`
     }
 
     &:hover {
-      background-color: ${(props) => props.theme.color_whitesmoke};
+      background-color: ${(props) => props.theme.color_flash_white};
+      border-color: ${(props) => props.theme.color_anti_flash_white};
+      transform: translateY(-1px);
     }
+  }
+
+  .login-link {
+    padding: 9px 16px;
+    border: 1px solid ${(props) => props.theme.color_outerspace};
+    border-radius: 999px;
+    &:hover { background: ${(props) => props.theme.color_outerspace}; color: #fff; }
   }
 
   @media (max-width: ${breakpoints.xl}) {
@@ -144,6 +166,7 @@ const Header = () => {
               type="button"
               className="sidebar-toggler"
               onClick={() => dispatch(toggleSidebar())}
+              aria-label="Open navigation menu"
             >
               <i className="bi bi-list"></i>
             </button>
@@ -166,7 +189,7 @@ const Header = () => {
                     <li className="nav-menu-item" key={menu.id}>
                       <Link
                         to={menu.menuLink}
-                        className="nav-menu-link text-base font-medium text-gray"
+                        className={`nav-menu-link text-base font-medium text-gray ${location.pathname === menu.menuLink ? "active" : ""}`}
                       >
                         {menu.menuText}
                       </Link>
@@ -179,7 +202,7 @@ const Header = () => {
 
           <IconLinksWrapper className="flex items-center">
             {!isLoggedIn && (
-              <Link to="/sign_in" className="text-base font-semibold text-outerspace hover:text-purple-600">
+              <Link to="/sign_in" className="login-link text-base font-semibold text-outerspace">
                 Login
               </Link>
             )}
@@ -187,6 +210,7 @@ const Header = () => {
               to="/wishlist"
               className={`icon-link ${location.pathname === "/wishlist" ? "active" : ""
                 } inline-flex items-center justify-center`}
+              aria-label="Wishlist"
             >
               <img src={staticImages.heart} alt="" />
             </Link>
@@ -197,6 +221,7 @@ const Header = () => {
                   ? "active"
                   : ""
                 } inline-flex items-center justify-center`}
+              aria-label="Account"
             >
               <img src={staticImages.user} alt="" />
             </Link>
@@ -204,12 +229,13 @@ const Header = () => {
               to="/cart"
               className={`icon-link ${location.pathname === "/cart" ? "active" : ""
                 } inline-flex items-center justify-center relative`}
+              aria-label={`Cart with ${itemsCount} items`}
             >
               <img src={staticImages.cart} alt="" />
               {itemsCount > 0 && (
                 <span
                   className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold"
-                  style={{ backgroundColor: "#8a33fd" }}
+                  style={{ backgroundColor: "#d45b3f" }}
                 >
                   {itemsCount}
                 </span>
@@ -220,6 +246,7 @@ const Header = () => {
               onClick={toggleTheme}
               className="icon-link inline-flex items-center justify-center"
               title="Toggle Theme"
+              aria-label="Toggle color theme"
               style={{ fontSize: '20px', color: themeMode === 'light' ? '#3c4242' : '#ffffff' }}
             >
               {themeMode === "light" ? (

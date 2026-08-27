@@ -17,12 +17,12 @@ import { addToCart } from "../../redux/slices/cartSlice";
 import { toast } from "react-hot-toast";
 
 const DetailsScreenWrapper = styled.main`
-  margin: 40px 0;
+  margin: 52px 0 80px;
 `;
 
 const DetailsContent = styled.div`
   grid-template-columns: repeat(2, 1fr);
-  gap: 40px;
+  gap: 56px;
 
   @media (max-width: ${breakpoints.xl}) {
     gap: 24px;
@@ -35,8 +35,10 @@ const DetailsContent = styled.div`
 `;
 
 const ProductDetailsWrapper = styled.div`
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 24px;
+  border: 1px solid ${(props) => props.theme.color_anti_flash_white};
+  border-radius: 22px;
+  padding: 38px;
+  background: ${(props) => props.theme.color_white};
 
   @media (max-width: ${breakpoints.sm}) {
     padding: 16px;
@@ -47,7 +49,10 @@ const ProductDetailsWrapper = styled.div`
   }
 
   .prod-title {
-    margin-bottom: 10px;
+    margin-bottom: 14px;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: clamp(30px, 4vw, 48px);
+    letter-spacing: -.035em;
   }
   .rating-and-comments {
     column-gap: 16px;
@@ -353,7 +358,7 @@ const ProductDetailsScreen = () => {
                                         imgSource: product.imgSource || (product.previewImages && product.previewImages[0]?.imgSource) 
                                     }}
                                     className="prod-add-btn"
-                                    style={{ backgroundColor: "#8a33fd", borderColor: "#8a33fd" }}
+                                    style={{ backgroundColor: "#23231f", borderColor: "#23231f" }}
                                 >
                                     <span className="prod-add-btn-icon">
                                         <i className="bi bi-camera"></i>
