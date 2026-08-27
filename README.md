@@ -1,179 +1,346 @@
-# 🧥 WearYourStyle — AI-Powered Fashion Marketplace
+# WearYourStyle
 
-[![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)](https://reactjs.org/)
-[![Nodejs](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
-[![Firebase](https://img.shields.io/badge/Firebase-039BE5?style=for-the-badge&logo=Firebase&logoColor=white)](https://firebase.google.com/)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+WearYourStyle is a full-stack fashion storefront with product discovery, secure customer accounts, order management, a virtual wardrobe, and an AI-assisted virtual try-on experience.
 
-**WearYourStyle** is a premium, full-stack e-commerce ecosystem that revolutionizes the online shopping experience. By integrating cutting-edge AI pose estimation with a high-performance marketplace, it provides users with a seamless and futuristic **Virtual Try-On** environment.
+The interface uses a responsive, modern design system with standard solid surfaces—no glassmorphism—and supports complete customer and administrator workflows.
 
----
+## Highlights
 
-## 🌟 Vision
-Traditional e-commerce lacks the "touch and try" feel. **WearYourStyle** bridges this gap using Computer Vision to allow users to visualize how clothes fit them in real-time, reducing return rates and increasing consumer confidence.
+### Shopping experience
 
----
+- Responsive home page, catalog, product details, cart, checkout, and informational pages
+- Product search, sorting, category filters, size filters, price filters, and stock-aware controls
+- Persistent cart with quantity and inventory validation
+- Guest wishlist saved on the device and automatically merged into the customer account after sign-in
+- Coupon validation, delivery estimates, and order totals calculated on the server
+- Customer reviews with average ratings and recently viewed products
+- Fit recommendations informed by the customer's saved style profile
 
-## ✨ Key Features
+### Customer account
 
-### 🤖 AI Virtual Try-On (Live Preview)
-The core innovation of the platform. Using **MediaPipe Pose Landmarker** and **OpenCV**, the system detects user posture via webcam and overlays garments with precision.
-- **Real-time Pose Tracking**: Detects 33 skeletal landmarks to map garment coordinates accurately.
-- **Dynamic Physics-based Scaling**: Automatically adjusts the size of the garment based on shoulder width and torso distance.
-- **WebSocket Synchronization**: High-speed frame processing via **Socket.IO** ensures a smooth, low-latency visual experience.
+- Registration, sign-in, sign-out, JWT authentication, and protected routes
+- Profile and style-preference management
+- Multiple saved delivery addresses
+- Order history, detailed status tracking, cancellation, return requests, and printable invoices
+- Persistent wishlist, wardrobe, lookbooks, and recent virtual try-on results
+- Loyalty-point feedback after a completed checkout
 
-### 🛍️ Premium Marketplace
-- **Curated Catalog**: Pre-seeded with over 200+ high-quality fashion products (Men & Women).
-- **Advanced State Management**: Powered by **Redux Toolkit** for lightning-fast cart updates, wishlist persistence, and global UI state.
-- **Responsive UX**: A mobile-first, glassmorphic design built with **Styled Components** and **Framer Motion**.
+### Virtual try-on and wardrobe
 
-### 👗 Virtual Wardrobe & Outfit Builder
-- **AI Recommendations**: Enhanced a Virtual Wardrobe system by integrating AI-based outfit recommendations using weather and user preferences.
-- **Auto Categorization**: Implemented image classification for automatic clothing categorization.
-- **Interactive Experience**: Designed an interactive outfit builder for improved user experience.
+- Live webcam try-on through Socket.IO
+- Static-photo try-on through the ML service REST API
+- MediaPipe pose detection, garment placement, accessory overlays, image segmentation, and optional high-quality processing
+- Downloadable results and device-local recent try-on history
+- Wardrobe image uploads, outfit building, lookbook saving, and styling suggestions
 
-### 🔒 Robust Infrastructure
-- **Secure Authentication**: Integrated with **Firebase Auth** and custom **JWT** implementations for enterprise-grade security.
-- **Cloud-Native Storage**: Automated asset optimization and delivery via **Cloudinary**.
-- **NoSQL Performance**: Real-time data sync using **Google Firestore**.
+### Administration
 
----
+- Separate administrator sign-in and role-protected dashboard
+- Revenue, order, customer, product, low-stock, and return analytics
+- Product create, update, delete, image upload, and bulk import workflows
+- Optional background removal and Cloudinary image upload
+- Order-status management and order deletion
+- Customer overview and coupon management
 
-## 📐 System Architecture
+> Online card, PayPal, and UPI choices are currently test-mode simulations. Cash on delivery creates a normal order, but no live payment gateway is connected.
 
-The ecosystem operates on a **Tri-Server Microservices** model:
+## Architecture
 
 ```mermaid
-graph TD
-    A[React Frontend] <-->|Rest API| B[Node.js / Express]
-    A <-->|WebSockets| C[Python ML Server]
-    B <-->|Auth & DB| D[Firebase / Firestore]
-    B <-->|Storage| E[Cloudinary]
-    C -->|MediaPipe| F[Pose Detection]
+flowchart LR
+    Browser[React + Vite client] -->|REST / JSON + JWT| API[Express API]
+    Browser <-->|Socket.IO + REST| ML[Flask ML service]
+    API --> Neon[(Neon Postgres)]
+    API --> Cloudinary[Cloudinary]
+    ML --> MediaPipe[MediaPipe + OpenCV]
 ```
 
-1.  **Client (Port 5173)**: React SPA handling UI rendering and webcam acquisition.
-2.  **Server (Port 3000)**: Backend orchestrator for auth, product logic, and database management.
-3.  **ML Server (Port 5000)**: Dedicated AI engine processing heavy CV tasks using Python.
+| Service | Default URL | Purpose |
+| --- | --- | --- |
+| Client | `http://localhost:5174` | React storefront and admin interface |
+| API | `http://localhost:3000` | Authentication, products, users, orders, reviews, coupons, and administration |
+| ML service | `http://localhost:7860` | Image classification and live/photo virtual try-on |
 
----
+## Technology stack
 
-## 🛠️ Technological Blueprint
+| Layer | Main technologies |
+| --- | --- |
+| Client | React 18, Vite 5, React Router, Redux Toolkit, Styled Components, Axios, Socket.IO Client |
+| API | Node.js, Express, Neon Postgres, Drizzle ORM, node-postgres, JWT, bcryptjs, Multer, Cloudinary |
+| ML | Python, Flask, Flask-SocketIO, MediaPipe, OpenCV, NumPy, SciPy, Pillow, rembg |
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | React 18, Vite, Redux Toolkit, Styled Components, Socket.io-client, React-Slick |
-| **Backend** | Node.js, Express, Firebase Admin SDK, JWT, Multer, Bcrypt |
-| **AI / ML** | Python 3.10+, MediaPipe, OpenCV, Flask-SocketIO, Eventlet |
-| **DevOps** | Docker, Git, Railway (Deployment) |
+## Repository structure
 
----
-
-## 📂 Project Structure
-
-```bash
+```text
 WearYourStyle/
-├── Client/             # React SPA (Vite)
-│   ├── src/components/ # Reusable UI atoms & organisms
-│   ├── src/redux/      # Global state slices & store
-│   └── src/screens/    # Main views (TryOn, Home, Checkout)
-├── Server/             # Node.js Express API
-│   ├── src/controllers/# Request handlers
-│   ├── src/routes/     # API Endpoints
-│   └── src/db/         # Firebase initialization
-└── MlServer/           # Python AI Engine
-    ├── main.py         # Socket.IO Socket Server
-    ├── requirements.txt# ML dependencies
-    └── pose_landmarker.task # MediaPipe pre-trained model
+├── Client/                 # React/Vite application
+│   └── src/
+│       ├── components/     # Shared UI and feature components
+│       ├── context/        # Authentication, theme, and try-on state
+│       ├── redux/          # Cart and sidebar state
+│       ├── screens/        # Storefront, account, wardrobe, and admin pages
+│       └── styles/         # Theme and shared styled components
+├── Server/                 # Express API, Drizzle schema, and Postgres data layer
+│   └── src/
+│       ├── controller/
+│       ├── middlewares/
+│       ├── models/
+│       └── routes/
+├── MlServer/               # Flask/Socket.IO computer-vision service
+├── scraper/                # Optional product-data collection utility
+└── images/                 # Supporting product/image utilities
 ```
 
----
+## Prerequisites
 
-## 🚀 Installation & Local Setup
+- Node.js 18 or newer
+- npm
+- Python 3.10 or 3.11
+- Access to the Neon project used by the application
+- Cloudinary credentials only when using administrator image uploads
+- A webcam only when using live virtual try-on
 
-### Prerequisites
-- **Node.js**: v18.0 or higher
-- **Python**: v3.10 or higher
-- **Firebase Project**: (Service Account JSON & Config Keys)
-- **Cloudinary**: (Cloud Name, API Key, Secret)
+## Local setup
 
-### Step 1: Clone the Repository
+### 1. Clone the repository
+
 ```bash
-git clone https://github.com/your-username/WearYourStyle.git
-cd WearYourStyle
+git clone https://github.com/bharath-ganga/WearYourStyle-new.git
+cd WearYourStyle-new
 ```
 
-### Step 2: Configure the Backend (Node.js)
+### 2. Configure and start the API
+
 ```bash
 cd Server
 npm install
-# Create a .env file (see Configuration section below)
-npm run dev
 ```
 
-### Step 3: Configure the AI Engine (Python)
-```bash
-cd ../MlServer
-pip install -r requirements.txt
-# Ensure pose_landmarker.task is in the root of MlServer/
-python main.py
-```
+Create `Server/.env`:
 
-### Step 4: Launch the Frontend (React)
-```bash
-cd ../Client
-npm install
-npm run dev
-```
-
----
-
-## ⚙️ Configuration (.env)
-
-### `Server/.env`
 ```env
 PORT=3000
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_CLIENT_EMAIL=your-client-email
-FIREBASE_PRIVATE_KEY="your-private-key"
-ACCESS_TOKEN_SECRET=your-jwt-secret
+
+NEON_BRANCH=production
+DATABASE_URL=postgresql://USER:PASSWORD@HOST-pooler/DB?sslmode=require
+DATABASE_URL_UNPOOLED=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
+DATABASE_POOL_MAX=10
+
+ACCESS_TOKEN_SECRET=replace-with-a-long-random-secret
+ACCESS_TOKEN_EXPIRY=1d
+REFRESH_TOKEN_SECRET=replace-with-another-long-random-secret
+REFRESH_TOKEN_EXPIRY=10d
+
 CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
+
+# Optional: Python executable used by the admin background-removal workflow
+REMBG_PYTHON=python
 ```
 
-### `Client/src/config/apiConfig.js`
-Ensure the URLs match your local environment:
-```javascript
-export const API_BASE_URL = "http://localhost:3000";
-export const ML_BASE_URL = "http://localhost:5000";
+The easiest way to write the Neon variables without copying credentials manually is:
+
+```bash
+npx neon@latest auth
+npx neon@latest link
+npx neon@latest env pull --file Server/.env
 ```
 
----
+The application uses the pooled `DATABASE_URL` for normal API traffic. Drizzle migrations and data-import scripts use `DATABASE_URL_UNPOOLED`, as required for session-aware administration work. Both environment files and the local `.neon` project link are ignored by Git.
 
-## 🎥 Demonstration
-[https://wear-your-style-jfso.vercel.app/](https://wear-your-style-jfso.vercel.app/)
+Create the schema before starting a fresh installation:
 
-*(Interactive walkthroughs and screenshots coming soon!)*
+```bash
+cd Server
+npm run db:migrate
+npm run db:verify
+```
 
----
+Start the API:
 
-## 🤝 Contributing
-1.  **Fork** the project.
-2.  **Create** your feature branch (`git checkout -b feature/AmazingFeature`).
-3.  **Commit** your changes (`git commit -m 'Add AmazingFeature'`).
-4.  **Push** to the branch (`git push origin feature/AmazingFeature`).
-5.  **Open** a Pull Request.
+```bash
+npm run dev
+```
 
----
+The API connects to Neon Postgres before listening on port `3000`. It also creates the development administrator defined in `Server/src/seedAdmin.js` if that account does not already exist. Replace those seeded credentials before any public deployment.
 
-## 📄 License
-Distributed under the **ISC License**. See `LICENSE` for more information.
+### 3. Configure and start the ML service
 
-## 📧 Contact
-**Bharath Ganga** - [bharathganga7@gmail.com](mailto:bharathganga7@gmail.com)
+Open a second terminal:
 
----
-*Designed with ❤️ by the WearYourStyle Engineering Team.*
+```bash
+cd MlServer
+python -m venv .venv
+```
+
+Activate the virtual environment:
+
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+```
+
+```bash
+# macOS or Linux
+source .venv/bin/activate
+```
+
+Install and start the service:
+
+```bash
+pip install -r requirements.txt
+python main.py
+```
+
+The required MediaPipe model files are expected in `MlServer/`. The supplied Dockerfile downloads them automatically during a container build.
+
+### 4. Configure and start the client
+
+Open a third terminal:
+
+```bash
+cd Client
+npm install
+```
+
+The client automatically uses the local API and ML URLs on localhost. To override them, create `Client/.env.local`:
+
+```env
+VITE_API_URL=http://localhost:3000
+VITE_ML_URL=http://localhost:7860
+```
+
+Start the client:
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:5174`.
+
+## Available commands
+
+Run commands from the relevant service directory.
+
+| Directory | Command | Description |
+| --- | --- | --- |
+| `Client` | `npm run dev` | Start the Vite development server |
+| `Client` | `npm run build` | Create a production build |
+| `Client` | `npm run preview` | Preview the production build |
+| `Client` | `npm run lint` | Run ESLint |
+| `Server` | `npm run dev` | Start the API with Nodemon |
+| `Server` | `npm start` | Start the API with Node.js |
+| `Server` | `npm run db:generate` | Generate a versioned Drizzle migration from the schema |
+| `Server` | `npm run db:migrate` | Apply migrations using the direct Neon connection |
+| `Server` | `npm run db:check` | Validate Drizzle migration history |
+| `Server` | `npm run db:verify` | Check row counts and cross-table integrity |
+| `Server` | `npm run migrate:firebase:dry` | Inventory Firestore without writing to Neon |
+| `Server` | `npm run migrate:firebase` | Idempotently import all Firestore collections into Neon |
+| `MlServer` | `python main.py` | Start the Flask/Socket.IO service |
+
+## Firestore-to-Neon migration
+
+The running application no longer imports Firebase or queries Firestore. Firebase Admin is retained only for the explicit one-time migration command.
+
+Test migrations on an isolated Neon branch before production:
+
+```bash
+npx neon@latest branches create --name migration-firestore --parent production
+npx neon@latest checkout migration-firestore
+npx neon@latest env pull --file Server/.env
+
+cd Server
+npm run db:migrate
+npm run migrate:firebase:dry
+npm run migrate:firebase
+npm run db:verify
+```
+
+After verification, check out the production branch, pull its environment, and run the same three write/verification commands:
+
+```bash
+cd ..
+npx neon@latest checkout production
+npx neon@latest env pull --file Server/.env
+
+cd Server
+npm run db:migrate
+npm run migrate:firebase
+npm run db:verify
+```
+
+The importer preserves Firestore document IDs and nested data, converts Firestore timestamps, and upserts rows in a single transaction. Legacy duplicate-email accounts are safely consolidated while every original user ID is recorded in `migration_user_aliases`. Missing historical user/order references receive clearly marked placeholder records so no order or payment is discarded. Each completed import is recorded in `migration_runs`.
+
+Once production is verified and rollback is no longer required, remove the `FIREBASE_*` variables or `Server/serviceAccountKey.json`. Do not delete the Firestore project until its retention window and business rollback requirements have been satisfied.
+
+## Main application routes
+
+| Area | Routes |
+| --- | --- |
+| Store | `/`, `/product`, `/product/details/:id`, `/cart`, `/wishlist` |
+| Authentication | `/sign_in`, `/sign_up`, `/reset`, `/change_password` |
+| Customer | `/checkout`, `/account`, `/account/add`, `/style-profile`, `/order`, `/order_detail/:id` |
+| Experiences | `/virtual_try_on`, `/wardrobe` |
+| Administration | `/admin`, `/admin/dashboard` |
+
+Checkout, customer account, orders, style profile, and wardrobe routes require authentication. The admin dashboard additionally requires the `admin` role.
+
+## API overview
+
+| Prefix | Capabilities |
+| --- | --- |
+| `/api/products` | Public product list and product details |
+| `/api/register`, `/api/login`, `/api/logout` | Customer authentication |
+| `/api/profile`, `/api/address`, `/api/wishlist` | Protected customer data |
+| `/api/orders` | Protected order placement, history, details, cancellation, and returns |
+| `/api/reviews` | Public review reading and authenticated review submission |
+| `/api/coupons/validate` | Coupon validation |
+| `/api/admin` | Role-protected products, orders, analytics, customers, and coupons |
+
+The ML service exposes `GET /`, `POST /classify`, and `POST /tryon/photo`, plus Socket.IO events for live and high-quality frame processing.
+
+## Verification checklist
+
+Before opening a pull request or deploying a change:
+
+```bash
+cd Client
+npm run build
+npm run lint
+```
+
+Then start all three services and verify the primary flow:
+
+1. Register, sign in, and update the customer profile.
+2. Search/filter products, open a product, add a review, and add it to the wishlist.
+3. Add products to the cart, apply a valid coupon, complete checkout, and inspect the order.
+4. Cancel an eligible order or request a return on a delivered order.
+5. Add and remove addresses, save a style profile, and use the wardrobe.
+6. Test live and photo virtual try-on, including result download/history.
+7. Sign in as an administrator and verify analytics, orders, products, customers, and coupons.
+8. Check responsive layouts at mobile, tablet, and desktop widths.
+
+## Deployment notes
+
+- The client falls back to its current origin for the API in production unless `VITE_API_URL` is set.
+- The ML client defaults to the configured hosted Hugging Face Space outside localhost unless `VITE_ML_URL` is set.
+- The API CORS policy currently accepts localhost origins and `*.vercel.app` origins. Update it when deploying to another domain.
+- Use strong, unique JWT secrets and remove or replace the development administrator credentials.
+- Serve every service over HTTPS before enabling webcam access in production.
+- Connect a payment provider and add webhook verification before treating online payments as real transactions.
+
+## Contributing
+
+1. Fork the repository and create a focused feature branch.
+2. Keep credentials and generated assets out of Git.
+3. Run the build, lint, and end-to-end verification checklist.
+4. Submit a pull request describing the behavior and test coverage.
+
+## License
+
+This project is distributed under the ISC License. See [LICENSE](LICENSE).
+
+## Contact
+
+Bharath Ganga — [bharathganga7@gmail.com](mailto:bharathganga7@gmail.com)

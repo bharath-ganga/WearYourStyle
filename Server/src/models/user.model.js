@@ -1,101 +1,60 @@
-import { getDb } from "../db/firebase.js";
-import bcrypt from "bcrypt";
+import { randomUUID } from "crypto";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { eq, sql } from "drizzle-orm";
+import { getDb } from "../db/postgres.js";
+import { users } from "../db/schema.js";
 
-// Firestore collection reference
-const usersCollection = () => getDb().collection("users");
+const asIso = (value) => value instanceof Date ? value.toISOString() : value;
+const toUser = (row) => row ? { ...row, createdAt: asIso(row.createdAt), updatedAt: asIso(row.updatedAt) } : null;
 
-// Helper: Find user by ID
 const findById = async (id) => {
-  const doc = await usersCollection().doc(id).get();
-  if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() };
+  const [user] = await getDb().select().from(users).where(eq(users.id, id)).limit(1);
+  return toUser(user);
 };
 
-// Helper: Find user by email
 const findByEmail = async (email) => {
-  const snapshot = await usersCollection().where("email", "==", email).limit(1).get();
-  if (snapshot.empty) return null;
-  const doc = snapshot.docs[0];
-  return { id: doc.id, ...doc.data() };
+  const normalized = String(email || "").trim().toLowerCase();
+  const [user] = await getDb().select().from(users).where(sql`lower(${users.email}) = ${normalized}`).limit(1);
+  return toUser(user);
 };
 
-// Helper: Create new user
 const createUser = async ({ firstName, lastName, email, password, phoneNumber, address, role = "customer" }) => {
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const now = new Date().toISOString();
-
-  const newUser = {
-    firstName,
-    lastName,
-    email,
-    password: hashedPassword,
-    phoneNumber: phoneNumber || "",
-    address: address || "",
-    addresses: [],
-    wishlist: [],
-    stylePreferences: {},
-    measurements: {},
-    role,
-    refreshToken: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  const docRef = await usersCollection().add(newUser);
-  return { id: docRef.id, ...newUser };
+  const now = new Date();
+  const [user] = await getDb().insert(users).values({
+    id: randomUUID(), firstName, lastName, email: String(email).trim().toLowerCase(),
+    password: await bcrypt.hash(password, 10), phoneNumber: phoneNumber || "", address: address || "",
+    addresses: [], wishlist: [], stylePreferences: {}, measurements: {}, role,
+    refreshToken: null, createdAt: now, updatedAt: now,
+  }).returning();
+  return toUser(user);
 };
 
-// Helper: Update user fields by ID
 const updateUser = async (id, fields) => {
-  const updateData = { ...fields, updatedAt: new Date().toISOString() };
-  await usersCollection().doc(id).update(updateData);
-  return findById(id);
+  const allowed = ["firstName", "lastName", "email", "password", "phoneNumber", "address", "addresses", "wishlist", "stylePreferences", "measurements", "role", "refreshToken"];
+  const updateData = Object.fromEntries(Object.entries(fields).filter(([key]) => allowed.includes(key)));
+  if (Object.hasOwn(updateData, "email")) updateData.email = String(updateData.email).trim().toLowerCase();
+  updateData.updatedAt = new Date();
+  const [user] = await getDb().update(users).set(updateData).where(eq(users.id, id)).returning();
+  return toUser(user);
 };
 
-// Helper: Get all users
-const getAllUsers = async () => {
-  const snapshot = await usersCollection().get();
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-};
-
-// Helper: Check password
-const isPasswordCorrect = async (plainPassword, hashedPassword) => {
-  return await bcrypt.compare(plainPassword, hashedPassword);
-};
-
-// Helper: Generate Access Token
-const generateAccessToken = (user) => {
-  return jwt.sign(
-    { id: user.id, email: user.email, firstName: user.firstName },
-    process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
-  );
-};
-
-// Helper: Generate Refresh Token
-const generateRefreshToken = (user) => {
-  return jwt.sign(
-    { id: user.id },
-    process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
-  );
-};
-
-// Helper: Return user without sensitive fields
+const getAllUsers = async () => (await getDb().select().from(users)).map(toUser);
+const isPasswordCorrect = async (plainPassword, hashedPassword) => bcrypt.compare(plainPassword, hashedPassword);
+const generateAccessToken = (user) => jwt.sign(
+  { id: user.id, email: user.email, firstName: user.firstName, role: user.role },
+  process.env.ACCESS_TOKEN_SECRET,
+  { expiresIn: process.env.ACCESS_TOKEN_EXPIRY },
+);
+const generateRefreshToken = (user) => jwt.sign(
+  { id: user.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRY },
+);
 const sanitizeUser = (user) => {
   const { password, refreshToken, ...safeUser } = user;
   return safeUser;
 };
 
 export const User = {
-  findById,
-  findByEmail,
-  create: createUser,
-  update: updateUser,
-  getAll: getAllUsers,
-  isPasswordCorrect,
-  generateAccessToken,
-  generateRefreshToken,
-  sanitizeUser,
+  findById, findByEmail, create: createUser, update: updateUser, getAll: getAllUsers,
+  isPasswordCorrect, generateAccessToken, generateRefreshToken, sanitizeUser,
 };

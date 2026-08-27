@@ -1,5 +1,5 @@
 import { Product } from "./models/product.model.js";
-import connectDb, { getDb } from "./db/firebase.js";
+import connectDb from "./db/postgres.js";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
@@ -34,18 +34,12 @@ const copyFile = (sourcePath, targetPath) => {
 const seedDatabase = async () => {
     try {
         await connectDb();
-        console.log("Connected to Firestore...");
-
-        const db = getDb();
+        console.log("Connected to Neon Postgres...");
         
         // 1. Wipe existing products
-        const productsSnapshot = await db.collection("products").get();
-        const batch = db.batch();
-        productsSnapshot.docs.forEach((doc) => {
-            batch.delete(doc.ref);
-        });
-        await batch.commit();
-        console.log(`\n🧹 Cleared ${productsSnapshot.size} old/dummy products from the database.`);
+        const existingProducts = await Product.getAll();
+        await Promise.all(existingProducts.map((product) => Product.delete(product.id)));
+        console.log(`\n🧹 Cleared ${existingProducts.length} old/dummy products from the database.`);
 
         // 2. Scan images directory and add them
         const generatedProducts = [];

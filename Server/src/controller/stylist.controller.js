@@ -12,7 +12,7 @@ const getStylistRecommendations = asyncHandler(async (req, res) => {
   const query = `${message} ${preferences.favoriteColors || ""} ${preferences.occasion || ""} ${(preferences.styles || []).join(" ")}`.toLowerCase();
   console.log(`AI Stylist Query received: "${message}"`);
 
-  // Fetch all products from Firestore
+  // Fetch all products from Postgres
   const allProducts = await Product.getAll();
 
   // Define keyword filters

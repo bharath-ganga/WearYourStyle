@@ -1,18 +1,24 @@
-import { getDb } from "../db/firebase.js";
+import { randomUUID } from "crypto";
+import { and, desc, eq } from "drizzle-orm";
+import { getDb } from "../db/postgres.js";
+import { reviews } from "../db/schema.js";
 
-const collection = () => getDb().collection("reviews");
+const asIso = (value) => value instanceof Date ? value.toISOString() : value;
+const toReview = (row) => row ? { ...row, createdAt: asIso(row.createdAt), updatedAt: asIso(row.updatedAt) } : null;
 
-const forProduct = async (productId) => {
-  const snapshot = await collection().where("productId", "==", productId).get();
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-};
+const forProduct = async (productId) => (
+  await getDb().select().from(reviews).where(eq(reviews.productId, productId)).orderBy(desc(reviews.createdAt))
+).map(toReview);
 
 const upsert = async ({ productId, userId, userName, rating, comment }) => {
-  const existing = await collection().where("productId", "==", productId).where("userId", "==", userId).limit(1).get();
-  const data = { productId, userId, userName, rating, comment, createdAt: new Date().toISOString() };
-  if (!existing.empty) { await existing.docs[0].ref.set(data, { merge:true }); return { id:existing.docs[0].id, ...data }; }
-  const doc = await collection().add(data);
-  return { id:doc.id, ...data };
+  const now = new Date();
+  const [review] = await getDb().insert(reviews).values({
+    id: randomUUID(), productId, userId, userName, rating, comment, createdAt: now, updatedAt: now,
+  }).onConflictDoUpdate({
+    target: [reviews.productId, reviews.userId],
+    set: { userName, rating, comment, updatedAt: now },
+  }).returning();
+  return toReview(review);
 };
 
 export const Review = { forProduct, upsert };

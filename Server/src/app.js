@@ -33,7 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-import connectDb from './db/firebase.js';
+import connectDb from './db/postgres.js';
 
 app.get('/', (req, res) => {
     res.send("WearYourStyle - Server is running");
@@ -41,27 +41,19 @@ app.get('/', (req, res) => {
 
 app.get('/api/db-debug', async (req, res) => {
     try {
-        const db = await connectDb();
-        const snapshot = await db.collection("products").limit(1).get();
+        await connectDb();
+        const products = await Product.getAll();
         res.status(200).json({
             status: "success",
-            message: "Firebase connected successfully and Firestore query completed",
-            projectId: process.env.FIREBASE_PROJECT_ID || "missing",
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "missing",
-            productsFound: snapshot.size
+            message: "Neon Postgres connected successfully",
+            branch: process.env.NEON_BRANCH || "unknown",
+            productsFound: products.length
         });
     } catch (err) {
         res.status(500).json({
             status: "error",
-            message: "Firebase connection failed",
-            error: err.message,
-            stack: err.stack,
-            env: {
-                projectId: process.env.FIREBASE_PROJECT_ID || "missing",
-                clientEmail: process.env.FIREBASE_CLIENT_EMAIL || "missing",
-                hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-                privateKeyLength: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.length : 0
-            }
+            message: "Neon Postgres connection failed",
+            error: err.message
         });
     }
 });

@@ -1,5 +1,5 @@
 import { Product } from "./models/product.model.js";
-import connectDb from "./db/firebase.js";
+import connectDb from "./db/postgres.js";
 import dotenv from "dotenv";
 
 dotenv.config({ path: "./.env" });
@@ -120,7 +120,7 @@ const productsToMigrate = [
 const migrate = async () => {
   try {
     await connectDb();
-    console.log("Connected to Firestore for migration...");
+    console.log("Connected to Neon Postgres for migration...");
 
     for (const prod of productsToMigrate) {
       const { id, ...data } = prod;

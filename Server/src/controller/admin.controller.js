@@ -6,7 +6,7 @@
  * UPGRADED (Step 2):
  *   createProductWithBgRemoval — accepts multipart/form-data with an image file,
  *     runs rembg background removal via Python subprocess, uploads the clean
- *     transparent PNG to Cloudinary, then saves the product to Firestore.
+ *     transparent PNG to Cloudinary, then saves the product to Postgres.
  *
  * PRESERVED (unchanged):
  *   getAllOrders, updateOrderStatus, deleteOrder,
@@ -179,7 +179,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
  *   1. Multer reads the file into memory (req.file.buffer)
  *   2. If removeBg !== "false": Python rembg strips the background → transparent PNG
  *   3. Clean PNG buffer is uploaded to Cloudinary (folder: wear_your_style/products)
- *   4. Product document is created in Firestore with the Cloudinary secure_url
+ *   4. Product row is created in Postgres with the Cloudinary secure_url
  *
  * Response:
  *   { success: true, data: <product>, imgSource: "<cloudinary_url>" }
@@ -233,7 +233,7 @@ const createProductWithBgRemoval = asyncHandler(async (req, res) => {
     throw new ApiError(500, `Cloudinary upload failed: ${err.message}`);
   }
 
-  // ── Step 3: Save product to Firestore ─────────────────────────────────────
+  // ── Step 3: Save product to Postgres ──────────────────────────────────────
   const productData = {
     title,
     price:         parseFloat(price),

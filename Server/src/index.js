@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import app from './app.js'
-import connectDb from './db/firebase.js'
+import connectDb from './db/postgres.js'
 import seedAdmin from './seedAdmin.js'
 
 dotenv.config({
@@ -19,5 +19,5 @@ connectDb()
         })
     })
     .catch((err) => {
-        console.error("❌ Firebase Firestore connection failed", err)
+        console.error("❌ Neon Postgres connection failed", err)
     })

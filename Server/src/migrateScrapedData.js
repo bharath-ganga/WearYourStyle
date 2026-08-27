@@ -1,5 +1,5 @@
 import { Product } from "./models/product.model.js";
-import connectDb from "./db/firebase.js";
+import connectDb from "./db/postgres.js";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
@@ -23,7 +23,7 @@ const migrateScrapedData = async () => {
     console.log(`Found ${products.length} products to migrate...`);
 
     await connectDb();
-    console.log("Connected to Firestore...");
+    console.log("Connected to Neon Postgres...");
 
     let count = 0;
     for (const prod of products) {
@@ -32,7 +32,7 @@ const migrateScrapedData = async () => {
       if (count % 10 === 0) console.log(`Migrated ${count} products...`);
     }
 
-    console.log(`✅ Success! Migrated ${count} products to Firestore.`);
+    console.log(`✅ Success! Migrated ${count} products to Neon Postgres.`);
     process.exit(0);
   } catch (error) {
     console.error("❌ Migration failed:", error.message);

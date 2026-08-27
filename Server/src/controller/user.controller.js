@@ -9,7 +9,7 @@ const generateAccessAndRefreshToken = async (user) => {
     const accessToken = User.generateAccessToken(user);
     const refreshToken = User.generateRefreshToken(user);
 
-    // Save refreshToken to Firestore
+    // Save the refresh token in Postgres.
     await User.update(user.id, { refreshToken });
 
     return { accessToken, refreshToken };
@@ -40,7 +40,8 @@ const validatePassword = (password) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, password, email, phoneNumber, address } = req.body;
+  const { firstName, lastName, password, phoneNumber, address } = req.body;
+  const email = String(req.body.email || "").trim().toLowerCase();
 
   if (!firstName || !lastName || !email || !password || !phoneNumber) {
     throw new ApiError(400, "All fields (First Name, Last Name, Email, Password, and Phone) are mandatory");
@@ -82,22 +83,23 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const { password } = req.body;
 
-  if (!email) {
-    throw new ApiError(400, "Email is required");
+  if (!email || !password) {
+    throw new ApiError(400, "Email and password are required");
   }
 
   const user = await User.findByEmail(email);
 
   if (!user) {
-    throw new ApiError(404, "User does not exist");
+    throw new ApiError(401, "Invalid email or password");
   }
 
   const isPasswordValid = await User.isPasswordCorrect(password, user.password);
 
   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials");
+    throw new ApiError(401, "Invalid email or password");
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user);

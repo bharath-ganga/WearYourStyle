@@ -51,7 +51,7 @@ const SignInScreen = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const email = emailRef.current.value;
+    const email = emailRef.current.value.trim().toLowerCase();
     const password = passwordRef.current.value;
     try {
       const response = await axios.post(`${API_BASE_URL}/api/login`, { email, password });
@@ -66,16 +66,8 @@ const SignInScreen = () => {
       }, 100);
     }
     catch (err) {
-      console.log("Error:", err);
-      if (err.response && err.response.status === 409) {
-        toast.error("User is not Registered!");
-      }
-      else if (err.response && err.response.status === 403) {
-        toast.error("Invalid Password!");
-      }
-      else {
-        toast.error("An unexpected error occurred.");
-      }
+      const message = err.response?.data?.message;
+      toast.error(message || "Unable to sign in. Please try again.");
     }
   }
 

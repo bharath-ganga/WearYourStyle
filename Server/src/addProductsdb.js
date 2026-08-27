@@ -1,5 +1,5 @@
 import { Product } from "./models/product.model.js";
-import connectDb from "./db/firebase.js";
+import connectDb from "./db/postgres.js";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
@@ -38,7 +38,7 @@ const addProducts = async () => {
     console.log(`Found ${imageUrls.length} images to process...`);
 
     await connectDb();
-    console.log("Connected to Firestore...");
+    console.log("Connected to Neon Postgres...");
 
     // Remove existing Gucci products to avoid duplicates if needed, or just add
     // Since this is a specialized script, we just add them.

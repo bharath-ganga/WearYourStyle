@@ -15,7 +15,7 @@
  * NEW:
  *   POST   /api/admin/products/upload   ← multipart/form-data with image file
  *     Runs rembg background removal, uploads clean PNG to Cloudinary,
- *     stores product in Firestore.  See admin.controller.js for full docs.
+ *     stores product in Postgres.  See admin.controller.js for full docs.
  */
 
 import express from "express";
