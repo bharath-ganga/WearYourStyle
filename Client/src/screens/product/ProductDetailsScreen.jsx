@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { Container } from "../../styles/styles";
 import { API_BASE_URL } from "../../config/apiConfig";
-import { defaultFallbackProducts } from "../../data/fallbackProducts";
 import Breadcrumb from "../../components/common/Breadcrumb";
 import ProductPreview from "../../components/product/ProductPreview";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
@@ -201,6 +200,7 @@ const ProductDetailsScreen = () => {
     const navigate = useNavigate();
     const { user, wishlist, toggleWishlist } = useAuth();
     const [product, setProduct] = useState(null);
+    const [productError, setProductError] = useState("");
     const [selectedSize, setSelectedSize] = useState("");
     const [selectedColor, setSelectedColor] = useState("");
 
@@ -216,19 +216,20 @@ const ProductDetailsScreen = () => {
                     const foundProduct = await response.json();
                     if (foundProduct && foundProduct.id) {
                         setProduct(foundProduct);
-                        const recent = JSON.parse(localStorage.getItem("recentlyViewed") || "[]").filter((item) => item.id !== foundProduct.id);
-                        localStorage.setItem("recentlyViewed", JSON.stringify([foundProduct, ...recent].slice(0, 8)));
+                        try {
+                            const stored = JSON.parse(localStorage.getItem("recentlyViewed") || "[]");
+                            const recent = (Array.isArray(stored) ? stored : []).filter((item) => item.id !== foundProduct.id);
+                            localStorage.setItem("recentlyViewed", JSON.stringify([foundProduct, ...recent].slice(0, 8)));
+                        } catch { /* Product details still work if local storage is unavailable. */ }
                         if (foundProduct.sizes?.length > 0) setSelectedSize(foundProduct.sizes[0]);
                         if (foundProduct.colors?.length > 0) setSelectedColor(foundProduct.colors[0]);
                         return;
                     }
                 }
-                const fallback = defaultFallbackProducts.find(p => p.id === id) || defaultFallbackProducts[0];
-                setProduct(fallback);
+                setProductError(response.status === 404 ? "Product not found" : "Product is unavailable right now");
             } catch (error) {
-                console.warn("Failed to fetch product, using fallback:", error);
-                const fallback = defaultFallbackProducts.find(p => p.id === id) || defaultFallbackProducts[0];
-                setProduct(fallback);
+                console.error("Failed to fetch product:", error);
+                setProductError("Product is unavailable right now");
             } finally {
                 setLoading(false);
             }
@@ -247,7 +248,7 @@ const ProductDetailsScreen = () => {
         );
     }
 
-    if (!product) return <Container><p className="py-20 text-center text-xl">Product not found!</p></Container>;
+    if (!product) return <Container><p role="alert" className="py-20 text-center text-xl">{productError || "Product not found"}</p></Container>;
 
     const handleAddToCart = () => {
         const cartItem = {

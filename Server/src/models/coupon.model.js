@@ -3,10 +3,6 @@ import { eq, sql } from "drizzle-orm";
 import { getDb } from "../db/postgres.js";
 import { coupons } from "../db/schema.js";
 
-const defaults = [
-  { id: "welcome10", code: "WELCOME10", discountPercent: 10, active: true },
-  { id: "style20", code: "STYLE20", discountPercent: 20, active: true },
-];
 const asIso = (value) => value instanceof Date ? value.toISOString() : value;
 const toCoupon = (row) => row ? {
   ...row, discountPercent: Number(row.discountPercent), createdAt: asIso(row.createdAt), updatedAt: asIso(row.updatedAt),
@@ -14,14 +10,14 @@ const toCoupon = (row) => row ? {
 
 const getAll = async () => {
   const items = (await getDb().select().from(coupons)).map(toCoupon);
-  return items.length ? items : defaults;
+  return items;
 };
 const findByCode = async (code) => {
   const normalized = String(code || "").trim().toUpperCase();
   const [coupon] = await getDb().select().from(coupons)
     .where(sql`upper(${coupons.code}) = ${normalized} and ${coupons.active} = true`).limit(1);
   if (coupon) return toCoupon(coupon);
-  return defaults.find((item) => item.code === normalized && item.active !== false) || null;
+  return null;
 };
 const create = async (data) => {
   const now = new Date();

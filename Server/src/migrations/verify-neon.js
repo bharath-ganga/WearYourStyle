@@ -10,7 +10,6 @@ const main = async () => {
     const counts = await pool.query(`
       select
         (select count(*)::int from users) as users,
-        (select count(*)::int from migration_user_aliases) as user_aliases,
         (select count(*)::int from products) as products,
         (select count(*)::int from orders) as orders,
         (select count(*)::int from payments) as payments,
@@ -24,14 +23,9 @@ const main = async () => {
         (select count(*)::int from reviews r left join products p on p.id = r.product_id where p.id is null) as orphan_review_products,
         (select count(*)::int from reviews r left join users u on u.id = r.user_id where u.id is null) as orphan_review_users
     `);
-    const latestRun = await pool.query(`
-      select source, counts, completed_at from migration_runs order by completed_at desc limit 1
-    `);
-
     const problems = Object.values(integrity.rows[0]).some((value) => Number(value) !== 0);
     console.log("Neon counts:", counts.rows[0]);
     console.log("Referential integrity:", integrity.rows[0]);
-    console.log("Latest migration:", latestRun.rows[0] || null);
     if (problems) throw new Error("Neon verification found orphaned records");
     console.log("Neon verification passed.");
   } finally {

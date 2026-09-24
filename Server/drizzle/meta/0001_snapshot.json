@@ -141,7 +141,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'firebase-firestore'"
+          "default": "'legacy-import'"
         },
         "migrated_at": {
           "name": "migrated_at",

@@ -1,10 +1,12 @@
 import { Order } from "../models/order.model.js";
-import { Product } from "../models/product.model.js";
-import { Payment } from "../models/payment.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/AsyncHandler.js";
 import { Coupon } from "../models/coupon.model.js";
+import { getDb } from "../db/postgres.js";
+import { orders, payments, products } from "../db/schema.js";
+import { eq, sql } from "drizzle-orm";
+import { randomUUID } from "crypto";
 
 const placeOrder = asyncHandler(async (req, res) => {
     const { 
@@ -12,7 +14,6 @@ const placeOrder = asyncHandler(async (req, res) => {
         shippingAddress, 
         paymentMethod, 
         phone,
-        status, 
         delivery_date,
         payment_details,
         couponCode = ""
@@ -21,7 +22,7 @@ const placeOrder = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const userEmail = req.user.email;
 
-    if (!items || items.length === 0) {
+    if (!Array.isArray(items) || items.length === 0) {
         throw new ApiError(400, "Cart is empty");
     }
 
@@ -29,65 +30,51 @@ const placeOrder = asyncHandler(async (req, res) => {
     const coupon = couponCode ? await Coupon.findByCode(couponCode) : null;
     if (couponCode && !coupon) throw new ApiError(400, "Coupon is invalid or inactive");
     const safeDiscount = Number(coupon?.discountPercent || 0);
-    let subtotal = 0;
-    const validatedItems = [];
-    for (const item of items) {
-        const quantity = Math.max(1, Number.parseInt(item.quantity, 10) || 1);
-        const productId = item.productId;
-        const product = productId ? await Product.findById(productId) : null;
-        if (!product) throw new ApiError(400, `Product is no longer available: ${item.title || productId}`);
-        if (Number(product.stock) < quantity) throw new ApiError(409, `Only ${product.stock || 0} left for ${product.title}`);
-        subtotal += Number(product.price) * quantity;
-        validatedItems.push({ ...item, productId, title: product.title, name: product.title, price: Number(product.price), quantity, totalPrice: Number(product.price) * quantity });
-    }
-    const serverTotal = Number((subtotal * (1 - safeDiscount / 100) + 50).toFixed(2));
-
-    const orderData = {
-        userId,
-        userEmail,
-        phone: phone || "N/A",
-        order_no: `ORD-${Date.now()}`,
-        items: validatedItems,
-        subtotal,
-        shippingFee: 50,
-        discountPercent: safeDiscount,
-        totalAmount: serverTotal,
-        shippingAddress,
-        paymentMethod,
-        order_date: new Date().toLocaleDateString(), 
-        status: status || "Order Placed",
-        delivery_date: delivery_date || "Within 3-5 days"
-    };
-
-    const order = await Order.create(orderData);
-
-    if (!order) {
-        throw new ApiError(500, "Something went wrong while placing order");
-    }
-
-    // Step 2: Store payment record if provided
-    if (payment_details) {
-        await Payment.create({
-            orderId: order.id,
-            order_no: order.order_no,
-            transactionId: payment_details.transaction_id,
-            paymentType: payment_details.payment_type || paymentMethod,
-            customerName: payment_details.customer_name || (req.user ? req.user.firstName : "Guest"),
-            amount: serverTotal,
-            timestamp: payment_details.timestamp || new Date().toISOString()
-        });
-    }
-
-    // Decrease product stock
-    for (const item of validatedItems) {
-        if (item.productId) {
-            const product = await Product.findById(item.productId);
-            if (product && typeof product.stock !== 'undefined') {
-                const newStock = Math.max(0, parseInt(product.stock) - parseInt(item.quantity || 1));
-                await Product.update(item.productId, { stock: newStock });
+    const order = await getDb().transaction(async (tx) => {
+        let subtotal = 0;
+        const validatedItems = [];
+        for (const item of items) {
+            const quantity = Number(item?.quantity);
+            if (!item?.productId || !Number.isSafeInteger(quantity) || quantity < 1) {
+                throw new ApiError(400, "Each cart item needs a product and a positive whole-number quantity");
             }
+            const [product] = await tx.update(products)
+                .set({ stock: sql`${products.stock} - ${quantity}`, updatedAt: new Date() })
+                .where(sql`${products.id} = ${String(item.productId)} and ${products.stock} >= ${quantity}`)
+                .returning();
+            if (!product) throw new ApiError(409, `Product is unavailable or has insufficient stock: ${item.productId}`);
+            const price = Number(product.price);
+            subtotal += price * quantity;
+            validatedItems.push({ productId: product.id, title: product.title, name: product.title, imgSource: product.imgSource, price, quantity, totalPrice: price * quantity });
         }
-    }
+        const totalAmount = Number((subtotal * (1 - safeDiscount / 100) + 50).toFixed(2));
+        const now = new Date();
+        const orderId = randomUUID();
+        const orderNo = `ORD-${Date.now()}-${orderId.slice(0, 8)}`;
+        const data = {
+            userEmail, phone: phone || "N/A", order_no: orderNo, items: validatedItems,
+            subtotal, shippingFee: 50, discountPercent: safeDiscount,
+            shippingAddress, paymentMethod, order_date: now.toISOString(),
+            delivery_date: delivery_date || "Within 3-5 days"
+        };
+        const [saved] = await tx.insert(orders).values({
+            id: orderId, userId, status: "Order Placed", totalAmount: String(totalAmount),
+            data, createdAt: now, updatedAt: now
+        }).returning();
+        if (payment_details) {
+            await tx.insert(payments).values({
+                id: randomUUID(), orderId, amount: String(totalAmount),
+                data: {
+                    order_no: orderNo,
+                    transactionId: payment_details.transaction_id,
+                    paymentType: payment_details.payment_type || paymentMethod,
+                    customerName: payment_details.customer_name || req.user.firstName,
+                    timestamp: payment_details.timestamp || now.toISOString()
+                }, createdAt: now, updatedAt: now
+            });
+        }
+        return { ...data, id: saved.id, userId, status: saved.status, totalAmount, createdAt: saved.createdAt.toISOString(), updatedAt: saved.updatedAt.toISOString() };
+    });
 
     return res
         .status(201)
@@ -132,33 +119,25 @@ const getOrderById = asyncHandler(async (req, res) => {
 
 const cancelOrder = asyncHandler(async (req, res) => {
     const { id } = req.params;
-
-    const order = await Order.findById(id);
-    if (!order) {
-        throw new ApiError(404, "Order not found");
-    }
-
-    // Security check: Only the owner or an admin can cancel the order
-    if (order.userId !== req.user.id && req.user.role !== "admin") {
-        throw new ApiError(403, "You do not have permission to cancel this order");
-    }
-
-    if (order.status === "Cancelled") {
-        throw new ApiError(400, "Order is already cancelled");
-    }
-
-    const updatedOrder = await Order.update(id, { status: "Cancelled" });
-
-    // Restore stock
-    for (const item of order.items) {
-        if (item.productId) {
-            const product = await Product.findById(item.productId);
-            if (product && typeof product.stock !== 'undefined') {
-                const newStock = parseInt(product.stock) + parseInt(item.quantity || 1);
-                await Product.update(item.productId, { stock: newStock });
+    const updatedOrder = await getDb().transaction(async (tx) => {
+        const [order] = await tx.select().from(orders).where(eq(orders.id, id)).for("update");
+        if (!order) throw new ApiError(404, "Order not found");
+        if (order.userId !== req.user.id && req.user.role !== "admin") {
+            throw new ApiError(403, "You do not have permission to cancel this order");
+        }
+        if (order.status === "Cancelled") throw new ApiError(400, "Order is already cancelled");
+        if (["Delivered", "Return requested", "Returned"].includes(order.status)) {
+            throw new ApiError(400, "This order can no longer be cancelled");
+        }
+        const [updated] = await tx.update(orders).set({ status: "Cancelled", updatedAt: new Date() }).where(eq(orders.id, id)).returning();
+        for (const item of order.data?.items || []) {
+            const quantity = Number(item.quantity);
+            if (item.productId && Number.isSafeInteger(quantity) && quantity > 0) {
+                await tx.update(products).set({ stock: sql`${products.stock} + ${quantity}`, updatedAt: new Date() }).where(eq(products.id, String(item.productId)));
             }
         }
-    }
+        return { ...updated.data, id: updated.id, userId: updated.userId, status: updated.status, totalAmount: Number(updated.totalAmount), createdAt: updated.createdAt.toISOString(), updatedAt: updated.updatedAt.toISOString() };
+    });
 
     return res
         .status(200)

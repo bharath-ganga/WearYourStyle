@@ -181,6 +181,10 @@ const ShippingPayment = ({ billingDetails }) => {
             toast.error("Please select at least one mode of payment.");
             return;
         }
+        if (!billingDetails?.address) {
+            toast.error("Please complete your billing address before placing an order.");
+            return;
+        }
         if (paymentMethod === "Credit Card") {
             const number = document.getElementById("checkout-card-number")?.value || "";
             const expiry = document.getElementById("checkout-card-expiry")?.value || "";
@@ -260,13 +264,6 @@ const ShippingPayment = ({ billingDetails }) => {
                     <div style={{ marginTop: '4px' }}><i className="bi bi-telephone-fill" style={{ marginRight: '6px', color: '#00a98f' }}></i>{billingDetails.phone}</div>
                 </div>
             )}
-          </div>
-          <div className="horiz-line-separator"></div>
-          <div className="list-group-item flex items-center">
-            <Input type="radio" name="shipping_addr" />
-            <span className="font-semibold text-lg">
-              Use a different shipping address
-            </span>
           </div>
         </div>
       </div>

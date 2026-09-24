@@ -12,15 +12,13 @@
     "db:check": "drizzle-kit check",
     "db:verify": "node src/migrations/verify-neon.js",
     "db:studio": "drizzle-kit studio",
-    "migrate:firebase:dry": "node src/migrations/firebase-to-neon.js --dry-run",
-    "migrate:firebase": "node src/migrations/firebase-to-neon.js"
+    "admin:create": "node -r dotenv/config src/createAdmin.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "drizzle-kit": "^0.31.10",
-    "firebase-admin": "^14.3.0",
     "nodemon": "^3.1.4"
   },
   "dependencies": {

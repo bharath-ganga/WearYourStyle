@@ -15,6 +15,13 @@
       "when": 1787853040770,
       "tag": "0001_icy_the_hunter",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790253147192,
+      "tag": "0002_clean_tarantula",
+      "breakpoints": true
     }
   ]
 }

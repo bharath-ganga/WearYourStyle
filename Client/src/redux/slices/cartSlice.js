@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const fetchFromLocalStorage = () => {
-    let cart = localStorage.getItem("cart");
-    if (cart) {
-        return JSON.parse(localStorage.getItem("cart"));
-    } else {
+    try {
+        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+        return Array.isArray(cart) ? cart : [];
+    } catch {
         return [];
     }
 };
@@ -15,7 +15,7 @@ const storeInLocalStorage = (data) => {
 
 const fetchDiscountFromLocalStorage = () => {
     const discount = Number(localStorage.getItem("cartDiscountPercent"));
-    return [10, 20].includes(discount) ? discount : 0;
+    return Number.isFinite(discount) && discount >= 0 && discount <= 80 ? discount : 0;
 };
 
 const cartSlice = createSlice({

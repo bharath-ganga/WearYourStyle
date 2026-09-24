@@ -7,7 +7,6 @@ import { Link } from "react-router-dom";
 import ProductList from "../../components/product/ProductList";
 import Title from "../../components/common/Title";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
-import { defaultFallbackProducts } from "../../data/fallbackProducts";
 import ProductFilter from "../../components/product/ProductFilter";
 
 const ProductsContent = styled.div`
@@ -92,6 +91,7 @@ const DescriptionContent = styled.div`
 const ProductListScreen = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState(false);
   const [query, setQuery] = useState(new URLSearchParams(window.location.search).get("q") || "");
   const [sort, setSort] = useState("featured");
   const initialFilters = { category: "", size: "", maxPrice: null, inStock: false };
@@ -105,16 +105,15 @@ const ProductListScreen = () => {
 
         if (response.ok && contentType && contentType.includes("application/json")) {
           const data = await response.json();
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data)) {
             setProducts(data);
             return;
           }
         }
-        console.warn("API response was not JSON array. Using fallback products.");
-        setProducts(defaultFallbackProducts);
+        throw new Error(`Catalog returned an invalid response (${response.status})`);
       } catch (error) {
-        console.warn("Failed to fetch products. Using fallback products:", error);
-        setProducts(defaultFallbackProducts);
+        console.error("Failed to fetch products:", error);
+        setCatalogError(true);
       } finally {
         setLoading(false);
       }
@@ -166,6 +165,8 @@ const ProductListScreen = () => {
                 <i className="bi bi-arrow-clockwise fa-spin text-4xl" style={{ animation: "spin 1s linear infinite" }}></i>
                 <span className="ml-3 text-lg font-semibold">Loading...</span>
               </div>
+            ) : catalogError ? (
+              <div role="alert" style={{ padding:"70px 20px", textAlign:"center", border:"1px dashed #c9c5bc", borderRadius:18 }}><h3>Products are unavailable right now</h3><p>Please try again in a moment.</p></div>
             ) : (
               visibleProducts.length ? <ProductList products={visibleProducts} /> : <div style={{ padding:"70px 20px", textAlign:"center", border:"1px dashed #c9c5bc", borderRadius:18 }}><h3>No exact matches</h3><p>Try removing a filter or searching another term.</p></div>
             )}

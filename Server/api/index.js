@@ -1,44 +1,31 @@
 import app from "../src/app.js";
-import connectDb from "../src/db/firebase.js";
-import seedAdmin from "../src/seedAdmin.js";
+import connectDb from "../src/db/postgres.js";
+import { isAllowedOrigin } from "../src/utils/allowedOrigin.js";
 
-let cachedDb = null;
+let connectionPromise;
 
 export default async (req, res) => {
-  const path = req.url || "";
-  const vercelPath = req.headers["x-vercel-forwarded-path"] || req.headers["x-matched-path"] || "";
-  
-  if (path.includes("db-debug") || vercelPath.includes("db-debug")) {
+  // Preflight requests do not need a database connection.
+  if (req.method === "OPTIONS") {
     return app(req, res);
   }
 
   try {
-    if (!cachedDb) {
-      console.log("[Vercel] Connecting to Firestore...");
-      cachedDb = await connectDb();
-      console.log("[Vercel] Seeding admin account...");
-      await seedAdmin();
-    }
+    if (!connectionPromise) connectionPromise = connectDb();
+    await connectionPromise;
     return app(req, res);
   } catch (error) {
-    console.error("[Vercel] Initialization error:", error);
-    
+    connectionPromise = undefined; // Retry after a transient connection failure.
+    console.error("[Vercel] Postgres initialization error:", error);
     const origin = req.headers.origin;
-    if (origin && (origin.startsWith("http://localhost") || origin.endsWith(".vercel.app"))) {
+    if (origin && isAllowedOrigin(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Access-Control-Allow-Credentials", "true");
-    } else {
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Vary", "Origin");
     }
-    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-
     res.status(500).json({
       success: false,
-      message: "Vercel Serverless Function Initialization Error",
-      error: error.message,
-      url: req.url || "undefined",
-      headers: req.headers || {}
+      message: "API database connection unavailable"
     });
   }
 };

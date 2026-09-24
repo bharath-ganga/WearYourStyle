@@ -101,18 +101,3 @@ export const coupons = pgTable("coupons", {
   uniqueIndex("coupons_code_upper_unique").on(sql`upper(${table.code})`),
   check("coupons_discount_check", sql`${table.discountPercent} between 0 and 100`),
 ]);
-
-export const migrationRuns = pgTable("migration_runs", {
-  id: text("id").primaryKey(),
-  source: text("source").notNull(),
-  counts: jsonb("counts").notNull(),
-  startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
-  completedAt: timestamp("completed_at", { withTimezone: true }).notNull(),
-});
-
-export const migrationUserAliases = pgTable("migration_user_aliases", {
-  sourceUserId: text("source_user_id").primaryKey(),
-  targetUserId: text("target_user_id").notNull(),
-  source: text("source").notNull().default("firebase-firestore"),
-  migratedAt: timestamp("migrated_at", { withTimezone: true }).notNull().defaultNow(),
-}, (table) => [index("migration_user_aliases_target_idx").on(table.targetUserId)]);

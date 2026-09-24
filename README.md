@@ -163,7 +163,7 @@ Start the API:
 npm run dev
 ```
 
-The API connects to Neon Postgres before listening on port `3000`. It also creates the development administrator defined in `Server/src/seedAdmin.js` if that account does not already exist. Replace those seeded credentials before any public deployment.
+The API connects to Neon Postgres before listening on port `3000`. It does not create an administrator during startup. To create one explicitly, set `ADMIN_EMAIL` and a strong `ADMIN_PASSWORD` in `Server/.env`, then run `npm run admin:create` from `Server/`. Existing administrators are left untouched.
 
 ### 3. Configure and start the ML service
 
@@ -235,44 +235,7 @@ Run commands from the relevant service directory.
 | `Server` | `npm run db:migrate` | Apply migrations using the direct Neon connection |
 | `Server` | `npm run db:check` | Validate Drizzle migration history |
 | `Server` | `npm run db:verify` | Check row counts and cross-table integrity |
-| `Server` | `npm run migrate:firebase:dry` | Inventory Firestore without writing to Neon |
-| `Server` | `npm run migrate:firebase` | Idempotently import all Firestore collections into Neon |
 | `MlServer` | `python main.py` | Start the Flask/Socket.IO service |
-
-## Firestore-to-Neon migration
-
-The running application no longer imports Firebase or queries Firestore. Firebase Admin is retained only for the explicit one-time migration command.
-
-Test migrations on an isolated Neon branch before production:
-
-```bash
-npx neon@latest branches create --name migration-firestore --parent production
-npx neon@latest checkout migration-firestore
-npx neon@latest env pull --file Server/.env
-
-cd Server
-npm run db:migrate
-npm run migrate:firebase:dry
-npm run migrate:firebase
-npm run db:verify
-```
-
-After verification, check out the production branch, pull its environment, and run the same three write/verification commands:
-
-```bash
-cd ..
-npx neon@latest checkout production
-npx neon@latest env pull --file Server/.env
-
-cd Server
-npm run db:migrate
-npm run migrate:firebase
-npm run db:verify
-```
-
-The importer preserves Firestore document IDs and nested data, converts Firestore timestamps, and upserts rows in a single transaction. Legacy duplicate-email accounts are safely consolidated while every original user ID is recorded in `migration_user_aliases`. Missing historical user/order references receive clearly marked placeholder records so no order or payment is discarded. Each completed import is recorded in `migration_runs`.
-
-Once production is verified and rollback is no longer required, remove the `FIREBASE_*` variables or `Server/serviceAccountKey.json`. Do not delete the Firestore project until its retention window and business rollback requirements have been satisfied.
 
 ## Main application routes
 
@@ -323,7 +286,7 @@ Then start all three services and verify the primary flow:
 
 ## Deployment notes
 
-- The client falls back to its current origin for the API in production unless `VITE_API_URL` is set.
+- When the client and API are deployed separately, set `VITE_API_URL` in the **Client build environment** to the deployed Server origin (without `/api`). Rebuild the client after changing it; Vite embeds this value at build time. Without it, the production client requests its own origin, whose SPA rewrite returns HTML instead of API JSON.
 - The ML client defaults to the configured hosted Hugging Face Space outside localhost unless `VITE_ML_URL` is set.
 - The API CORS policy currently accepts localhost origins and `*.vercel.app` origins. Update it when deploying to another domain.
 - Use strong, unique JWT secrets and remove or replace the development administrator credentials.

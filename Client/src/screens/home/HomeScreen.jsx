@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { API_BASE_URL } from "../../config/apiConfig";
-import { defaultFallbackProducts } from "../../data/fallbackProducts";
 import Hero from "../../components/home/Hero";
 import Featured from "../../components/home/Featured";
 import NewArrival from "../../components/home/NewArrival";
@@ -125,6 +124,7 @@ const ModalContent = styled.div`
 const HomeScreen = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [locationName, setLocationName] = useState("");
   const [temperature, setTemperature] = useState(null);
@@ -139,17 +139,16 @@ const HomeScreen = () => {
 
         if (response.ok && contentType && contentType.includes("application/json")) {
           const data = await response.json();
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data)) {
             const shuffled = [...data].sort(() => 0.5 - Math.random());
             setAllProducts(shuffled);
             return;
           }
         }
-        console.warn("API response was not JSON array. Using fallback products.");
-        setAllProducts(defaultFallbackProducts);
+        throw new Error(`Catalog returned an invalid response (${response.status})`);
       } catch (error) {
-        console.warn("Failed to fetch products. Using fallback products:", error);
-        setAllProducts(defaultFallbackProducts);
+        console.error("Failed to fetch products:", error);
+        setCatalogError(true);
       } finally {
         setLoading(false);
       }
@@ -307,6 +306,11 @@ const HomeScreen = () => {
         <div className="flex justify-center items-center py-40">
           <i className="bi bi-arrow-clockwise fa-spin text-5xl" style={{ animation: "spin 1s linear infinite" }}></i>
           <span className="ml-4 text-2xl font-bold text-gray-500">Loading Products...</span>
+        </div>
+      ) : catalogError ? (
+        <div role="alert" style={{ padding: "80px 24px", textAlign: "center" }}>
+          <h2>Products are unavailable right now</h2>
+          <p>Please try again in a moment.</p>
         </div>
       ) : (
         <>

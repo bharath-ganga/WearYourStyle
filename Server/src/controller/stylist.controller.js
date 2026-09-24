@@ -9,15 +9,15 @@ const getStylistRecommendations = asyncHandler(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, "Message query is required"));
   }
 
-  const query = `${message} ${preferences.favoriteColors || ""} ${preferences.occasion || ""} ${(preferences.styles || []).join(" ")}`.toLowerCase();
+  const query = `${message} ${preferences.favoriteColors || ""} ${preferences.occasion || ""} ${(Array.isArray(preferences.styles) ? preferences.styles : []).join(" ")}`.toLowerCase();
   console.log(`AI Stylist Query received: "${message}"`);
 
   // Fetch all products from Postgres
   const allProducts = await Product.getAll();
 
   // Define keyword filters
-  const isMens = query.includes("men") || query.includes("boy") || query.includes("male");
-  const isWomens = query.includes("women") || query.includes("girl") || query.includes("lady") || query.includes("female") || query.includes("dress") || query.includes("gown");
+  const isWomens = /\b(women|woman|girls?|ladies|lady|female|dress|gown)\b/.test(query);
+  const isMens = !isWomens && /\b(men|man|boys?|male)\b/.test(query);
   
   const wantsTops = query.includes("shirt") || query.includes("top") || query.includes("wear") || query.includes("t-shirt") || query.includes("dress") || query.includes("gown");
   const wantsBottoms = query.includes("pant") || query.includes("trouser") || query.includes("chinos") || query.includes("cargo") || query.includes("jeans") || query.includes("skirt");
@@ -51,7 +51,7 @@ const getStylistRecommendations = asyncHandler(async (req, res) => {
   if (filtered.length === 0) {
     filtered = allProducts.filter(p => 
       p.title.toLowerCase().includes(query) || 
-      p.category.toLowerCase().includes(query)
+      (p.category || "").toLowerCase().includes(query)
     );
   }
 

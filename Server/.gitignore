@@ -141,6 +141,4 @@ dist
 # SvelteKit build / generate output
 .svelte-kit
 
-# Firebase Service Account Key (NEVER commit this!)
-serviceAccountKey.json
 .vercel
