@@ -13,12 +13,12 @@ import { useAuth } from "../../context/AuthContext";
 const Form = styled.form`
   display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; margin-top:22px;
   label { display:grid; gap:8px; font-weight:700; }
-  input,select { border:1px solid #c9c5bc; border-radius:10px; padding:12px; background:#fff; }
+  input,select { border:1px solid #c9c5bc; border-radius: 0; padding:12px; background:#fff; }
   .wide { grid-column:1/-1; }
   .chips { display:flex; flex-wrap:wrap; gap:8px; }
-  .chips button { border:1px solid #c9c5bc; border-radius:999px; padding:9px 13px; }
+  .chips button { border:1px solid #c9c5bc; border-radius: 0; padding:9px 13px; }
   .chips button.active { background:#263333; color:#fff; border-color:#263333; }
-  .save { grid-column:1/-1; justify-self:start; background:#d45b3f; color:#fff; border-radius:999px; padding:12px 22px; font-weight:800; }
+  .save { grid-column:1/-1; justify-self:start; background:#d45b3f; color:#fff; border-radius: 0; padding:12px 22px; font-weight:800; }
   @media(max-width:700px){ grid-template-columns:1fr; .wide,.save{grid-column:auto;} }
 `;
 

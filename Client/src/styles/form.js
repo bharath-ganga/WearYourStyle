@@ -38,7 +38,7 @@ export const Textarea = styled.textarea`
 export const InputGroupWrapper = styled.div`
   min-width: 400px;
   width: 100%;
-  border-radius: 999px;
+  border-radius: 0;
   display: grid;
   align-items: stretch;
   grid-template-columns: 40px auto;
@@ -77,14 +77,14 @@ export const FormElement = styled.div`
     height: 40px;
     border: 1px solid ${defaultTheme.color_platinum};
     width: 100%;
-    border-radius: 10px;
+    border-radius: 0;
     padding: 2px 14px;
     margin: 4px 0;
     transition: ${defaultTheme.default_transition};
 
     &:focus {
       border-color: ${defaultTheme.color_sea_green};
-      box-shadow: 0 0 0 3px rgba(212, 91, 63, 0.12);
+      box-shadow: none;
     }
   }
 

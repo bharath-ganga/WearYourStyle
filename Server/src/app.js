@@ -86,10 +86,24 @@ app.use('/api/reviews', reviewRouter);
 // Standard Error Handling Middleware
 app.use((err, req, res, next) => {
     console.error("🔥 Server Error:", err.message);
+    // Drizzle wraps driver errors; the Postgres error code lives on err.cause.
+    const pgCode = err.code || err.cause?.code;
+    if (pgCode === "23505") {
+        return res.status(409).json({ success: false, message: "A record with this value already exists", errors: [] });
+    }
+    if (pgCode === "23514" || pgCode === "22P02") {
+        return res.status(400).json({ success: false, message: "Invalid value supplied", errors: [] });
+    }
+    if (err.name === "MulterError") {
+        return res.status(400).json({ success: false, message: err.message, errors: [] });
+    }
+    if (err.type === "entity.parse.failed") {
+        return res.status(400).json({ success: false, message: "Malformed JSON body", errors: [] });
+    }
     const statusCode = err.statusCode || 500;
     res.status(statusCode).json({
         success: false,
-        message: err.message || "Internal Server Error",
+        message: statusCode >= 500 && !err.statusCode ? "Internal Server Error" : err.message,
         errors: err.errors || []
     });
 });

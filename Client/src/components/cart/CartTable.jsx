@@ -10,11 +10,11 @@ const ScrollbarXWrapper = styled.div`
   }
 
   &::-webkit-scrollbar-track {
-    border-radius: 10px;
+    border-radius: 0;
   }
 
   &::-webkit-scrollbar-thumb {
-    border-radius: 10px;
+    border-radius: 0;
     background-color: grey;
   }
 `;

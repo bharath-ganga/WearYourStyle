@@ -23,7 +23,7 @@ const SignInScreenWrapper = styled.section`
     }
 
     .separator-text {
-      border-radius: 50%;
+      border-radius: 0;
       min-width: 36px;
       height: 36px;
       background-color: ${defaultTheme.color_purple};

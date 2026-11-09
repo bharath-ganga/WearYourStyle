@@ -28,12 +28,12 @@ const Grid = styled.div`
 
 const Card = styled.div`
   background: #fff;
-  border-radius: 12px;
+  border-radius: 0;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
   transition: transform 0.2s;
   &:hover {
-    transform: translateY(-5px);
+    transform: none;
   }
 `;
 
@@ -47,12 +47,12 @@ const RecommendationBox = styled.div`
   background: #d45b3f;
   color: #fff;
   padding: 30px;
-  border-radius: 16px;
+  border-radius: 0;
   margin-bottom: 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 10px 20px rgba(108, 92, 231, 0.2);
+  box-shadow: none;
 `;
 
 const WeatherInfo = styled.div`
@@ -68,7 +68,7 @@ const UploadBox = styled.div`
   border: 2px dashed #ccc;
   padding: 40px;
   text-align: center;
-  border-radius: 12px;
+  border-radius: 0;
   cursor: pointer;
   background: #fff;
   margin-bottom: 30px;
@@ -82,7 +82,7 @@ const PreviewImg = styled.img`
   max-width: 100%;
   max-height: 200px;
   margin-top: 20px;
-  border-radius: 8px;
+  border-radius: 0;
 `;
 
 const OutfitGrid = styled.div`
@@ -95,12 +95,12 @@ const OutfitGrid = styled.div`
 const OutfitItem = styled.div`
   border: 1px solid #eee;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 0;
   img {
     width: 100%;
     height: 100px;
     object-fit: cover;
-    border-radius: 4px;
+    border-radius: 0;
   }
 `;
 
@@ -370,10 +370,10 @@ const WardrobeScreen = () => {
                         </UploadBox>
                         {preview && <PreviewImg src={preview} alt="Preview" />}
                         {classification && (
-                            <div style={{marginTop: '15px', padding: '10px', background: '#f0f0ff', borderRadius: '8px'}}>
+                            <div style={{marginTop: '15px', padding: '10px', background: '#f0f0ff', borderRadius: 0}}>
                                 <p><strong>Detected:</strong> {classification.color} {classification.type}</p>
-                                <div style={{width: '100%', height: '8px', background: '#ddd', borderRadius: '4px', marginTop: '5px'}}>
-                                    <div style={{width: `${classification.confidence * 100}%`, height: '100%', background: '#6c5ce7', borderRadius: '4px'}}></div>
+                                <div style={{width: '100%', height: '8px', background: '#ddd', borderRadius: 0, marginTop: '5px'}}>
+                                    <div style={{width: `${classification.confidence * 100}%`, height: '100%', background: '#6c5ce7', borderRadius: 0}}></div>
                                 </div>
                                 <small>Match Confidence: {(classification.confidence * 100).toFixed(1)}%</small>
                             </div>
@@ -390,7 +390,7 @@ const WardrobeScreen = () => {
                                 placeholder="e.g. cherry blossom, neon grid..."
                                 value={designPrompt}
                                 onChange={(e) => setDesignPrompt(e.target.value)}
-                                style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc', outline: 'none', fontSize: '14px' }}
+                                style={{ padding: '10px', borderRadius: 0, border: '1px solid #ccc', outline: 'none', fontSize: '14px' }}
                             />
                             <button 
                                 className="btn btn-primary"
@@ -407,10 +407,10 @@ const WardrobeScreen = () => {
                     <Card>
                         <CardTitle>Visual Outfit Builder</CardTitle>
                         <div style={{display: 'flex', flexDirection: 'column', gap: '10px', minHeight: '200px'}}>
-                            <div style={{border: '1px dashed #eee', height: '120px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <div style={{border: '1px dashed #eee', height: '120px', borderRadius: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                                 {selectedItems.top ? <img src={selectedItems.top.imgSource} style={{height: '100%'}} /> : "Select a Top"}
                             </div>
-                            <div style={{border: '1px dashed #eee', height: '120px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <div style={{border: '1px dashed #eee', height: '120px', borderRadius: 0, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                                 {selectedItems.bottom ? <img src={selectedItems.bottom.imgSource} style={{height: '100%'}} /> : "Select a Bottom"}
                             </div>
                         </div>
@@ -423,8 +423,8 @@ const WardrobeScreen = () => {
                         <div style={{marginBottom: '20px'}}>
                             <small>WARDROBE HEALTH</small>
                             <div style={{display: 'flex', gap: '5px', marginTop: '5px'}}>
-                                <div style={{flex: 3, height: '10px', background: '#6c5ce7', borderRadius: '5px'}} title="Worn Items"></div>
-                                <div style={{flex: 1, height: '10px', background: '#fdcb6e', borderRadius: '5px'}} title="Unused"></div>
+                                <div style={{flex: 3, height: '10px', background: '#6c5ce7', borderRadius: 0}} title="Worn Items"></div>
+                                <div style={{flex: 1, height: '10px', background: '#fdcb6e', borderRadius: 0}} title="Unused"></div>
                             </div>
                         </div>
                         <ul style={{listStyle: 'none', padding: 0}}>
@@ -451,7 +451,7 @@ const WardrobeScreen = () => {
                     ) : (
                         wardrobeItems.map(item => (
                             <Card key={item.id} style={{padding: '10px', position: 'relative'}} onClick={() => handleSelectItem(item)}>
-                                <img src={item.imgSource} style={{width: '100%', height: '150px', objectFit: 'contain', borderRadius: '8px'}} />
+                                <img src={item.imgSource} style={{width: '100%', height: '150px', objectFit: 'contain', borderRadius: 0}} />
                                 <div style={{marginTop: '10px', textAlign: 'center'}}>
                                     <strong>{item.title}</strong>
                                 </div>

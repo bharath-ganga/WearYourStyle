@@ -13,7 +13,7 @@ export const getReviews = asyncHandler(async (req, res) => {
 export const saveReview = asyncHandler(async (req, res) => {
   const rating = Number(req.body.rating);
   const comment = String(req.body.comment || "").trim();
-  if (rating < 1 || rating > 5 || comment.length < 5) throw new ApiError(400, "Choose 1–5 stars and write at least 5 characters");
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5 || comment.length < 5) throw new ApiError(400, "Choose 1–5 stars and write at least 5 characters");
   if (!await Product.findById(req.params.productId)) throw new ApiError(404, "Product not found");
   const review = await Review.upsert({ productId:req.params.productId, userId:req.user.id, userName:`${req.user.firstName} ${req.user.lastName || ""}`.trim(), rating, comment });
   const all = await Review.forProduct(req.params.productId);

@@ -104,7 +104,7 @@ const OrderListScreen = () => {
                     ) : (
                         <div className="py-20 text-center flex flex-col justify-center items-center gap-4">
                             <p className="text-xl text-gray">No orders found.</p>
-                            <Link to="/product" style={{ backgroundColor: '#3c4242', color: 'white', padding: '10px 24px', borderRadius: '8px', fontWeight: 'bold' }}>Start Shopping</Link>
+                            <Link to="/product" style={{ backgroundColor: '#3c4242', color: 'white', padding: '10px 24px', borderRadius: 0, fontWeight: 'bold' }}>Start Shopping</Link>
                         </div>
                     )}
                 </div>

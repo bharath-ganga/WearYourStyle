@@ -26,7 +26,7 @@ const ProductsContent = styled.div`
 
 const ProductsContentLeft = styled.div`
   border: 1px solid rgba(190, 188, 189, 0.4);
-  border-radius: 18px;
+  border-radius: 0;
   background: ${(props) => props.theme.color_white};
   overflow: hidden;
 
@@ -88,13 +88,21 @@ const DescriptionContent = styled.div`
   }
 `;
 
+// Letter sizes in wear order, then numeric (shoe) sizes ascending.
+const LETTER_SIZES = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"];
+const compareSizes = (a, b) => {
+  const [ia, ib] = [LETTER_SIZES.indexOf(String(a).toUpperCase()), LETTER_SIZES.indexOf(String(b).toUpperCase())];
+  if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  return Number(a) - Number(b) || String(a).localeCompare(String(b));
+};
+
 const ProductListScreen = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [catalogError, setCatalogError] = useState(false);
   const [query, setQuery] = useState(new URLSearchParams(window.location.search).get("q") || "");
   const [sort, setSort] = useState("featured");
-  const initialFilters = { category: "", size: "", maxPrice: null, inStock: false };
+  const initialFilters = { gender: "", category: "", size: "", maxPrice: null, inStock: false };
   const [filters, setFilters] = useState(initialFilters);
 
   useEffect(() => {
@@ -123,7 +131,8 @@ const ProductListScreen = () => {
 
   const facets = useMemo(() => ({
     categories: [...new Set(products.map((product) => product.category).filter(Boolean))].sort(),
-    sizes: [...new Set(products.flatMap((product) => Array.isArray(product.sizes) ? product.sizes : []).filter(Boolean))].sort(),
+    genders: [...new Set(products.map((product) => product.gender).filter(Boolean))].sort(),
+    sizes: [...new Set(products.flatMap((product) => Array.isArray(product.sizes) ? product.sizes : []).filter(Boolean))].sort(compareSizes),
     maxPrice: Math.max(1000, Math.ceil(Math.max(...products.map((product) => Number(product.price) || 0), 1000) / 100) * 100),
   }), [products]);
 
@@ -132,6 +141,7 @@ const ProductListScreen = () => {
     const matches = products.filter((product) => {
       const searchable = `${product.title || ""} ${product.brand || ""} ${product.category || ""}`.toLowerCase();
       return (!normalized || searchable.includes(normalized)) &&
+        (!filters.gender || product.gender === filters.gender) &&
         (!filters.category || product.category === filters.category) &&
         (!filters.size || (product.sizes || []).includes(filters.size)) &&
         (filters.maxPrice == null || (Number(product.price) || 0) <= filters.maxPrice) &&
@@ -156,8 +166,8 @@ const ProductListScreen = () => {
             <div className="products-right-top flex items-center justify-between">
               <div><h4 className="text-xxl">The full collection</h4><p className="text-gray text-sm">{visibleProducts.length} products</p></div>
               <div className="flex items-center" style={{ gap: 10, flexWrap: "wrap" }}>
-                <input aria-label="Search products" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search styles, brands…" style={{ border:"1px solid #c9c5bc", borderRadius:999, padding:"10px 15px", minWidth:220 }} />
-                <select aria-label="Sort products" value={sort} onChange={(event) => setSort(event.target.value)} style={{ border:"1px solid #c9c5bc", borderRadius:999, padding:"10px 15px", background:"white" }}><option value="featured">Featured</option><option value="rating">Top rated</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select>
+                <input aria-label="Search products" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search styles, brands…" style={{ border:"1px solid #c9c5bc", borderRadius: 0, padding:"10px 15px", minWidth:220 }} />
+                <select aria-label="Sort products" value={sort} onChange={(event) => setSort(event.target.value)} style={{ border:"1px solid #c9c5bc", borderRadius: 0, padding:"10px 15px", background:"white" }}><option value="featured">Featured</option><option value="rating">Top rated</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select>
               </div>
             </div>
             {loading ? (
@@ -166,9 +176,9 @@ const ProductListScreen = () => {
                 <span className="ml-3 text-lg font-semibold">Loading...</span>
               </div>
             ) : catalogError ? (
-              <div role="alert" style={{ padding:"70px 20px", textAlign:"center", border:"1px dashed #c9c5bc", borderRadius:18 }}><h3>Products are unavailable right now</h3><p>Please try again in a moment.</p></div>
+              <div role="alert" style={{ padding:"70px 20px", textAlign:"center", border:"1px dashed #c9c5bc", borderRadius: 0 }}><h3>Products are unavailable right now</h3><p>Please try again in a moment.</p></div>
             ) : (
-              visibleProducts.length ? <ProductList products={visibleProducts} /> : <div style={{ padding:"70px 20px", textAlign:"center", border:"1px dashed #c9c5bc", borderRadius:18 }}><h3>No exact matches</h3><p>Try removing a filter or searching another term.</p></div>
+              visibleProducts.length ? <ProductList products={visibleProducts} /> : <div style={{ padding:"70px 20px", textAlign:"center", border:"1px dashed #c9c5bc", borderRadius: 0 }}><h3>No exact matches</h3><p>Try removing a filter or searching another term.</p></div>
             )}
           </ProductsContentRight>
         </ProductsContent>

@@ -33,7 +33,7 @@ const OrderDetailScreenWrapper = styled.main`
   .order-d-top {
     background-color: ${defaultTheme.color_whitesmoke};
     padding: 26px 32px;
-    border-radius: 8px;
+    border-radius: 0;
     border: 1px solid rgba(0, 0, 0, 0.05);
 
     @media (max-width: ${breakpoints.sm}) {
@@ -68,7 +68,7 @@ const OrderDetailStatusWrapper = styled.div`
     &-dot {
       width: 20px;
       height: 20px;
-      border-radius: 50%;
+      border-radius: 0;
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
@@ -107,7 +107,7 @@ const OrderDetailStatusWrapper = styled.div`
           top: 50%;
           transform: translate(-50%, -50%);
           z-index: 30;
-          border-radius: 50%;
+          border-radius: 0;
         }
 
         .order-status-text {
@@ -132,7 +132,7 @@ const OrderDetailMessageWrapper = styled.div`
   margin-left: auto;
   min-height: 68px;
   padding: 16px 24px;
-  border-radius: 8px;
+  border-radius: 0;
   position: relative;
   margin-top: 80px;
 
@@ -200,9 +200,9 @@ const OrderDetailListWrapper = styled.div`
     &-img {
       width: 80px;
       height: 80px;
-      border-radius: 8px;
+      border-radius: 0;
       overflow: hidden;
-      box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+      box-shadow: none;
 
       @media (max-width: ${breakpoints.sm}) {
         width: 50px;
@@ -243,7 +243,7 @@ const OrderDetailListWrapper = styled.div`
         height: 28px;
         z-index: 5;
         background-color: ${defaultTheme.color_white};
-        border-radius: 50%;
+        border-radius: 0;
         right: 8px;
         top: 24px;
       }
@@ -334,7 +334,7 @@ const OrderDetailScreen = () => {
                         padding: '12px 24px',
                         backgroundColor: '#3c4242',
                         color: 'white',
-                        borderRadius: '8px',
+                        borderRadius: 0,
                         fontWeight: '600'
                     }}>Go Back to My Orders</Link>
                 </div>
@@ -371,7 +371,7 @@ const OrderDetailScreen = () => {
             </div>
 
               <div className="order-d-wrapper">
-              <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginBottom:16, flexWrap:"wrap" }}><button type="button" onClick={downloadInvoice} style={{border:"1px solid #263333",borderRadius:999,padding:"10px 16px",fontWeight:700}}>Download invoice</button>{order.status === "Order Placed" && <button type="button" onClick={()=>updateOrder("cancel")} style={{border:"1px solid #b42318",color:"#b42318",borderRadius:999,padding:"10px 16px",fontWeight:700}}>Cancel order</button>}{order.status === "Delivered" && <button type="button" onClick={()=>updateOrder("return",{reason:"Customer requested return"})} style={{border:"1px solid #263333",borderRadius:999,padding:"10px 16px",fontWeight:700}}>Request return</button>}</div>
+              <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginBottom:16, flexWrap:"wrap" }}><button type="button" onClick={downloadInvoice} style={{border:"1px solid #263333",borderRadius: 0,padding:"10px 16px",fontWeight:700}}>Download invoice</button>{order.status === "Order Placed" && <button type="button" onClick={()=>updateOrder("cancel")} style={{border:"1px solid #b42318",color:"#b42318",borderRadius: 0,padding:"10px 16px",fontWeight:700}}>Cancel order</button>}{order.status === "Delivered" && <button type="button" onClick={()=>updateOrder("return",{reason:"Customer requested return"})} style={{border:"1px solid #263333",borderRadius: 0,padding:"10px 16px",fontWeight:700}}>Request return</button>}</div>
               <div className="order-d-top flex justify-between items-start">
                 <div className="order-d-top-l">
                   <h4 className="text-3xl order-d-no">
@@ -403,41 +403,41 @@ const OrderDetailScreen = () => {
               {order.status !== "Delivered" && (
                 <div style={{
                     marginTop: '40px', padding: '30px', backgroundColor: '#f8fafc',
-                    borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', position: 'relative', overflow: 'hidden'
+                    borderRadius: 0, border: '1px solid #e2e8f0', boxShadow: "none", position: 'relative', overflow: 'hidden'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-                       <div style={{ width: '12px', height: '12px', backgroundColor: '#10b981', borderRadius: '50%', marginRight: '10px', boxShadow: '0 0 0 4px rgba(16, 185, 129, 0.2)' }}></div>
+                       <div style={{ width: '12px', height: '12px', backgroundColor: '#10b981', borderRadius: 0, marginRight: '10px', boxShadow: "none" }}></div>
                        <h4 className="text-xl font-bold m-0" style={{ color: '#0f172a' }}>Live Tracking</h4>
                     </div>
 
-                    <div style={{height: '140px', backgroundColor: '#e2e8f0', borderRadius: '12px', position: 'relative', overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.06)' }}>
+                    <div style={{height: '140px', backgroundColor: '#e2e8f0', borderRadius: 0, position: 'relative', overflow: 'hidden', boxShadow: "none" }}>
                         {/* Moving dashed road line */}
                         <div style={{
                             position: 'absolute', top:'50%', left: '10%', right: '10%', height: '6px', 
                             background: 'repeating-linear-gradient(90deg, #94a3b8, #94a3b8 10px, transparent 10px, transparent 20px)', 
-                            transform:'translateY(-50%)', borderRadius:'4px',
+                            transform:'translateY(-50%)', borderRadius: 0,
                             animation: 'moveRoad 1s linear infinite'
                         }}></div>
                         
                         {/* Progress line filling up the road */}
                         <div style={{
-                            position: 'absolute', top:'50%', left: '10%', height: '6px', backgroundColor: '#10b981', transform:'translateY(-50%)', borderRadius:'4px',
+                            position: 'absolute', top:'50%', left: '10%', height: '6px', backgroundColor: '#10b981', transform:'translateY(-50%)', borderRadius: 0,
                             animation: 'fillRoad 10s ease-in-out infinite alternate', zIndex: 1
                         }}></div>
 
                         {/* Warehouse Marker */}
                         <div style={{position: 'absolute', top:'50%', left: '10%', transform: 'translate(-50%, -50%)', zIndex: 2 }}>
-                            <div style={{ position: 'relative', width: '20px', height: '20px', backgroundColor: '#334155', borderRadius: '50%', border: '4px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}></div>
-                            <div style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', padding: '4px 10px', backgroundColor: '#334155', color: 'white', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold' }}>Warehouse</div>
+                            <div style={{ position: 'relative', width: '20px', height: '20px', backgroundColor: '#334155', borderRadius: 0, border: '4px solid white', boxShadow: "none" }}></div>
+                            <div style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', padding: '4px 10px', backgroundColor: '#334155', color: 'white', borderRadius: 0, fontSize: '13px', fontWeight: 'bold' }}>Warehouse</div>
                         </div>
 
                         {/* Destination Marker */}
                         <div style={{position: 'absolute', top:'50%', right: '10%', transform: 'translate(50%, -50%)', zIndex: 2}}>
                             <div style={{ position: 'relative' }}>
-                                <div style={{ width: '24px', height: '24px', backgroundColor: '#ef4444', borderRadius: '50%', border: '4px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}></div>
-                                <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(239, 68, 68, 0.2)', borderRadius: '50%', animation: 'pulse 1.5s infinite', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}></div>
+                                <div style={{ width: '24px', height: '24px', backgroundColor: '#ef4444', borderRadius: 0, border: '4px solid white', boxShadow: "none", position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}></div>
+                                <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(239, 68, 68, 0.2)', borderRadius: 0, animation: 'pulse 1.5s infinite', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}></div>
                             </div>
-                            <div style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', padding: '4px 10px', backgroundColor: '#ef4444', color: 'white', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold' }}>You</div>
+                            <div style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', padding: '4px 10px', backgroundColor: '#ef4444', color: 'white', borderRadius: 0, fontSize: '13px', fontWeight: 'bold' }}>You</div>
                         </div>
 
                         {/* Vehicle */}
@@ -467,8 +467,8 @@ const OrderDetailScreen = () => {
                             animation: 'driveVehicle 10s ease-in-out infinite alternate'
                         }}>
                              <div style={{
-                                 padding: '8px', backgroundColor: 'white', borderRadius: '50%',
-                                 boxShadow: '0 4px 8px rgba(0,0,0,0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                 padding: '8px', backgroundColor: 'white', borderRadius: 0,
+                                 boxShadow: "none", display: 'flex', justifyContent: 'center', alignItems: 'center',
                                  border: '3px solid #10b981'
                              }}>
                                 <i className="bi bi-truck text-2xl" style={{ color: '#10b981' }}></i>

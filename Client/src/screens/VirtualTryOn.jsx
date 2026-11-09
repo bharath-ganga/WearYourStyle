@@ -7,11 +7,35 @@ import { Container, Section } from "../styles/styles";
 import { BaseButtonBlack, BaseButtonGreen } from "../styles/button";
 import { breakpoints, defaultTheme } from "../styles/themes/default";
 import { API_BASE_URL, ML_BASE_URL } from "../config/apiConfig";
+import { garmentTypeFor, loadGarmentAsPng, LIVE_FRAME_FORMAT, LIVE_FRAME_QUALITY } from "../utils/tryOn";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Socket — singleton, created once at module level (PRESERVED)
+//  Socket — singleton; connected while the try-on page is open
 // ─────────────────────────────────────────────────────────────────────────────
-const socket = io(ML_BASE_URL, { transports: ["websocket"] });
+const socket = io(ML_BASE_URL, { transports: ["websocket", "polling"], autoConnect: false });
+
+// If a frame reply never arrives (dropped connection, server restart), stop
+// waiting after this long so the live feed doesn't freeze.
+const FRAME_TIMEOUT_MS = 4000;
+
+const STATUS_COLORS = { online: "#1f8a4c", connecting: "#b7791f", offline: "#b7791f" };
+
+const ServerStatus = styled.p`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: ${(p) => STATUS_COLORS[p.$status]};
+
+  &::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: ${(p) => STATUS_COLORS[p.$status]};
+  }
+`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Animations
@@ -65,9 +89,9 @@ const TryOnWrapper = styled.div`
   display: grid;
   grid-template-columns: 1fr 280px;
   gap: 0;
-  border-radius: 24px;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  box-shadow: none;
   background: #0a0a0f;
   min-height: 680px;
 
@@ -84,7 +108,7 @@ const ModeBar = styled.div`
   display: flex;
   gap: 0;
   background: #18181f;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 4px;
   margin-bottom: 20px;
   width: fit-content;
@@ -97,14 +121,14 @@ const ModeBtn = styled.button`
   gap: 8px;
   padding: 9px 20px;
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.22s ease;
   letter-spacing: 0.2px;
   background: ${(p) => (p.$active ? defaultTheme.color_sea_green : "transparent")};
-  color: ${(p) => (p.$active ? "#fff" : "rgba(255,255,255,0.55)")};
+  color: ${(p) => (p.$active ? "#fff" : "#939393")};
   box-shadow: none;
 
   &:hover:not(:disabled) {
@@ -176,8 +200,8 @@ const ScanLineOverlay = styled.div`
     left: 0;
     width: 100%;
     height: 2px;
-    background: linear-gradient(90deg, transparent, ${defaultTheme.color_sea_green}, transparent);
-    box-shadow: 0 0 12px 3px ${defaultTheme.color_sea_green};
+    background: ${defaultTheme.color_sea_green};
+    box-shadow: none;
     animation: ${(p) => (p.$active ? css`${scanLine} 2.2s linear infinite` : "none")};
   }
 `;
@@ -198,10 +222,10 @@ const CornerBrackets = styled.div`
     border-color: ${defaultTheme.color_sea_green};
     border-style: solid;
   }
-  &::before { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
-  &::after  { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
-  span::before { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
-  span::after  { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+  &::before { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 0; }
+  &::after  { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0; }
+  span::before { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0; }
+  span::after  { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0; }
 `;
 
 const SilhouetteGuide = styled.div`
@@ -224,9 +248,9 @@ const SilhouetteGuide = styled.div`
     width: 100px;
     height: 125px;
     border: 3px solid ${defaultTheme.color_sea_green};
-    border-radius: 50%;
+    border-radius: 0;
     margin-bottom: 12px;
-    box-shadow: 0 0 10px rgba(16, 185, 177, 0.2);
+    box-shadow: none;
   }
   .silhouette-shoulders {
     width: 250px;
@@ -235,7 +259,7 @@ const SilhouetteGuide = styled.div`
     border-bottom: none;
     border-top-left-radius: 120px;
     border-top-right-radius: 120px;
-    box-shadow: 0 -4px 10px rgba(16, 185, 177, 0.2);
+    box-shadow: none;
   }
   .guide-text {
     margin-top: 24px;
@@ -243,11 +267,11 @@ const SilhouetteGuide = styled.div`
     border: 1px solid ${defaultTheme.color_sea_green};
     color: ${defaultTheme.color_sea_green};
     padding: 8px 16px;
-    border-radius: 20px;
+    border-radius: 0;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.2px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: none;
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -260,8 +284,8 @@ const HudBadge = styled.div`
   position: absolute;
   right: 16px;
   background: #18181f;
-  border: 1px solid ${(p) => p.$color || "rgba(255,255,255,0.15)"};
-  border-radius: 10px;
+  border: 1px solid ${(p) => p.$color || "#353535"};
+  border-radius: 0;
   padding: 9px 14px;
   color: #fff;
   font-size: 13px;
@@ -275,7 +299,7 @@ const HudBadge = styled.div`
   white-space: nowrap;
 
   .dot {
-    width: 8px; height: 8px; border-radius: 50%;
+    width: 8px; height: 8px; border-radius: 0;
     background: ${(p) => p.$color || defaultTheme.color_sea_green};
     animation: ${(p) => (p.$pulse ? css`${pulse} 1.4s ease infinite` : "none")};
   }
@@ -292,7 +316,7 @@ const SizeBadge = styled(HudBadge)`
     font-size: 11px;
     font-weight: 700;
     padding: 2px 8px;
-    border-radius: 4px;
+    border-radius: 0;
     letter-spacing: 0.5px;
   }
 `;
@@ -304,7 +328,7 @@ const HQBadge = styled(HudBadge)`
   transition: all 0.2s ease;
   user-select: none;
 
-  &:hover { background: #44334e; transform: translateY(-1px); }
+  &:hover { background: #44334e; transform: none; }
   &:active { transform: scale(0.98); }
 
   .dot { background: #d9a3e8; }
@@ -336,8 +360,8 @@ const IconBtn = styled.button`
   align-items: center;
   gap: 7px;
   padding: 9px 18px;
-  border-radius: 8px;
-  border: 1px solid ${(p) => p.$border || "rgba(255,255,255,0.2)"};
+  border-radius: 0;
+  border: 1px solid ${(p) => p.$border || "#414141"};
   background: ${(p) => p.$bg || "#292932"};
   color: ${(p) => p.$color || "#fff"};
   font-size: 13px;
@@ -348,7 +372,7 @@ const IconBtn = styled.button`
 
   &:hover:not(:disabled) {
     background: ${(p) => p.$hoverBg || "#363640"};
-    transform: translateY(-1px);
+    transform: none;
   }
   &:active { transform: scale(0.97); }
   &:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -368,7 +392,7 @@ const IdleState = styled.div`
 
   .icon-ring {
     width: 80px; height: 80px;
-    border-radius: 50%;
+    border-radius: 0;
     background: rgba(16,185,177,0.1);
     border: 2px solid rgba(16,185,177,0.3);
     display: flex; align-items: center; justify-content: center;
@@ -376,7 +400,7 @@ const IdleState = styled.div`
     svg { width: 36px; height: 36px; color: ${defaultTheme.color_sea_green}; }
   }
   h3 { font-size: 18px; font-weight: 700; color: #fff; margin: 0; }
-  p  { font-size: 13px; color: rgba(255,255,255,0.5); margin: 0; max-width: 260px; line-height: 1.6; }
+  p  { font-size: 13px; color: #888888; margin: 0; max-width: 260px; line-height: 1.6; }
 `;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -398,7 +422,7 @@ const DropZone = styled.label`
   width: 100%;
   max-width: 400px;
   border: 2px dashed rgba(16,185,177,0.4);
-  border-radius: 16px;
+  border-radius: 0;
   padding: 40px 24px;
   text-align: center;
   cursor: pointer;
@@ -415,15 +439,15 @@ const DropZone = styled.label`
 
   .upload-icon {
     width: 52px; height: 52px;
-    border-radius: 14px;
+    border-radius: 0;
     background: rgba(16,185,177,0.12);
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 14px;
     svg { width: 26px; height: 26px; color: ${defaultTheme.color_sea_green}; }
   }
   h4 { font-size: 15px; font-weight: 700; color: #fff; margin: 0 0 6px; }
-  p  { font-size: 12px; color: rgba(255,255,255,0.45); margin: 0; }
-  .formats { margin-top: 10px; font-size: 11px; color: rgba(255,255,255,0.3); }
+  p  { font-size: 12px; color: #7b7b7b; margin: 0; }
+  .formats { margin-top: 10px; font-size: 11px; color: #585858; }
 `;
 
 const PhotoPreview = styled.div`
@@ -440,7 +464,7 @@ const PhotoPreview = styled.div`
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    border-radius: 8px;
+    border-radius: 0;
   }
 `;
 
@@ -458,13 +482,13 @@ const ProcessingOverlay = styled.div`
 
   .spinner {
     width: 48px; height: 48px;
-    border-radius: 50%;
+    border-radius: 0;
     border: 3px solid rgba(16,185,177,0.2);
     border-top-color: ${defaultTheme.color_sea_green};
     animation: ${spin} 0.8s linear infinite;
   }
   h4 { color: #fff; font-size: 16px; font-weight: 700; margin: 0; }
-  p  { color: rgba(255,255,255,0.5); font-size: 13px; margin: 0; text-align: center; }
+  p  { color: #888888; font-size: 13px; margin: 0; text-align: center; }
 `;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -476,12 +500,12 @@ const HeightSliderWrap = styled.div`
   gap: 10px;
   background: #1a1a22;
   border: 1px solid #2d2d35;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 8px 14px;
   width: 100%;
   max-width: 400px;
 
-  label { font-size: 12px; color: rgba(255,255,255,0.5); white-space: nowrap; }
+  label { font-size: 12px; color: #888888; white-space: nowrap; }
   input[type="range"] {
     flex: 1;
     accent-color: ${defaultTheme.color_sea_green};
@@ -501,21 +525,23 @@ const HeightSliderWrap = styled.div`
 // ─────────────────────────────────────────────────────────────────────────────
 const Sidebar = styled.div`
   background: #111118;
-  border-left: 1px solid rgba(255,255,255,0.07);
+  border-left: 1px solid #242424;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Match the stage height; the garment list scrolls inside */
+  max-height: 680px;
 
   @media (max-width: ${breakpoints.lg}) {
     border-left: none;
-    border-top: 1px solid rgba(255,255,255,0.07);
+    border-top: 1px solid #242424;
     max-height: 340px;
   }
 `;
 
 const SidebarTabs = styled.div`
   display: flex;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border-bottom: 1px solid #242424;
   flex-shrink: 0;
 `;
 
@@ -530,16 +556,17 @@ const SidebarTab = styled.button`
   letter-spacing: 0.5px;
   text-transform: uppercase;
   transition: all 0.2s ease;
-  color: ${(p) => (p.$active ? defaultTheme.color_sea_green : "rgba(255,255,255,0.35)")};
+  color: ${(p) => (p.$active ? defaultTheme.color_sea_green : "#646464")};
   border-bottom: 2px solid ${(p) => (p.$active ? defaultTheme.color_sea_green : "transparent")};
   margin-bottom: -1px;
 
-  &:hover { color: rgba(255,255,255,0.75); }
+  &:hover { color: #c3c3c3; }
 `;
 
 const SidebarScroll = styled.div`
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -547,12 +574,13 @@ const SidebarScroll = styled.div`
 
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+  &::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 0; }
 `;
 
 const GarmentCard = styled.div`
-  border-radius: 10px;
-  border: 2px solid ${(p) => (p.$active ? defaultTheme.color_sea_green : "rgba(255,255,255,0.07)")};
+  flex-shrink: 0;
+  border-radius: 0;
+  border: 2px solid ${(p) => (p.$active ? defaultTheme.color_sea_green : "#242424")};
   background: ${(p) => (p.$active ? "#183a35" : "#191920")};
   cursor: pointer;
   overflow: hidden;
@@ -560,7 +588,7 @@ const GarmentCard = styled.div`
   position: relative;
 
   &:hover {
-    border-color: ${(p) => (p.$active ? defaultTheme.color_sea_green : "rgba(255,255,255,0.2)")};
+    border-color: ${(p) => (p.$active ? defaultTheme.color_sea_green : "#414141")};
     background: #25252d;
   }
 
@@ -578,7 +606,7 @@ const GarmentCard = styled.div`
     top: 8px;
     right: 8px;
     width: 22px; height: 22px;
-    border-radius: 50%;
+    border-radius: 0;
     background: ${defaultTheme.color_sea_green};
     display: ${(p) => (p.$active ? "flex" : "none")};
     align-items: center; justify-content: center;
@@ -595,16 +623,16 @@ const AccessoryCard = styled(GarmentCard)`
   height: 110px;
 
   .emoji { font-size: 36px; margin-bottom: 6px; line-height: 1; }
-  .label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.6); text-align: center; }
+  .label { font-size: 11px; font-weight: 600; color: #9f9f9f; text-align: center; }
 
   img { display: none; }
 `;
 
 const ShimmerCard = styled.div`
+  flex-shrink: 0;
   height: 160px;
-  border-radius: 10px;
-  background: linear-gradient(90deg, #1a1a24 25%, #22222e 50%, #1a1a24 75%);
-  background-size: 400px 100%;
+  border-radius: 0;
+  background: #1c1c1c;
   animation: ${shimmer} 1.4s ease infinite;
 `;
 
@@ -614,8 +642,8 @@ const ShimmerCard = styled.div`
 const SidebarStatus = styled.div`
   padding: 12px;
   font-size: 11px;
-  color: rgba(255,255,255,0.3);
-  border-top: 1px solid rgba(255,255,255,0.06);
+  color: #585858;
+  border-top: 1px solid #222222;
   text-align: center;
   flex-shrink: 0;
   line-height: 1.5;
@@ -728,6 +756,34 @@ const VirtualTryOn = () => {
     return ["shirt", "top", "t-shirt", "tshirt"].some((term) => text.includes(term));
   });
 
+  // ── Socket.IO connection ────────────────────────────────────────────────────
+  // The server keeps the chosen garment per connection, so after every
+  // (re)connect the current garment and accessory are sent again.
+  const garmentRef = useRef(null);      // { shirt, garment_type }
+  const accessoryRef = useRef(null);
+  const frameSentAt = useRef(0);
+  const [serverStatus, setServerStatus] = useState(socket.connected ? "online" : "connecting");
+
+  useEffect(() => {
+    const onConnect = () => {
+      setServerStatus("online");
+      if (garmentRef.current) socket.emit("update_garment", garmentRef.current);
+      if (accessoryRef.current) socket.emit("update_accessory", { accessory: accessoryRef.current });
+    };
+    const onDisconnect = () => setServerStatus("connecting");
+    const onConnectError = () => setServerStatus("offline");
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on("connect_error", onConnectError);
+    socket.connect();
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off("connect_error", onConnectError);
+      socket.disconnect();
+    };
+  }, []);
+
   // ── Socket.IO listeners ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!socket) return;
@@ -811,28 +867,21 @@ const VirtualTryOn = () => {
   const handleGarmentClick = async (imageUrl, id) => {
     setActiveShirt(id);
     try {
-      const img = new Image();
-      img.crossOrigin = "Anonymous";
-      img.src = imageUrl;
-      await new Promise((res, rej) => {
-        img.onload  = res;
-        img.onerror = () => rej(new Error("Image load failed"));
-      });
-      const canvas = document.createElement("canvas");
-      canvas.width  = img.width;
-      canvas.height = img.height;
-      canvas.getContext("2d").drawImage(img, 0, 0);
-      const b64 = canvas.toDataURL("image/png").split(",")[1];
+      const b64 = await loadGarmentAsPng(imageUrl);
+      const garment = { shirt: b64, garment_type: garmentTypeFor(allProducts.find((p) => p.id === id)) };
+      garmentRef.current = garment;
       setShirtImage(b64);
-      socket.emit("update_garment", { shirt: b64 });
+      socket.emit("update_garment", garment);
     } catch (e) {
       console.error("Garment load error:", e);
+      setAiFeedback("Could not load this garment. Please pick another one.");
     }
   };
 
   // ── Select accessory ───────────────────────────────────────────────────────
   const handleAccessoryClick = (accId) => {
     const id = accId === "none" ? null : accId;
+    accessoryRef.current = id;
     setActiveAccessory(id);
     socket.emit("update_accessory", { accessory: id });
   };
@@ -841,12 +890,13 @@ const VirtualTryOn = () => {
   const sendFrame = useCallback(() => {
     if (!webcamRef.current || !socket.connected) return;
     if (!activeShirt && !activeAccessory)          return;
-    if (isProcessing.current)                      return;
+    if (isProcessing.current && Date.now() - frameSentAt.current < FRAME_TIMEOUT_MS) return;
 
     const shot = webcamRef.current.getScreenshot();
     if (!shot) return;
 
     isProcessing.current = true;
+    frameSentAt.current = Date.now();
     setIsAiProcessing(true);
 
     const frameB64 = shot.split(",")[1];
@@ -925,6 +975,7 @@ const VirtualTryOn = () => {
         body:    JSON.stringify({
           frame:          frameB64,
           shirt:          shirtImage,
+          garment_type:   garmentRef.current?.garment_type || "top",
           user_height_cm: userHeightCm,
           hq:             true,
         }),
@@ -945,10 +996,11 @@ const VirtualTryOn = () => {
   // ── HQ snapshot (manual trigger in live mode) ──────────────────────────────
   const captureHQShot = () => {
     if (!webcamRef.current || !shirtImage) return;
-    isProcessing.current = true;
-    setIsAiProcessing(true);
     const shot = webcamRef.current.getScreenshot();
     if (!shot) return;
+    isProcessing.current = true;
+    frameSentAt.current = Date.now();
+    setIsAiProcessing(true);
     socket.emit("frame_hq", {
       frame:          shot.split(",")[1],
       user_height_cm: userHeightCm,
@@ -990,6 +1042,13 @@ const VirtualTryOn = () => {
         <PageHeader>
           <h2>AI Virtual <span>Try-On</span></h2>
           <p>Select a garment, choose your mode, and see how it looks on you in real time.</p>
+          <ServerStatus $status={serverStatus} role="status">
+            {serverStatus === "online"
+              ? "Try-on server connected"
+              : serverStatus === "offline"
+                ? "Try-on server is starting up. This can take up to a minute on first use…"
+                : "Connecting to the try-on server…"}
+          </ServerStatus>
         </PageHeader>
 
         {/* Mode toggle */}
@@ -1041,8 +1100,9 @@ const VirtualTryOn = () => {
                     <WebcamFeed
                       audio={false}
                       ref={webcamRef}
-                      screenshotFormat="image/png"
-                      videoConstraints={{ facingMode: "user" }}
+                      screenshotFormat={LIVE_FRAME_FORMAT}
+                      screenshotQuality={LIVE_FRAME_QUALITY}
+                      videoConstraints={{ facingMode: "user", width: 640, height: 480 }}
                       mirrored={true}
                     />
 
@@ -1112,7 +1172,7 @@ const VirtualTryOn = () => {
                     {!shirtImage && !activeAccessory && (
                       <div style={{
                         position: "absolute", top: "42%",
-                        color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600,
+                        color: "#6f6f6f", fontSize: 13, fontWeight: 600,
                         textAlign: "center", zIndex: 10, pointerEvents: "none",
                       }}>
                         ← Select a garment or accessory
@@ -1261,7 +1321,7 @@ const VirtualTryOn = () => {
 
                         {/* Height slider inline */}
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Height</span>
+                          <span style={{ fontSize: 11, color: "#6f6f6f" }}>Height</span>
                           <input
                             type="range" min={140} max={210}
                             value={userHeightCm}
@@ -1347,7 +1407,7 @@ const VirtualTryOn = () => {
                 loading ? (
                   [1, 2, 3].map((i) => <ShimmerCard key={i} />)
                 ) : tryOnClothes.length === 0 ? (
-                  <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, textAlign: "center", padding: "24px 8px" }}>
+                  <div style={{ color: "#585858", fontSize: 12, textAlign: "center", padding: "24px 8px" }}>
                     No try-on garments found in catalog
                   </div>
                 ) : (
@@ -1397,7 +1457,7 @@ const VirtualTryOn = () => {
           marginTop: 20,
           background: "rgba(16,185,177,0.06)",
           border: "1px solid rgba(16,185,177,0.18)",
-          borderRadius: 10,
+          borderRadius: 0,
           padding: "14px 20px",
           display: "flex",
           gap: 28,
@@ -1415,7 +1475,7 @@ const VirtualTryOn = () => {
             </div>
           ))}
         </div>
-        {tryOnHistory.length > 0 && <div style={{ marginTop:28 }}><h3 style={{ marginBottom:8 }}>Recent try-ons</h3><p style={{ color:"#616666", marginBottom:16 }}>Stored only on this device. Up to three recent results are kept.</p><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,260px))", gap:16 }}>{tryOnHistory.map((item) => <article key={item.id} style={{ border:"1px solid #dedbd3", borderRadius:14, padding:10, background:"#fff" }}><img src={item.src} alt="Saved virtual try-on" style={{ width:"100%", aspectRatio:"4/5", objectFit:"cover", borderRadius:9 }} /><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}><span>{item.size ? `Size ${item.size}` : "Saved look"}</span><button type="button" aria-label="Delete saved try-on" onClick={() => { const next=tryOnHistory.filter((saved)=>saved.id!==item.id); setTryOnHistory(next); localStorage.setItem("tryOnHistory",JSON.stringify(next)); }}><i className="bi bi-trash3"></i></button></div></article>)}</div></div>}
+        {tryOnHistory.length > 0 && <div style={{ marginTop:28 }}><h3 style={{ marginBottom:8 }}>Recent try-ons</h3><p style={{ color:"#616666", marginBottom:16 }}>Stored only on this device. Up to three recent results are kept.</p><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,260px))", gap:16 }}>{tryOnHistory.map((item) => <article key={item.id} style={{ border:"1px solid #dedbd3", borderRadius: 0, padding:10, background:"#fff" }}><img src={item.src} alt="Saved virtual try-on" style={{ width:"100%", aspectRatio:"4/5", objectFit:"cover", borderRadius: 0 }} /><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}><span>{item.size ? `Size ${item.size}` : "Saved look"}</span><button type="button" aria-label="Delete saved try-on" onClick={() => { const next=tryOnHistory.filter((saved)=>saved.id!==item.id); setTryOnHistory(next); localStorage.setItem("tryOnHistory",JSON.stringify(next)); }}><i className="bi bi-trash3"></i></button></div></article>)}</div></div>}
       </Container>
     </Section>
   );

@@ -50,7 +50,7 @@ const darkTheme = {
     color_silver: "#444444",
     color_whitesmoke: "#2a2a2a",
     color_brown: "#fb9f4c",
-    color_black_04: "rgba(255, 255, 255, 0.1)",
+    color_black_04: "#2a2a2a",
 };
   
 

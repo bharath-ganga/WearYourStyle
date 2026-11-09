@@ -18,7 +18,7 @@ const OrderItemWrapper = styled.div`
   .order-item-details {
     border: 1px solid rgba(0, 0, 0, 0.1);
     padding: 24px 32px;
-    border-radius: 8px;
+    border-radius: 0;
 
     @media (max-width: ${breakpoints.sm}) {
       padding: 20px 24px;
@@ -73,7 +73,7 @@ const OrderItemWrapper = styled.div`
     &-img {
       width: 100px;
       height: 100px;
-      border-radius: 6px;
+      border-radius: 0;
       overflow: hidden;
     }
 

@@ -26,7 +26,7 @@ const AccountScreenWrapper = styled.main`
   }
 
   .address-item {
-    border-radius: 12px;
+    border-radius: 0;
     border: 1px solid rgba(0, 0, 0, 0.1);
     padding: 25px;
     row-gap: 8px;
@@ -37,7 +37,7 @@ const AccountScreenWrapper = styled.main`
 
     li {
       height: 28px;
-      border-radius: 8px;
+      border-radius: 0;
       padding: 2px 12px;
       background-color: ${defaultTheme.color_whitesmoke};
     }
@@ -47,7 +47,7 @@ const AccountScreenWrapper = styled.main`
     margin-top: 12px;
     .btn-separator {
       width: 1px;
-      border-radius: 50px;
+      border-radius: 0;
       background: ${defaultTheme.color_platinum};
       margin: 0 10px;
     }
@@ -145,17 +145,17 @@ const AccountScreen = () => {
 
                 {/* GAMIFICATION WIDGET */}
                 <div style={{
-                    background: 'linear-gradient(45deg, #FFD700, #FFA500)', 
-                    borderRadius: '12px', padding: '20px', color: 'white', 
+                    background: '#23231f', border: '2px solid #e9a23b', 
+                    borderRadius: 0, padding: '20px', color: 'white', 
                     marginBottom: '25px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    boxShadow: '0 4px 15px rgba(255, 165, 0, 0.3)'
+                    boxShadow: "none"
                 }}>
                     <div>
                         <h3 style={{fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0'}}><i className="bi bi-trophy"></i> Elite Stylist</h3>
                         <p style={{margin: 0, fontSize: '16px'}}>You have <strong>{Number(localStorage.getItem('loyaltyPoints') || 450)}</strong> Loyalty Points.</p>
                         <small>Earn 500 points for a ₹500 voucher!</small>
                     </div>
-                    <button style={{background: 'white', color: '#FFA500', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'}}>
+                    <button style={{background: 'white', color: '#FFA500', border: 'none', padding: '10px 20px', borderRadius: 0, fontWeight: 'bold', cursor: 'pointer'}}>
                         Redeem
                     </button>
                 </div>
@@ -227,7 +227,7 @@ const AccountScreen = () => {
                   <div style={{ 
                       background: '#fcfcfc', 
                       border: '1px solid #eee', 
-                      borderRadius: '12px', 
+                      borderRadius: 0, 
                       padding: '20px',
                       marginBottom: '30px'
                   }}>
@@ -244,11 +244,11 @@ const AccountScreen = () => {
                               gap: '15px', 
                               padding: '15px',
                               backgroundColor: 'white',
-                              borderRadius: '8px',
+                              borderRadius: 0,
                               border: '1px solid #efefef',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                              boxShadow: "none"
                           }}>
-                              <div style={{ width: '60px', height: '60px', borderRadius: '6px', overflow: 'hidden', backgroundColor: '#f5f5f5' }}>
+                              <div style={{ width: '60px', height: '60px', borderRadius: 0, overflow: 'hidden', backgroundColor: '#f5f5f5' }}>
                                   <img src={staticImages.product1 || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=100"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               </div>
                               <div style={{ flex: 1 }}>
@@ -259,7 +259,7 @@ const AccountScreen = () => {
                                   <span style={{ 
                                       display: 'inline-block',
                                       padding: '4px 10px',
-                                      borderRadius: '20px',
+                                      borderRadius: 0,
                                       fontSize: '12px',
                                       fontWeight: 'bold',
                                       backgroundColor: '#e6fffa',

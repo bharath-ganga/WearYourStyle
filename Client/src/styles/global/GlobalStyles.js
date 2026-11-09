@@ -37,7 +37,7 @@ export const GlobalStyles = createGlobalStyle`
     .py-40 { padding-top: 10rem; padding-bottom: 10rem; }
     .relative { position: relative; }
     .absolute { position: absolute; }
-    .rounded-full { border-radius: 999px; }
+    .rounded-full { border-radius: 0; }
 
     // common reset
     ul {

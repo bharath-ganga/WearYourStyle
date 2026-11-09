@@ -12,6 +12,7 @@ import Webcam from "react-webcam";
 import io from "socket.io-client";
 import React, { useState, useRef, useEffect } from "react";
 import { ML_BASE_URL } from "../../config/apiConfig";
+import { garmentTypeFor, loadGarmentAsPng, LIVE_FRAME_FORMAT, LIVE_FRAME_QUALITY } from "../../utils/tryOn";
 
 const ProductCardBoxWrapper = styled.div`
   ${commonCardStyles}
@@ -56,7 +57,7 @@ const ButtonWrapper = styled.div`
 background-color: #23231f;
   color: white;
   padding: 10px 20px;
-  border-radius: 999px;
+  border-radius: 0;
   border: none;
   cursor: pointer;
   font-weight: bold;
@@ -66,7 +67,7 @@ background-color: #23231f;
 
   &:hover {
     background-color: #d45b3f;
-    transform: translateY(-2px);
+    transform: none;
   }
 
   &:active {
@@ -82,10 +83,10 @@ const WebcamContainer = styled.div`
   width: 100%;
   height: 25rem;
   border: 1px solid #dedbd3;
-  border-radius: 20px;
+  border-radius: 0;
   background-color: #000;
   overflow: hidden;
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.16);
+  box-shadow: none;
 `;
 
 
@@ -109,101 +110,89 @@ const OverlayImage = styled.img`
 `;
 
 
-const socket = io(ML_BASE_URL, { transports: ["websocket"] });
+// Connected only while the home-page webcam is open, so plain page views
+// don't hold a connection to the ML server.
+const socket = io(ML_BASE_URL, { transports: ["websocket", "polling"], autoConnect: false });
 
 const NewArrival = ({ products = [] }) => {
-  const [selectedImage, setSelectedImage] = useState(null); 
-  const [webcamActive, setWebcamActive] = useState(false); 
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [webcamActive, setWebcamActive] = useState(false);
   const webcamRef = useRef(null);
-  const [shirtImage, setShirtImage] = useState(null); 
+  const [shirtImage, setShirtImage] = useState(null);
   const [detectedSize, setDetectedSize] = useState("");
+  const garmentRef = useRef(null);
+  const waitingForFrame = useRef(false);
+
   useEffect(() => {
-    if (!socket) return;
+    if (!webcamActive) return;
 
-    // Handle processed frame data from the server
-    socket.on("frame_processed", (data) => {
-        setSelectedImage(`data:image/png;base64,${data.frame}`);
-        if(data.detected_size) {
-            setDetectedSize(data.detected_size);
-        }
-    });
-
-    socket.on("error", (error) => {
-        console.error("Error from server:", error.message);
-    });
-
-    // Cleanup on component unmount
-    return () => {
-        socket.disconnect();
+    const onFrame = (data) => {
+      waitingForFrame.current = false;
+      setSelectedImage(`data:image/jpeg;base64,${data.frame}`);
+      if (data.detected_size) setDetectedSize(data.detected_size);
     };
-}, []);
+    const onError = (error) => {
+      waitingForFrame.current = false;
+      console.error("Error from try-on server:", error.message);
+    };
+    // The server forgets the garment when the connection drops; send it again.
+    const onConnect = () => {
+      if (garmentRef.current) socket.emit("update_garment", garmentRef.current);
+    };
 
-const handleImageClick = async (imageUrl) => {
-  if (!webcamActive) {
-      alert("Please enable the webcam to try on clothes.");
+    socket.on("frame_processed", onFrame);
+    socket.on("error", onError);
+    socket.on("connect", onConnect);
+    socket.connect();
+    return () => {
+      socket.off("frame_processed", onFrame);
+      socket.off("error", onError);
+      socket.off("connect", onConnect);
+      socket.disconnect();
+    };
+  }, [webcamActive]);
+
+  const handleImageClick = async (item, imageUrl) => {
+    if (!webcamActive) {
+      alert("Please open the webcam to try on clothes.");
       return;
-  }
-
-  try {
-      const shirtResponse = await fetch(imageUrl);
-      const shirtBlob = await shirtResponse.blob();
-      const shirtBase64 = await blobToBase64(shirtBlob);
-      setShirtImage(shirtBase64); // Update the selected shirt image
-
-      // Notify server of the new garment to cache
-      socket.emit("update_garment", { shirt: shirtBase64 });
-  } catch (error) {
-      console.error("Error loading shirt image:", error);
-  }
-};
-
-const sendFrameToServer = async () => {
-  if (!webcamRef.current || !shirtImage || !socket.connected) return;
-
-  const screenshot = webcamRef.current.getScreenshot();
-  if (!screenshot) return;
-
-  // Extract base64 part from data URL
-  const frameBase64 = screenshot.split(",")[1];
-
-  // Send only the frame to the server (shirt is cached)
-  socket.emit("process_frame", {
-      frame: frameBase64,
-  });
-};
-
-
-const blobToBase64 = (blob) => {
-  return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(",")[1]); // Extract Base64
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-  });
-};
-
-const toggleWebcam = () => {
-  setWebcamActive((prev) => !prev);
-  setSelectedImage(null); // Reset the image when toggling the webcam
-  setDetectedSize("");
-
-  // Stop the webcam stream when disabling
-  if (webcamRef.current && webcamRef.current.stream) {
-      const tracks = webcamRef.current.stream.getTracks();
-      tracks.forEach((track) => track.stop());
-  }
-};
-
-useEffect(() => {
-  // Send frames periodically when webcam is active
-  let interval;
-  if (webcamActive && shirtImage) {
-      interval = setInterval(sendFrameToServer, 100); 
-  }
-  return () => {
-    if (interval) clearInterval(interval);
+    }
+    try {
+      const shirt = await loadGarmentAsPng(imageUrl);
+      garmentRef.current = { shirt, garment_type: garmentTypeFor(item) };
+      setShirtImage(shirt);
+      socket.emit("update_garment", garmentRef.current);
+    } catch (error) {
+      console.error("Error loading garment image:", error);
+    }
   };
-}, [webcamActive, shirtImage]);
+
+  const toggleWebcam = () => {
+    setWebcamActive((prev) => !prev);
+    setSelectedImage(null);
+    setDetectedSize("");
+    waitingForFrame.current = false;
+
+    if (webcamRef.current && webcamRef.current.stream) {
+      webcamRef.current.stream.getTracks().forEach((track) => track.stop());
+    }
+  };
+
+  useEffect(() => {
+    if (!webcamActive || !shirtImage) return;
+    // One frame in flight at a time; a lost reply is retried after 4 s.
+    let sentAt = 0;
+    const interval = setInterval(() => {
+      if (!webcamRef.current || !socket.connected) return;
+      if (waitingForFrame.current && Date.now() - sentAt < 4000) return;
+      const screenshot = webcamRef.current.getScreenshot();
+      if (!screenshot) return;
+      waitingForFrame.current = true;
+      sentAt = Date.now();
+      socket.emit("process_frame", { frame: screenshot.split(",")[1] });
+    }, 110);
+    return () => clearInterval(interval);
+  }, [webcamActive, shirtImage]);
 
 
   const settings = {
@@ -249,7 +238,7 @@ useEffect(() => {
                       className="object-fit-cover"
                       src={imgUrl}
                       alt="Product"
-                      onClick={() => handleImageClick(imgUrl)}
+                      onClick={() => handleImageClick(item, imgUrl)}
                     />
                   </div>
                 </ProductCardBoxWrapper>
@@ -267,8 +256,10 @@ useEffect(() => {
     <Webcam
       audio={false}
       ref={webcamRef}
-      screenshotFormat="image/png"
-      videoConstraints={{ facingMode: "user" }}
+      screenshotFormat={LIVE_FRAME_FORMAT}
+      screenshotQuality={LIVE_FRAME_QUALITY}
+      mirrored={true}
+      videoConstraints={{ facingMode: "user", width: 640, height: 480 }}
       className="webcam-feed"
     />
     </WebcamContainer>
@@ -283,10 +274,10 @@ useEffect(() => {
               ✨ AI Smart Fit Estimate: Size {detectedSize} ✨
             </p>
           )}
-          <a href={selectedImage} download="MyWearYourStyleFit.png" style={{
+          <a href={selectedImage} download="MyWearYourStyleFit.jpg" style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px',
             backgroundColor: '#3c4242', color: 'white', padding: '10px 20px', 
-            borderRadius: '5px', textDecoration: 'none', fontWeight: 'bold'
+            borderRadius: 0, textDecoration: 'none', fontWeight: 'bold'
           }}>
             <i className="bi bi-download"></i> Share My Fit
           </a>

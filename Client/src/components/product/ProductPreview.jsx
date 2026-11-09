@@ -37,7 +37,7 @@ const ProductPreviewWrapper = styled.div`
     width: 70px;
     height: 70px;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 0;
     cursor: pointer;
     transition: ${defaultTheme.default_transition};
 

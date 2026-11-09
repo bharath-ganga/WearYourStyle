@@ -4,8 +4,7 @@ import { Container } from "../../styles/styles";
 import { staticImages } from "../../utils/images";
 import { navMenuData } from "../../data/data";
 import { Link, useLocation } from "react-router-dom";
-import { Input, InputGroupWrapper } from "../../styles/form";
-import { breakpoints, defaultTheme } from "../../styles/themes/default";
+import { breakpoints } from "../../styles/themes/default";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleSidebar } from "../../redux/slices/sidebarSlice";
 import { useEffect } from "react";
@@ -109,7 +108,7 @@ const IconLinksWrapper = styled.div`
   .icon-link {
     width: 40px;
     height: 40px;
-    border-radius: 999px;
+    border-radius: 0;
     border: 1px solid transparent;
 
     &.active {
@@ -122,14 +121,31 @@ const IconLinksWrapper = styled.div`
     &:hover {
       background-color: ${(props) => props.theme.color_flash_white};
       border-color: ${(props) => props.theme.color_anti_flash_white};
-      transform: translateY(-1px);
+      transform: none;
     }
+  }
+
+  .count-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    background: ${(props) => props.theme.color_sea_green};
   }
 
   .login-link {
     padding: 9px 16px;
     border: 1px solid ${(props) => props.theme.color_outerspace};
-    border-radius: 999px;
+    border-radius: 0;
     &:hover { background: ${(props) => props.theme.color_outerspace}; color: #fff; }
   }
 
@@ -209,7 +225,7 @@ const Header = () => {
               aria-label="Wishlist"
             >
               <img src={staticImages.heart} alt="" />
-              {wishlist.length > 0 && <span className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold" style={{ backgroundColor: "#d45b3f" }}>{wishlist.length}</span>}
+              {wishlist.length > 0 && <span className="count-badge">{wishlist.length}</span>}
             </Link>
             <Link
               to="/account"
@@ -230,12 +246,7 @@ const Header = () => {
             >
               <img src={staticImages.cart} alt="" />
               {itemsCount > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold"
-                  style={{ backgroundColor: "#d45b3f" }}
-                >
-                  {itemsCount}
-                </span>
+                <span className="count-badge">{itemsCount}</span>
               )}
             </Link>
             <button

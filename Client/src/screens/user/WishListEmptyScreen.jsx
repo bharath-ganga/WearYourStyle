@@ -19,7 +19,7 @@ const WishListEmptyScreenWrapper = styled.main`
       margin-left: auto;
       width: 140px;
       height: 140px;
-      border-radius: 50%;
+      border-radius: 0;
       background: #f0f9f4;
       margin-bottom: 40px;
     }

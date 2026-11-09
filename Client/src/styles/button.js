@@ -11,7 +11,7 @@ const commonButtonStyles = css`
   justify-content: center;
   align-items: center;
   text-align: center;
-  border-radius: 999px;
+  border-radius: 0;
   text-decoration: none;
   font-weight: 700;
   font-size: 14px;
@@ -21,8 +21,7 @@ const commonButtonStyles = css`
   padding-right: 22px;
   transition: ${defaultTheme.default_transition};
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 22px rgba(31, 30, 26, 0.14);
+    filter: brightness(0.9);
   }
 `;
 

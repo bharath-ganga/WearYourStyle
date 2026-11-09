@@ -1,12 +1,12 @@
 import styled from "styled-components";
 import { Container } from "../../styles/styles";
 import Breadcrumb from "../../components/common/Breadcrumb";
-import { Link } from "react-router-dom";
 import CartTable from "../../components/cart/CartTable";
 import { breakpoints } from "../../styles/themes/default";
 import CartDiscount from "../../components/cart/CartDiscount";
 import CartSummary from "../../components/cart/CartSummary";
 import { useSelector } from "react-redux";
+import { BaseLinkGreen } from "../../styles/button";
 
 const CartPageWrapper = styled.main`
   padding: 48px 0;
@@ -63,9 +63,7 @@ const CartScreen = () => {
            <div className="flex flex-col items-center justify-center py-20 text-center">
               <h2 className="text-2xl font-bold mb-4">Your cart is empty!</h2>
               <p className="text-gray mb-6">Looks like you haven't added anything to your cart yet.</p>
-              <Link to="/product" className="bg-purple-600 text-white px-8 py-3 rounded-md hover:bg-purple-700 transition font-semibold">
-                Start Shopping
-              </Link>
+              <BaseLinkGreen to="/product">Start Shopping</BaseLinkGreen>
            </div>
         </Container>
       </CartPageWrapper>

@@ -16,12 +16,12 @@ const ChatContainer = styled.div`
 const ChatButton = styled.button`
   width: 60px;
   height: 60px;
-  border-radius: 50%;
+  border-radius: 0;
   background: #d45b3f;
   color: white;
   border: none;
   cursor: pointer;
-  box-shadow: 0 12px 26px rgba(113, 45, 29, 0.28);
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,7 +29,7 @@ const ChatButton = styled.button`
   transition: transform 0.2s, box-shadow 0.2s;
   &:hover {
     transform: scale(1.05);
-    box-shadow: 0 16px 30px rgba(113, 45, 29, 0.34);
+    box-shadow: none;
   }
 `;
 
@@ -38,8 +38,8 @@ const ChatWindow = styled.div`
   height: 500px;
   background: #f7f5ef;
   border: 1px solid #dedbd3;
-  border-radius: 18px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -92,11 +92,11 @@ const Message = styled.div`
   background: ${(props) => (props.$sender === "user" ? "#d45b3f" : "white")};
   color: ${(props) => (props.$sender === "user" ? "white" : "#333")};
   padding: 10px 14px;
-  border-radius: 12px;
+  border-radius: 0;
   max-width: 80%;
   font-size: 14px;
   line-height: 1.4;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
   border-bottom-right-radius: ${(props) => (props.$sender === "user" ? "2px" : "12px")};
   border-bottom-left-radius: ${(props) => (props.$sender === "user" ? "12px" : "2px")};
 `;
@@ -105,7 +105,7 @@ const ProductRecommendation = styled.div`
   margin-top: 10px;
   background: #fcfcfc;
   border: 1px solid #efefef;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -115,7 +115,7 @@ const ProductRecommendation = styled.div`
     width: 50px;
     height: 50px;
     object-fit: cover;
-    border-radius: 4px;
+    border-radius: 0;
   }
   .info {
     flex: 1;
@@ -135,7 +135,7 @@ const ProductRecommendation = styled.div`
     font-weight: bold;
     text-decoration: none;
     padding: 4px 8px;
-    border-radius: 4px;
+    border-radius: 0;
     background: #f2e4df;
     &:hover {
       background: #d45b3f;
@@ -155,7 +155,7 @@ const ChatInputArea = styled.form`
 const Input = styled.input`
   flex: 1;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 10px 15px;
   font-size: 14px;
   outline: none;
@@ -168,7 +168,7 @@ const SendButton = styled.button`
   background: #d45b3f;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   width: 38px;
   height: 38px;
   cursor: pointer;

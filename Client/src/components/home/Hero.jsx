@@ -21,7 +21,7 @@ const HeroSliderWrapper = styled.div`
   max-width: 1540px;
   margin: 0 auto;
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: 0;
   .custom-prev-arrow {
     left: 24px !important;
     background-color: ${defaultTheme.color_white};
@@ -60,7 +60,7 @@ const HeroSliderItemWrapper = styled.div`
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, rgba(17,17,14,.72) 0%, rgba(17,17,14,.32) 50%, rgba(17,17,14,.05) 100%);
+    background: rgba(17,17,14,.42);
   }
 
   img {

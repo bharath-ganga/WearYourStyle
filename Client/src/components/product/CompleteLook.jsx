@@ -49,7 +49,7 @@ const CompleteLook = ({ currentProduct }) => {
   }, [currentProduct]);
 
   return (
-    <Section style={{backgroundColor: '#eef4f4', padding: '40px 0', borderRadius: '12px', marginTop: '40px'}}>
+    <Section style={{backgroundColor: '#eef4f4', padding: '40px 0', borderRadius: 0, marginTop: '40px'}}>
       <Title titleText={"✨ Complete The Look ✨"} />
       {loading ? (
         <div className="flex justify-center items-center py-10">
