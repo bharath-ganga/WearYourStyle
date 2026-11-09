@@ -61,9 +61,7 @@ const SignInScreen = () => {
       localStorage.setItem("userId", userId);
       window.dispatchEvent(new Event("auth-changed"));
       toast.success("Successfully Logged In!");
-      setTimeout(() => {
-        navigate(location.state?.from || "/account", { replace: true });
-      }, 100);
+      navigate(location.state?.from || "/account", { replace: true });
     }
     catch (err) {
       const message = err.response?.data?.message;

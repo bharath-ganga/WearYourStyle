@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { getCartTotal } from "../../redux/slices/cartSlice";
 import { currencyFormat } from "../../utils/helper";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
+import ColorSwatch from "../common/ColorSwatch";
 
 const CheckoutSummaryWrapper = styled.div`
   box-shadow: none;
@@ -114,8 +115,8 @@ const CheckoutSummary = () => {
                     <span className="text-gray">x{item.quantity}</span>
                   </p>
                   <p className="text-base font-bold text-outerspace">
-                    Color: &nbsp;
-                    <span className="text-gray font-normal">{item.color}</span>
+                    Colour: &nbsp;<ColorSwatch color={item.color} />
+                    {item.size && <span className="text-gray font-normal">&nbsp; Size: {item.size}</span>}
                   </p>
                 </div>
                 <div className="order-item-info-r text-gray font-bold text-base">

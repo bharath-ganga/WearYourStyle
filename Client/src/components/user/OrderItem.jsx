@@ -6,6 +6,7 @@ import { breakpoints, defaultTheme } from "../../styles/themes/default";
 import axios from "axios";
 import { API_BASE_URL } from "../../config/apiConfig";
 import { toast } from "react-hot-toast";
+import ColorSwatch from "../common/ColorSwatch";
 
 const OrderItemWrapper = styled.div`
   margin: 30px 0;
@@ -133,7 +134,7 @@ const OrderItem = ({ order }) => {
     }
   };
 
-  const showCancelButton = order.status === "Order Placed" || order.status === "pending";
+  const showCancelButton = ["Order Placed", "Confirmed", "pending"].includes(order.status);
 
   return (
     <OrderItemWrapper>
@@ -142,7 +143,7 @@ const OrderItem = ({ order }) => {
         <div className="order-info-group flex flex-wrap">
           <div className="order-info-item">
             <span className="text-gray font-semibold">Order Date:</span>
-            <span className="text-silver">{order.order_date}</span>
+            <span className="text-silver">{new Date(order.order_date || order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
           </div>
           <div className="order-info-item">
             <span className="text-gray font-semibold">Order Status:</span>
@@ -156,7 +157,7 @@ const OrderItem = ({ order }) => {
           </div>
           <div className="order-info-item">
             <span className="text-gray font-semibold">Method:</span>
-            <span className="text-silver">{order.payment_method}</span>
+            <span className="text-silver">{order.paymentMethod || order.payment_method || "—"}</span>
           </div>
         </div>
       </div>
@@ -174,16 +175,22 @@ const OrderItem = ({ order }) => {
             <ul>
               <li className="font-semibold text-base">
                 <span>Colour:</span>
-                <span className="text-silver">{primaryItem.color || "Default"}</span>
+                <span className="text-silver"><ColorSwatch color={primaryItem.color} /></span>
               </li>
+              {primaryItem.size && (
+                <li className="font-semibold text-base">
+                  <span>Size:</span>
+                  <span className="text-silver">{primaryItem.size}</span>
+                </li>
+              )}
               <li className="font-semibold text-base">
                 <span>Qty:</span>
                 <span className="text-silver">{primaryItem.quantity}</span>
               </li>
               <li className="font-semibold text-base">
-                <span>Total:</span>
+                <span>Order total:</span>
                 <span className="text-silver">
-                  {currencyFormat(primaryItem.price)}
+                  {currencyFormat(order.totalAmount ?? primaryItem.price)}
                 </span>
               </li>
             </ul>

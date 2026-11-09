@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { API_BASE_URL } from "../config/apiConfig";
@@ -14,9 +14,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [wishlist, setWishlist] = useState(readGuestWishlist);
   const [loading, setLoading] = useState(true);
+  // Token whose profile is currently loaded. A new token (just signed in)
+  // puts the app back into "loading" so route guards wait for the profile
+  // instead of bouncing the user to the sign-in page.
+  const sessionToken = useRef(null);
 
   const loadSession = useCallback(async () => {
     const token = localStorage.getItem("accessToken");
+    if (token !== sessionToken.current) setLoading(true);
+    sessionToken.current = token;
     if (!token) {
       setUser(null);
       setWishlist(readGuestWishlist());
@@ -43,6 +49,7 @@ export const AuthProvider = ({ children }) => {
       if (error.response?.status === 401) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("userId");
+        sessionToken.current = null;
         setUser(null);
       }
     } finally {
@@ -84,6 +91,7 @@ export const AuthProvider = ({ children }) => {
     } catch { /* local logout still succeeds */ }
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userId");
+    sessionToken.current = null;
     setUser(null);
     setWishlist(readGuestWishlist());
   };

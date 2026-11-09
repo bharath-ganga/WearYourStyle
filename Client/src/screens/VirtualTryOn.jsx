@@ -1144,10 +1144,10 @@ const VirtualTryOn = () => {
                     </HudBadge>
 
                     {/* HUD — Size recommendation */}
-                    {detectedSize && (
+                    {detectedSize && detectedSize !== "Unknown" && (
                       <SizeBadge $top="62px">
                         <i className="bi bi-rulers" style={{ fontSize: 14, color: defaultTheme.color_sea_green }} />
-                        Recommended Size:&nbsp;
+                        Estimated Size:&nbsp;
                         <span
                           className="size-tag"
                           style={{ background: sizeColors[detectedSize] || defaultTheme.color_sea_green }}
@@ -1283,10 +1283,10 @@ const VirtualTryOn = () => {
                     )}
 
                     {/* Size badge */}
-                    {detectedSize && !photoProcessing && (
+                    {detectedSize && detectedSize !== "Unknown" && !photoProcessing && (
                       <SizeBadge $top="16px">
                         <i className="bi bi-rulers" style={{ fontSize: 14, color: defaultTheme.color_sea_green }} />
-                        Recommended Size:&nbsp;
+                        Estimated Size:&nbsp;
                         <span
                           className="size-tag"
                           style={{ background: sizeColors[detectedSize] || defaultTheme.color_sea_green }}

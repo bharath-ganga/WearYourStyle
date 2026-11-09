@@ -653,22 +653,43 @@ def warp_garment_by_anchors(garment: dict, landmarks, h: int, w: int) -> np.ndar
 # ═══════════════════════════════════════════════════════════════
 def estimate_size(
     shoulder_px: float,
-    frame_width: int,
+    torso_px: float,
     user_height_cm: float = 175.0,
 ) -> str:
     """
-    Estimates clothing size from pixel shoulder width.
+    Estimates clothing size from the body's own proportions, so the result
+    does not depend on how far the person stands from the camera.
 
-    Calibration: a person of height H cm fills roughly 27% of the
-    frame width as shoulder span at 1 metre from a standard webcam.
+    The torso (shoulder joints to hip joints) is ~30% of standing height,
+    which converts pixels to cm; MediaPipe shoulder points are joint centres,
+    about 1.18x narrower than the outer shoulder width a size chart uses.
     Standard adult shoulder widths: XS <37 cm, S 37-40, M 40-44, L 44-48, XL >48.
     """
-    shoulder_cm = (shoulder_px / frame_width) * user_height_cm * 0.27
+    if not all(np.isfinite(value) and value > 0 for value in (shoulder_px, torso_px, user_height_cm)):
+        return "Unknown"
+    shoulder_cm = shoulder_px / torso_px * (0.30 * user_height_cm) * 1.18
     if   shoulder_cm < 37: return "XS"
     elif shoulder_cm < 40: return "S"
     elif shoulder_cm < 44: return "M"
     elif shoulder_cm < 48: return "L"
     else:                  return "XL"
+
+def estimate_size_from_pose(landmarks, frame_height, frame_width, user_height_cm=175.0):
+    """Use the same visible-body check in live and high-quality modes."""
+    if not all(
+        landmarks[i].visibility > 0.5
+        and 0.0 <= landmarks[i].x <= 1.0
+        and 0.0 <= landmarks[i].y <= 1.0
+        for i in (11, 12, 23, 24)
+    ):
+        return "Unknown"
+    def point(i):
+        return np.array([landmarks[i].x * frame_width, landmarks[i].y * frame_height])
+    shoulders = float(np.linalg.norm(point(11) - point(12)))
+    torso = float(np.linalg.norm((point(11) + point(12)) / 2 - (point(23) + point(24)) / 2))
+    if shoulders < 8 or torso < 8:
+        return "Unknown"
+    return estimate_size(shoulders, torso, user_height_cm)
 
 # ═══════════════════════════════════════════════════════════════
 #  Core compositing helpers
@@ -890,7 +911,9 @@ def _run_fast_pipeline(
         return frame_bgr.copy(), "Unknown", "Stand back for detection"
 
     # Size estimation (Layer 3)
-    detected_size = estimate_size(shoulder_w, w, user_height_cm)
+    # Only estimate a size when both shoulders and hips are clearly in frame;
+    # in a close-up the hips are guessed and the estimate is meaningless.
+    detected_size = estimate_size_from_pose(landmarks, h, w, user_height_cm)
 
     output = frame_bgr.copy()
 
@@ -930,13 +953,10 @@ def _run_hq_pipeline(
             result_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
             mp_img     = mp.Image(image_format=mp.ImageFormat.SRGB, data=result_rgb)
             pose       = detector.detect(mp_img)
-            size       = "M"
+            size       = "Unknown"
             if pose.pose_landmarks:
-                lms   = pose.pose_landmarks[0]
-                sw_px = float(np.linalg.norm(
-                    np.array([lms[11].x - lms[12].x]) * frame_bgr.shape[1]
-                ))
-                size  = estimate_size(sw_px, frame_bgr.shape[1], user_height_cm)
+                fh, fw = frame_bgr.shape[:2]
+                size = estimate_size_from_pose(pose.pose_landmarks[0], fh, fw, user_height_cm)
             return result_bgr, size
         except Exception as e:
             print(f"[INFO] HR-VITON fallback triggered: {e}", flush=True)

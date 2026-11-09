@@ -4,6 +4,7 @@ import { breakpoints, defaultTheme } from "../../styles/themes/default";
 import { currencyFormat } from "../../utils/helper";
 import { useDispatch } from "react-redux";
 import { removeFromCart, toggleCartQty } from "../../redux/slices/cartSlice";
+import ColorSwatch from "../common/ColorSwatch";
 
 const CartTableRowWrapper = styled.tr`
   .cart-tbl {
@@ -77,7 +78,7 @@ const CartItem = ({ cartItem }) => {
             <h4 className="text-base font-semibold">{cartItem.title}</h4>
             <div className="flex flex-wrap items-center mt-1">
                 <p className="text-sm text-gray">
-                <span className="font-semibold">Color: </span> {cartItem.color}
+                <span className="font-semibold">Colour: </span> <ColorSwatch color={cartItem.color} />
                 </p>
                 <p className="text-sm text-gray ml-2">
                 <span className="font-semibold">Size:</span> {cartItem.size}
@@ -112,7 +113,7 @@ const CartItem = ({ cartItem }) => {
       </td>
       <td>
         <span className="cart-tbl-shipping uppercase text-silver font-bold">
-          {Number(cartItem.shipping || 0) === 0 ? "Free" : currencyFormat(cartItem.shipping)}
+          Per order
         </span>
       </td>
       <td>

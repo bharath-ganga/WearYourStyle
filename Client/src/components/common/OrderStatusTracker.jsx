@@ -101,8 +101,14 @@ const OrderStatusTracker = ({ currentStatus, compact = false }) => {
 
   const steps = ["Ordered", "Shipped", "Out for delivery", "Delivered"];
   
-  const normalizedStatus = 
-    currentStatus === "Order Placed" || currentStatus === "pending" ? "Ordered" : currentStatus;
+  // Map every backend status onto a step; returns happen after delivery.
+  const normalizedStatus = {
+    "Order Placed": "Ordered",
+    pending: "Ordered",
+    Confirmed: "Ordered",
+    "Return requested": "Delivered",
+    Returned: "Delivered",
+  }[currentStatus] || currentStatus;
 
   useEffect(() => {
     let targetIndex = steps.indexOf(normalizedStatus);

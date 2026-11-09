@@ -45,7 +45,9 @@ const placeOrder = asyncHandler(async (req, res) => {
             if (!product) throw new ApiError(409, `Product is unavailable or has insufficient stock: ${item.productId}`);
             const price = Number(product.price);
             subtotal += price * quantity;
-            validatedItems.push({ productId: product.id, title: product.title, name: product.title, imgSource: product.imgSource, price, quantity, totalPrice: price * quantity });
+            // Keep the shopper's chosen variant; only short plain strings are accepted.
+            const variant = (value) => (typeof value === "string" ? value.trim().slice(0, 20) : "");
+            validatedItems.push({ productId: product.id, title: product.title, name: product.title, imgSource: product.imgSource, size: variant(item.size), color: variant(item.color), price, quantity, totalPrice: price * quantity });
         }
         const totalAmount = Number((subtotal * (1 - safeDiscount / 100) + 50).toFixed(2));
         const now = new Date();
