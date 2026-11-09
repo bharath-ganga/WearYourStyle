@@ -14,7 +14,7 @@ const Page = styled.main`
   .head { display:flex; justify-content:space-between; align-items:end; gap:20px; margin:28px 0; }
   .head p { color:#616666; margin-top:8px; }
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:22px; }
-  .card { border:1px solid #dedbd3; border-radius:18px; overflow:hidden; background:#fff; }
+  .card { border:1px solid #dedbd3; border-radius: 0; overflow:hidden; background:#fff; }
   .photo { display:block; aspect-ratio:4/5; overflow:hidden; background:#f4f1ea; }
   .photo img { width:100%; height:100%; object-fit:cover; transition:transform .3s ease; }
   .photo:hover img { transform:scale(1.025); }
@@ -23,10 +23,10 @@ const Page = styled.main`
   h3 { font-size:17px; margin:5px 0 12px; min-height:46px; }
   .row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .actions { display:grid; grid-template-columns:1fr auto; gap:8px; margin-top:15px; }
-  button,.browse { border:1px solid #263333; border-radius:999px; padding:10px 14px; font-weight:700; }
+  button,.browse { border:1px solid #263333; border-radius: 0; padding:10px 14px; font-weight:700; }
   .add { background:#263333; color:#fff; }
   .remove { width:42px; padding:0; background:#fff; color:#d45b3f; }
-  .empty { text-align:center; border:1px dashed #c9c5bc; border-radius:22px; padding:72px 20px; }
+  .empty { text-align:center; border:1px dashed #c9c5bc; border-radius: 0; padding:72px 20px; }
   .empty i { font-size:48px; color:#d45b3f; }
   .browse { display:inline-flex; margin-top:20px; background:#263333; color:#fff; }
 `;

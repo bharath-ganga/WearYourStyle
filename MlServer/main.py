@@ -104,6 +104,14 @@ def _download(url: str, dest: str) -> bool:
         return False
 
 
+# ── Pose landmarker (gitignored, so fetch it on first local run) ─
+if not os.path.exists(POSE_MODEL):
+    _download(
+        "https://storage.googleapis.com/mediapipe-models/pose_landmarker/"
+        "pose_landmarker_full/float16/1/pose_landmarker_full.task",
+        POSE_MODEL,
+    )
+
 # ── Classifier (EfficientNet Lite0) ─────────────────────────────
 if not os.path.exists(CLASSIFIER_PATH):
     _download(
@@ -291,33 +299,40 @@ def get_color_name(hsv) -> str:
 # ═══════════════════════════════════════════════════════════════
 #  Layer 1 — Body Segmentation
 # ═══════════════════════════════════════════════════════════════
-def segment_body(frame_rgb: np.ndarray) -> np.ndarray:
+def segment_body(frame_rgb: np.ndarray) -> dict:
     """
-    Returns uint8 mask (H×W): 255 = person, 0 = background.
+    Returns uint8 masks (H×W, 255 = set):
+      person  — anything that is not background (garment is clipped to it)
+      head    — face skin + hair (garment is never drawn over it)
+      clothes — what the user is currently wearing
     Uses MediaPipe selfie_multiclass segmenter (6 classes):
       0 = background, 1 = hair, 2 = body-skin, 3 = face-skin,
       4 = clothes, 5 = accessories
-    Falls back to a full-frame mask when the segmenter is unavailable.
+    Falls back to a full-frame person mask when the segmenter is unavailable.
     """
+    shape = frame_rgb.shape[:2]
+    empty = np.zeros(shape, dtype=np.uint8)
     if _segmenter is None:
-        # No segmenter — return all-person mask (no clipping)
-        return np.full(frame_rgb.shape[:2], 255, dtype=np.uint8)
+        # No segmenter — no clipping
+        return {"person": np.full(shape, 255, dtype=np.uint8), "head": empty, "clothes": empty}
 
     mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
     result = _segmenter.segment(mp_img)
 
     if result.category_mask is None:
-        return np.full(frame_rgb.shape[:2], 255, dtype=np.uint8)
+        return {"person": np.full(shape, 255, dtype=np.uint8), "head": empty, "clothes": empty}
 
-    cat = result.category_mask.numpy_view()          # H×W, values 0-5
+    cat = result.category_mask.numpy_view().reshape(shape)   # H×W, values 0-5
     mask = np.where(cat > 0, 255, 0).astype(np.uint8)  # any non-background = person
+    head = np.where((cat == 1) | (cat == 3), 255, 0).astype(np.uint8)
+    clothes = np.where(cat == _SEG_CLOTHES, 255, 0).astype(np.uint8)
 
     # Morphological cleanup: close holes, smooth edges
     k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, k, iterations=2)
     mask = cv2.GaussianBlur(mask, (11, 11), 0)
     _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
-    return mask
+    return {"person": mask, "head": head, "clothes": clothes}
 
 # ═══════════════════════════════════════════════════════════════
 #  Layer 1 — Arm Occlusion Mask
@@ -405,13 +420,16 @@ def _tps_warp(
             smoothing=0.5,
         )
 
-        # Dense output grid  [out_h × out_w, 2]
-        yy, xx = np.mgrid[0:out_h, 0:out_w]
-        out_coords = np.column_stack([xx.ravel(), yy.ravel()]).astype(np.float64)
-
-        src_coords = rbf(out_coords).astype(np.float32)
-        map_x = src_coords[:, 0].reshape(out_h, out_w)
-        map_y = src_coords[:, 1].reshape(out_h, out_w)
+        # The warp is smooth, so evaluate it on a coarse grid and upscale the
+        # maps; this is ~16x cheaper than evaluating every output pixel.
+        step = 4
+        gh, gw = (out_h + step - 1) // step + 1, (out_w + step - 1) // step + 1
+        yy, xx = np.mgrid[0:gh, 0:gw] * step
+        grid = np.column_stack([xx.ravel(), yy.ravel()]).astype(np.float64)
+        src_coords = rbf(grid).astype(np.float32)
+        full = ((gw - 1) * step + 1, (gh - 1) * step + 1)
+        map_x = cv2.resize(src_coords[:, 0].reshape(gh, gw), full, interpolation=cv2.INTER_LINEAR)[:out_h, :out_w]
+        map_y = cv2.resize(src_coords[:, 1].reshape(gh, gw), full, interpolation=cv2.INTER_LINEAR)[:out_h, :out_w]
 
         warped = cv2.remap(
             garment, map_x, map_y,
@@ -453,10 +471,11 @@ def warp_garment_to_body(
         lm = landmarks[i]
         return np.array([lm.x * w, lm.y * h], dtype=np.float32)
 
-    ls = lm_px(11)   # left shoulder
-    rs = lm_px(12)   # right shoulder
-    lh = lm_px(23)   # left hip
-    rh = lm_px(24)   # right hip
+    # A flat product shot shows the garment facing the viewer, so its image-left
+    # edge belongs on whichever shoulder appears on image-left. Sorting by x keeps
+    # logos the right way round whether or not the camera frame is mirrored.
+    ls, rs = sorted((lm_px(11), lm_px(12)), key=lambda p: p[0])
+    lh, rh = sorted((lm_px(23), lm_px(24)), key=lambda p: p[0])
 
     neck     = (ls + rs) * 0.5
     mid_hip  = (lh + rh) * 0.5
@@ -522,6 +541,112 @@ def warp_garment_to_body(
         borderValue=(0, 0, 0, 0),
     )
     return warped
+
+# ═══════════════════════════════════════════════════════════════
+#  Garment preparation — catalog photos show the garment on a model
+# ═══════════════════════════════════════════════════════════════
+# Landmarks used as warp anchors: shoulders and hips always, elbows so sleeves
+# follow the arms, knees so dresses keep their length.
+_CORE_ANCHORS  = (11, 12, 23, 24)
+_ELBOW_ANCHORS = (13, 14)
+_KNEE_ANCHORS  = (25, 26)
+_SEG_CLOTHES   = 4
+GARMENT_EASE   = 1.12   # horizontal looseness of a model-photo garment on the user
+
+
+def _has_transparency(img: np.ndarray) -> bool:
+    return img.ndim == 3 and img.shape[2] == 4 and np.mean(img[:, :, 3] < 128) > 0.05
+
+
+def prepare_garment(img: np.ndarray, garment_type: str = "top") -> dict:
+    """
+    Turns an uploaded garment image into {"image": BGRA, "anchors": {idx: (x, y)} | None}.
+
+    Model photos (the whole catalog): the selfie segmenter's "clothes" class
+    cuts the garment away from skin, hair and background, and the model's pose
+    landmarks become warp anchors, so the garment is mapped body-to-body.
+    Tops are trimmed just below the hips so trousers are not carried over.
+
+    Flat cut-outs (transparent PNGs, or no person found): background is
+    stripped and the fixed collar/hem anchor layout is used instead.
+    """
+    if img.ndim == 2:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGRA)
+    elif img.shape[2] == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
+
+    if not _has_transparency(img) and _segmenter is not None:
+        h, w = img.shape[:2]
+        rgb = np.ascontiguousarray(cv2.cvtColor(img[:, :, :3], cv2.COLOR_BGR2RGB))
+        mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        pose = detector.detect(mp_img)
+        seg = _segmenter.segment(mp_img)
+        if pose.pose_landmarks and seg.category_mask is not None:
+            lms = pose.pose_landmarks[0]
+            clothes = (seg.category_mask.numpy_view().reshape(h, w) == _SEG_CLOTHES).astype(np.uint8) * 255
+
+            if garment_type != "dress":
+                hip_y  = (lms[23].y + lms[24].y) / 2 * h
+                neck_y = (lms[11].y + lms[12].y) / 2 * h
+                cut_y  = int(hip_y + (hip_y - neck_y) * 0.12)
+                clothes[max(0, cut_y):, :] = 0
+
+            # Keep the largest blob (drops shoes, bags and stray pixels)
+            n, labels, stats, _ = cv2.connectedComponentsWithStats(clothes, 8)
+            if n > 1:
+                biggest = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+                clothes = np.where(labels == biggest, 255, 0).astype(np.uint8)
+
+            if np.count_nonzero(clothes) > 0.02 * h * w:
+                clothes = cv2.GaussianBlur(clothes, (5, 5), 0)
+                img[:, :, 3] = clothes
+                anchors = {i: (lms[i].x * w, lms[i].y * h) for i in _CORE_ANCHORS}
+                for i in _ELBOW_ANCHORS + (_KNEE_ANCHORS if garment_type == "dress" else ()):
+                    if lms[i].visibility > 0.6:
+                        anchors[i] = (lms[i].x * w, lms[i].y * h)
+                # Crop to the garment to keep the warp cheap; shift anchors to match
+                ys, xs = np.nonzero(clothes)
+                x0, y0 = max(0, xs.min() - 4), max(0, ys.min() - 4)
+                x1, y1 = min(w, xs.max() + 5), min(h, ys.max() + 5)
+                anchors = {i: (x - x0, y - y0) for i, (x, y) in anchors.items()}
+                return {"image": img[y0:y1, x0:x1].copy(), "anchors": anchors}
+
+    return {"image": crop_to_content(remove_background(img)), "anchors": None}
+
+
+def warp_garment_by_anchors(garment: dict, landmarks, h: int, w: int) -> np.ndarray | None:
+    """Warp a model-photo garment so the model's joints land on the user's joints."""
+    src, dst = [], []
+    for i, (gx, gy) in garment["anchors"].items():
+        lm = landmarks[i]
+        # Elbows/knees only help when the user's joint is actually tracked
+        if i not in _CORE_ANCHORS and lm.visibility < 0.6:
+            continue
+        src.append((gx, gy))
+        dst.append((lm.x * w, lm.y * h))
+
+    src = np.array(src, dtype=np.float32)
+    dst = np.array(dst, dtype=np.float32)
+    if np.linalg.norm(dst[0] - dst[1]) < 8:
+        return None
+
+    # Add the neck midpoint for extra stability around the collar.
+    src = np.vstack([src, (src[0] + src[1]) / 2])
+    dst = np.vstack([dst, (dst[0] + dst[1]) / 2])
+
+    # Fit slightly loose so the user's own clothes don't peek out at the sides;
+    # the composite is clipped to the body silhouette, so nothing spills over.
+    center_x = dst[-1, 0]
+    dst[:, 0] = center_x + (dst[:, 0] - center_x) * GARMENT_EASE
+
+    warped = _tps_warp(garment["image"], src, dst, h, w)
+    if warped is not None:
+        return warped
+    M, _ = cv2.estimateAffinePartial2D(src, dst)
+    if M is None:
+        return None
+    return cv2.warpAffine(garment["image"], M, (w, h), flags=cv2.INTER_LINEAR,
+                          borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
 
 # ═══════════════════════════════════════════════════════════════
 #  Layer 3 — Size Estimation
@@ -629,14 +754,15 @@ def remove_background(image: np.ndarray) -> np.ndarray:
 def _apply_garment_composite(
     frame: np.ndarray,
     warped_garment: np.ndarray,
-    body_mask: np.ndarray,
+    masks: dict,
     arm_mask: np.ndarray,
 ) -> np.ndarray:
     """
-    Three-pass composite:
-      1. Alpha-blend warped garment onto frame
-      2. Clip garment to body silhouette (prevents bleed outside person)
+    Composite:
+      1. Clip garment to body silhouette, never over face or hair
+      2. Alpha-blend warped garment onto frame
       3. Restore original arm pixels over garment (arm occlusion)
+      4. Inpaint the user's own clothes where they still show beside the garment
     """
     h, w = frame.shape[:2]
 
@@ -646,8 +772,8 @@ def _apply_garment_composite(
         else np.ones((h, w), dtype=np.float32)
     )
 
-    # Clip by body mask
-    body_f = body_mask.astype(np.float32) / 255.0
+    # Clip by body mask, keep the face and hair visible
+    body_f = (masks["person"].astype(np.float32) / 255.0) * (1.0 - masks["head"].astype(np.float32) / 255.0)
     clipped = garment_alpha * body_f  # [0.0 – 1.0]
 
     garment_bgr = warped_garment[:, :, :3].astype(np.float32)
@@ -659,6 +785,20 @@ def _apply_garment_composite(
     # Paste original arm pixels on top
     arm_bool = arm_mask > 0
     blended[arm_bool] = frame[arm_bool]
+
+    # The user's own top can stick out past a narrower garment. Within the
+    # garment's vertical span, repaint those strips from the surrounding garment.
+    covered = clipped > 0.5
+    rows = np.where(covered.any(axis=1))[0]
+    if rows.size:
+        leftover = (masks["clothes"] > 0) & ~covered & ~arm_bool
+        leftover[: rows[0], :] = False
+        leftover[rows[-1] + 1:, :] = False
+        # Only thin strips touching the garment; large areas are a different item
+        near = cv2.dilate(covered.astype(np.uint8), np.ones((25, 25), np.uint8)) > 0
+        leftover &= near
+        if leftover.any():
+            blended = cv2.inpaint(blended, leftover.astype(np.uint8) * 255, 5, cv2.INPAINT_TELEA)
 
     return blended
 
@@ -711,7 +851,7 @@ def overlay_accessory_on_frame(
 # ═══════════════════════════════════════════════════════════════
 def _run_fast_pipeline(
     frame_bgr: np.ndarray,
-    shirt_bgra: np.ndarray | None,
+    garment: dict | None,
     active_accessory: str | None,
     user_height_cm: float = 175.0,
 ) -> tuple[np.ndarray, str, str]:
@@ -725,7 +865,7 @@ def _run_fast_pipeline(
     mp_img    = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
 
     # Body segmentation (Layer 1)
-    body_mask = segment_body(frame_rgb)
+    body_masks = segment_body(frame_rgb)
 
     # Pose detection
     pose_result = detector.detect(mp_img)
@@ -755,13 +895,15 @@ def _run_fast_pipeline(
     output = frame_bgr.copy()
 
     # Garment warping + compositing
-    if shirt_bgra is not None:
-        cropped = crop_to_content(shirt_bgra)
-        warped  = warp_garment_to_body(cropped, landmarks, h, w)
+    if garment is not None:
+        if garment["anchors"]:
+            warped = warp_garment_by_anchors(garment, landmarks, h, w)
+        else:
+            warped = warp_garment_to_body(garment["image"], landmarks, h, w)
 
         if warped is not None:
             arm_mask = build_arm_occlusion_mask(landmarks, h, w)   # Layer 1
-            output   = _apply_garment_composite(output, warped, body_mask, arm_mask)
+            output   = _apply_garment_composite(output, warped, body_masks, arm_mask)
 
     # Accessories
     if active_accessory:
@@ -772,7 +914,7 @@ def _run_fast_pipeline(
 
 def _run_hq_pipeline(
     frame_bgr: np.ndarray,
-    shirt_bgra: np.ndarray,
+    garment: dict,
     user_height_cm: float = 175.0,
 ) -> tuple[np.ndarray, str]:
     """
@@ -782,11 +924,7 @@ def _run_hq_pipeline(
     """
     if hrviton.available:
         try:
-            garment_bgr = (
-                shirt_bgra[:, :, :3]
-                if shirt_bgra.ndim == 3 and shirt_bgra.shape[2] == 4
-                else shirt_bgra
-            )
+            garment_bgr = garment["image"][:, :, :3]
             result_bgr = hrviton.run(frame_bgr, garment_bgr)
             # HR-VITON doesn't return landmarks — estimate size separately
             result_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
@@ -804,7 +942,7 @@ def _run_hq_pipeline(
             print(f"[INFO] HR-VITON fallback triggered: {e}", flush=True)
 
     # Enhanced fast pipeline fallback
-    result, size, _ = _run_fast_pipeline(frame_bgr, shirt_bgra, None, user_height_cm)
+    result, size, _ = _run_fast_pipeline(frame_bgr, garment, None, user_height_cm)
     return result, size
 
 # ═══════════════════════════════════════════════════════════════
@@ -904,20 +1042,18 @@ def tryon_photo():
         if shirt_bgra is None:
             return jsonify({"error": "Invalid shirt image"}), 400
 
-        # Ensure garment is BGRA and strip background
-        shirt_bgra = remove_background(shirt_bgra)
-        shirt_bgra = crop_to_content(shirt_bgra)
+        garment = prepare_garment(shirt_bgra, data.get("garment_type", "top"))
 
         user_height_cm = float(data.get("user_height_cm", 175))
         use_hq         = bool(data.get("hq", True))
 
         if use_hq:
             result_bgr, detected_size = _run_hq_pipeline(
-                frame_bgr, shirt_bgra, user_height_cm
+                frame_bgr, garment, user_height_cm
             )
         else:
             result_bgr, detected_size, _ = _run_fast_pipeline(
-                frame_bgr, shirt_bgra, None, user_height_cm
+                frame_bgr, garment, None, user_height_cm
             )
 
         _, buf    = cv2.imencode(".jpg", result_bgr, [cv2.IMWRITE_JPEG_QUALITY, 90])
@@ -939,9 +1075,9 @@ def update_garment(data):
         if shirt is None:
             emit("error", {"message": "Invalid shirt data"})
             return
-        shirt = remove_background(shirt)
+        garment = prepare_garment(shirt, data.get("garment_type", "top"))
         with _cache_lock:
-            garment_cache[request.sid] = shirt
+            garment_cache[request.sid] = garment
         emit("garment_updated", {"status": "success"})
     except Exception as e:
         emit("error", {"message": f"Garment update failed: {str(e)}"})

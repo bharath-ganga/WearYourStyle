@@ -8,10 +8,10 @@ const Page = styled.main`
   h1 { max-width: 760px; margin: 12px 0 18px; font-size: clamp(38px, 6vw, 72px); line-height: 1; }
   .lead { max-width: 720px; font-size: 19px; line-height: 1.7; color: #616666; }
   .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 42px; }
-  article { border: 1px solid #dedbd3; border-radius: 18px; padding: 24px; background: var(--color-white, #fff); }
+  article { border: 1px solid #dedbd3; border-radius: 0; padding: 24px; background: var(--color-white, #fff); }
   article h2 { font-size: 20px; margin-bottom: 10px; }
   article p { color: #616666; line-height: 1.65; }
-  .cta { display: inline-flex; margin-top: 34px; padding: 13px 20px; border-radius: 999px; background: #263333; color: #fff; font-weight: 700; }
+  .cta { display: inline-flex; margin-top: 34px; padding: 13px 20px; border-radius: 0; background: #263333; color: #fff; font-weight: 700; }
 `;
 
 const pages = {

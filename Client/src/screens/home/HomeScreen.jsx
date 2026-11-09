@@ -60,10 +60,10 @@ const ModalOverlay = styled.div`
 const ModalContent = styled.div`
   background: #ffffff;
   padding: 40px;
-  border-radius: 20px;
+  border-radius: 0;
   width: min(470px, calc(100% - 32px));
   text-align: center;
-  box-shadow: 0 28px 70px rgba(0,0,0,0.28);
+  box-shadow: none;
   transform: scale(1);
   animation: scaleUp 0.3s ease-out;
 
@@ -99,7 +99,7 @@ const ModalContent = styled.div`
     color: #fff;
     border: none;
     padding: 12px 24px;
-    border-radius: 999px;
+    border-radius: 0;
     cursor: pointer;
     font-weight: 600;
     font-size: 15px;
@@ -107,7 +107,7 @@ const ModalContent = styled.div`
     
     &:hover {
       background: #333;
-      transform: translateY(-2px);
+      transform: none;
     }
   }
   
@@ -265,9 +265,9 @@ const HomeScreen = () => {
                     value={manualCity} 
                     onChange={(e) => setManualCity(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleManualLocation()}
-                    style={{ padding: '12px 16px', width: '60%', borderRadius: '999px', border: '1px solid #dedbd3', marginRight: '8px', fontSize: '15px', background: '#f7f5ef' }}
+                    style={{ padding: '12px 16px', width: '60%', borderRadius: 0, border: '1px solid #dedbd3', marginRight: '8px', fontSize: '15px', background: '#f7f5ef' }}
                 />
-                <button onClick={handleManualLocation} style={{ padding: '12px 20px', background: '#d45b3f', color: 'white', borderRadius: '999px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                <button onClick={handleManualLocation} style={{ padding: '12px 20px', background: '#d45b3f', color: 'white', borderRadius: 0, border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
                     Search
                 </button>
             </div>

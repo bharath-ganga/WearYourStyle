@@ -27,6 +27,9 @@ import { Product } from "../models/product.model.js";
 import { Payment } from "../models/payment.model.js";
 import { uploadToCloudinary } from "../utils/cloudinary.util.js";
 import { User } from "../models/user.model.js";
+import { getDb } from "../db/postgres.js";
+import { orders, products } from "../db/schema.js";
+import { eq, sql } from "drizzle-orm";
 
 const execFileAsync = promisify(execFile);
 
@@ -108,23 +111,56 @@ const getAllOrders = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: ordersWithPayments });
 });
 
+export const ORDER_STATUSES = ["Order Placed", "Confirmed", "Shipped", "Out for delivery", "Delivered", "Cancelled", "Return requested", "Returned"];
+// Once stock has gone back on the shelf the order is closed for further changes.
+const RESTOCKING_STATUSES = ["Cancelled", "Returned"];
+
 const updateOrderStatus = asyncHandler(async (req, res) => {
   const { id }     = req.params;
   const { status } = req.body;
-  const updated    = await Order.update(id, { status });
-  res.status(200).json({ success: true, data: updated });
+  if (!ORDER_STATUSES.includes(status)) {
+    throw new ApiError(400, `Status must be one of: ${ORDER_STATUSES.join(", ")}`);
+  }
+
+  const updated = await getDb().transaction(async (tx) => {
+    const [order] = await tx.select().from(orders).where(eq(orders.id, id)).for("update");
+    if (!order) throw new ApiError(404, "Order not found");
+    if (order.status === status) return order;
+    if (RESTOCKING_STATUSES.includes(order.status)) {
+      throw new ApiError(400, `This order is already ${order.status.toLowerCase()} and can no longer change status`);
+    }
+
+    const [row] = await tx.update(orders).set({ status, updatedAt: new Date() }).where(eq(orders.id, id)).returning();
+    if (RESTOCKING_STATUSES.includes(status)) {
+      for (const item of order.data?.items || []) {
+        const quantity = Number(item.quantity);
+        if (item.productId && Number.isSafeInteger(quantity) && quantity > 0) {
+          await tx.update(products)
+            .set({ stock: sql`${products.stock} + ${quantity}`, updatedAt: new Date() })
+            .where(eq(products.id, String(item.productId)));
+        }
+      }
+    }
+    return row;
+  });
+
+  res.status(200).json({ success: true, data: await Order.findById(updated.id) });
 });
 
 const deleteOrder = asyncHandler(async (req, res) => {
+  if (!await Order.findById(req.params.id)) throw new ApiError(404, "Order not found");
   await Order.delete(req.params.id);
   res.status(200).json({ success: true, message: "Order deleted successfully" });
 });
+
+// Keep in sync with LOW_STOCK in Client/src/screens/admin/AdminDashboard.jsx
+const LOW_STOCK_THRESHOLD = 10;
 
 const getAnalytics = asyncHandler(async (_req, res) => {
   const [orders, products, users] = await Promise.all([Order.getAll(), Product.getAll(), User.getAll()]);
   const delivered = orders.filter((order) => order.status === "Delivered");
   const revenue = delivered.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
-  const lowStock = products.filter((product) => Number(product.stock || 0) <= 5).length;
+  const lowStock = products.filter((product) => Number(product.stock || 0) <= LOW_STOCK_THRESHOLD).length;
   const returns = orders.filter((order) => String(order.status).toLowerCase().includes("return")).length;
   res.status(200).json({ success: true, data: { revenue, orders: orders.length, customers: users.filter((user) => user.role !== "admin").length, products: products.length, lowStock, returns } });
 });
@@ -143,18 +179,47 @@ const getAllProducts = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: products });
 });
 
-/** Original handler — accepts plain JSON body with imgSource URL. Unchanged. */
+/**
+ * Validates the product fields that are present. On create, title and price are required.
+ * Returns a cleaned copy of the body.
+ */
+const validateProductInput = (body, { partial }) => {
+  const data = { ...body };
+  delete data.id;
+  if (!partial || Object.hasOwn(data, "title")) {
+    data.title = String(data.title || "").trim();
+    if (!data.title) throw new ApiError(400, "Product title is required");
+  }
+  if (!partial || Object.hasOwn(data, "price")) {
+    const price = Number(data.price);
+    if (!Number.isFinite(price) || price <= 0) throw new ApiError(400, "Price must be a number greater than 0");
+    data.price = price;
+  }
+  if (Object.hasOwn(data, "stock")) {
+    const stock = Number(data.stock);
+    if (!Number.isSafeInteger(stock) || stock < 0) throw new ApiError(400, "Stock must be a whole number of 0 or more");
+    data.stock = stock;
+  }
+  for (const key of ["sizes", "colors"]) {
+    if (typeof data[key] === "string") data[key] = data[key].split(/[|,]/).map((v) => v.trim()).filter(Boolean);
+    if (Object.hasOwn(data, key) && !Array.isArray(data[key])) throw new ApiError(400, `${key} must be a list`);
+  }
+  return data;
+};
+
 const createProduct = asyncHandler(async (req, res) => {
-  const newProduct = await Product.create(req.body);
+  const newProduct = await Product.create(validateProductInput(req.body, { partial: false }));
   res.status(201).json({ success: true, data: newProduct });
 });
 
 const updateProduct = asyncHandler(async (req, res) => {
-  const updated = await Product.update(req.params.id, req.body);
+  const updated = await Product.update(req.params.id, validateProductInput(req.body, { partial: true }));
+  if (!updated) throw new ApiError(404, "Product not found");
   res.status(200).json({ success: true, data: updated });
 });
 
 const deleteProduct = asyncHandler(async (req, res) => {
+  if (!await Product.findById(req.params.id)) throw new ApiError(404, "Product not found");
   await Product.delete(req.params.id);
   res.status(200).json({ success: true, message: "Product deleted successfully" });
 });
@@ -190,7 +255,7 @@ const createProductWithBgRemoval = asyncHandler(async (req, res) => {
     throw new ApiError(400, "No image file provided. Send multipart/form-data with field 'image'.");
   }
 
-  const { title, price, category, gender, description } = req.body;
+  const { title, price, category, gender, description, stock, sizes } = req.body;
   const skipBgRemoval = req.body.removeBg === "false";
 
   if (!title || !price || !category || !gender) {
@@ -234,16 +299,18 @@ const createProductWithBgRemoval = asyncHandler(async (req, res) => {
   }
 
   // ── Step 3: Save product to Postgres ──────────────────────────────────────
-  const productData = {
+  const productData = validateProductInput({
     title,
-    price:         parseFloat(price),
+    price,
+    ...(stock !== undefined && { stock }),
+    ...(sizes !== undefined && { sizes }),
     category,
     gender,
     description:   description || "",
     imgSource:     cloudinaryResult.secure_url,
     cloudinaryId:  cloudinaryResult.public_id,
     bgRemoved,
-  };
+  }, { partial: false });
 
   const newProduct = await Product.create(productData);
 

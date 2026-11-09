@@ -38,7 +38,7 @@ const DetailsContent = styled.div`
 
 const ProductDetailsWrapper = styled.div`
   border: 1px solid ${(props) => props.theme.color_anti_flash_white};
-  border-radius: 22px;
+  border-radius: 0;
   padding: 38px;
   background: ${(props) => props.theme.color_white};
 
@@ -132,7 +132,7 @@ const ProductSizeWrapper = styled.div`
     span {
       width: 38px;
       height: 38px;
-      border-radius: 8px;
+      border-radius: 0;
       border: 1.5px solid ${defaultTheme.color_silver};
       text-transform: uppercase;
 
@@ -185,7 +185,7 @@ const ProductColorWrapper = styled.div`
     }
 
     .prod-colorbox {
-      border-radius: 100%;
+      border-radius: 0;
       width: 22px;
       height: 22px;
       display: inline-block;
@@ -363,7 +363,7 @@ const ProductDetailsScreen = () => {
                                 </span>
                                 <span className="prod-add-btn-text">Add to cart</span>
                             </BaseButtonGreen>
-                            <button type="button" onClick={() => toggleWishlist(product)} aria-pressed={saved} style={{ minHeight:44, border:"1px solid #c9c5bc", borderRadius:999, padding:"0 17px", fontWeight:700 }}><i className={`bi ${saved ? "bi-heart-fill" : "bi-heart"}`} style={{ color:saved ? "#d45b3f" : "inherit", marginRight:7 }}></i>{saved ? "Saved" : "Save"}</button>
+                            <button type="button" onClick={() => toggleWishlist(product)} aria-pressed={saved} style={{ minHeight:44, border:"1px solid #c9c5bc", borderRadius: 0, padding:"0 17px", fontWeight:700 }}><i className={`bi ${saved ? "bi-heart-fill" : "bi-heart"}`} style={{ color:saved ? "#d45b3f" : "inherit", marginRight:7 }}></i>{saved ? "Saved" : "Save"}</button>
 
                             {isTryOnable && (
                                 <BaseLinkGreen

@@ -30,7 +30,7 @@ const ProductServicesWrapper = styled.div`
 
     &-icon {
       background: ${defaultTheme.color_flash_white};
-      border-radius: 50%;
+      border-radius: 0;
       width: 44px;
       height: 44px;
       flex-basis: 44px;

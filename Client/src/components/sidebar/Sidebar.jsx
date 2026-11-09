@@ -17,7 +17,7 @@ const SideNavigationWrapper = styled.div`
   left: 0;
   width: 310px;
   z-index: 999;
-  box-shadow: 24px 0 60px rgba(18, 18, 15, 0.18);
+  box-shadow: none;
   padding: 24px;
   transform: translateX(-100%);
   transition: ${defaultTheme.default_transition};
@@ -37,7 +37,7 @@ const SideNavigationWrapper = styled.div`
 
   .sidenav-search-form {
     border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 12px;
+    border-radius: 0;
     margin-top: 20px;
 
     .input-group {
@@ -54,7 +54,7 @@ const SideNavigationWrapper = styled.div`
 
     li {
       padding: 10px 12px;
-      border-radius: 10px;
+      border-radius: 0;
       transition: ${defaultTheme.default_transition};
 
       &:hover {

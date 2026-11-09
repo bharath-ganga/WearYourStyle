@@ -10,12 +10,12 @@ const Wrap = styled.section`
   margin:60px 0 20px; border-top:1px solid #dedbd3; padding-top:38px;
   .top { display:flex; justify-content:space-between; gap:20px; align-items:end; margin-bottom:22px; }
   .score { font-size:36px; font-weight:800; }
-  form { display:grid; gap:12px; padding:20px; border:1px solid #dedbd3; border-radius:16px; margin-bottom:22px; }
-  textarea,select { border:1px solid #c9c5bc; border-radius:10px; padding:11px; }
+  form { display:grid; gap:12px; padding:20px; border:1px solid #dedbd3; border-radius: 0; margin-bottom:22px; }
+  textarea,select { border:1px solid #c9c5bc; border-radius: 0; padding:11px; }
   textarea { min-height:90px; resize:vertical; }
-  form button { justify-self:start; padding:10px 17px; border-radius:999px; background:#263333; color:#fff; font-weight:700; }
+  form button { justify-self:start; padding:10px 17px; border-radius: 0; background:#263333; color:#fff; font-weight:700; }
   .reviews { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
-  article { border:1px solid #dedbd3; border-radius:14px; padding:18px; }
+  article { border:1px solid #dedbd3; border-radius: 0; padding:18px; }
   article p { color:#616666; line-height:1.55; margin-top:8px; }
 `;
 const ProductReviews = ({ productId }) => {

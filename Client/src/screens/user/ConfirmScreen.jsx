@@ -15,7 +15,7 @@ const ConfirmScreenWrapper = styled.main`
 
   .confirm-msg {
     border: 2px solid ${defaultTheme.color_outerspace};
-    border-radius: 6px;
+    border-radius: 0;
     padding: 24px 0;
     margin-top: 16px;
     max-width: 400px;
@@ -41,7 +41,7 @@ const ConfirmScreen = () => {
             </p>
             <div className="flex gap-2">
               <BaseLinkGreen to="/">Continue Shopping</BaseLinkGreen>
-              <Link to="/order" className="btn text-base font-semibold" style={{ border: "1px solid #3c4242", padding: "8px 16px", borderRadius: "4px" }}>View Order</Link>
+              <Link to="/order" className="btn text-base font-semibold" style={{ border: "1px solid #3c4242", padding: "8px 16px", borderRadius: 0 }}>View Order</Link>
             </div>
           </div>
         </div>

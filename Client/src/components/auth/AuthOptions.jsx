@@ -9,7 +9,7 @@ const SignOptions = styled.div`
   .sign-option {
     column-gap: 12px;
     height: 40px;
-    border-radius: 5px;
+    border-radius: 0;
     border: 1px solid ${defaultTheme.color_platinum};
     transition: ${defaultTheme.default_transition};
 

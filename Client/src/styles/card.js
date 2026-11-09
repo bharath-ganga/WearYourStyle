@@ -3,11 +3,11 @@ import { breakpoints, defaultTheme } from "./themes/default";
 
 export const commonCardStyles = css`
   padding: 0;
-  border-radius: 18px;
+  border-radius: 0;
   cursor: pointer;
 
   .product-img {
-    border-radius: 18px;
+    border-radius: 0;
     overflow: hidden;
     margin-bottom: 16px;
     background: #ece9e1;

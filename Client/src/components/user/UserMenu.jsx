@@ -19,7 +19,7 @@ const NavMenuWrapper = styled.nav`
   }
 
   .nav-menu-item {
-    border-radius: 4px;
+    border-radius: 0;
 
     @media (max-width: ${breakpoints.sm}) {
       flex: 1 1 0;

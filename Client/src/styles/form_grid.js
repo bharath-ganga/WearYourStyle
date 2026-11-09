@@ -16,8 +16,7 @@ export const FormGridWrapper = styled.div`
   .form-grid-content {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    box-shadow: rgba(50, 50, 93, 0.15) 0px 50px 100px -20px,
-      rgba(0, 0, 0, 0.1) 0px 30px 60px -30px;
+    box-shadow: none;
     min-height: 620px;
 
     @media (max-width: ${breakpoints.md}) {

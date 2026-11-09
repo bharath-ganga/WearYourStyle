@@ -6,8 +6,7 @@ import { currencyFormat } from "../../utils/helper";
 import { breakpoints, defaultTheme } from "../../styles/themes/default";
 
 const CheckoutSummaryWrapper = styled.div`
-  box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.05),
-    -2px -2px 4px 0px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
   padding: 40px;
 
   @media (max-width: ${breakpoints.xl}) {
@@ -45,7 +44,7 @@ const CheckoutSummaryWrapper = styled.div`
       width: 60px;
       height: 60px;
       overflow: hidden;
-      border-radius: 4px;
+      border-radius: 0;
       img {
         width: 100%;
         height: 100%;

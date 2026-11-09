@@ -29,7 +29,7 @@ const ProductCardWrapper = styled(Link)`
     right: 14px;
     width: 38px;
     height: 38px;
-    border-radius: 100%;
+    border-radius: 0;
 
     &:hover {
       background-color: ${defaultTheme.color_sea_green};

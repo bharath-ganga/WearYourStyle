@@ -24,7 +24,7 @@ const CartDiscountWrapper = styled.div`
   .coupon-group {
     margin-top: 20px;
     overflow: hidden;
-    border-radius: 6px;
+    border-radius: 0;
     height: 40px;
   }
 

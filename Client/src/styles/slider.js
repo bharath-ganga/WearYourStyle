@@ -11,7 +11,7 @@ const commonArrowStyles = css`
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 100%;
+  border-radius: 0;
   background-color: ${defaultTheme.color_sea_green};
   border: 3px solid ${defaultTheme.color_whitesmoke};
   svg {

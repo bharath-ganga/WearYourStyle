@@ -6,10 +6,9 @@ import { breakpoints, defaultTheme } from "../../styles/themes/default";
 
 const DescriptionMediaWrapper = styled.div`
   height: 330px;
-  border-radius: 12px;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px,
-    rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+  box-shadow: none;
   position: relative;
   transition: ${defaultTheme.default_transition};
   margin-top: auto;
@@ -34,7 +33,7 @@ const DescriptionMediaWrapper = styled.div`
     top: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4));
+    background: rgba(0, 0, 0, 0.4);
   }
   .media-title {
     position: absolute;

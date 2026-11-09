@@ -15,7 +15,7 @@ const StyledSectionTitle = styled(TitleWrapper)`
 `;
 
 const BrandsContent = styled.div`
-  border-radius: 24px;
+  border-radius: 0;
   padding: 64px 20px;
   background-color: ${(props) => props.theme.color_white};
   border: 1px solid ${(props) => props.theme.color_anti_flash_white};
@@ -47,7 +47,7 @@ const BrandsItemWrapper = styled.div`
   transition: all 0.3s ease;
 
   &:hover {
-    transform: translateY(-5px);
+    transform: none;
   }
 
   .brand-img-wrap {

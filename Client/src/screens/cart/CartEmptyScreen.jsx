@@ -12,7 +12,7 @@ const CartEmptyScreenWrapper = styled.main`
   }
 
   .empty-cart-msg {
-    border-radius: 6px;
+    border-radius: 0;
     padding: 24px 0;
     margin-top: 16px;
     max-width: 400px;

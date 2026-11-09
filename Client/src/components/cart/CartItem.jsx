@@ -22,7 +22,7 @@ const CartTableRowWrapper = styled.tr`
         width: 24px;
         height: 24px;
         border: 1px solid ${defaultTheme.color_platinum};
-        border-radius: 2px;
+        border-radius: 0;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -54,7 +54,7 @@ const CartTableRowWrapper = styled.tr`
     width: 80px;
     height: 80px;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 0;
 
     @media (max-width: ${breakpoints.xl}) {
       width: 60px;

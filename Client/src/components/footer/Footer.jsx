@@ -76,7 +76,7 @@ const FooterWrapper = styled.footer`
     .ftr-social-link {
       width: 25px;
       height: 25px;
-      border-radius: 4px;
+      border-radius: 0;
     }
   }
 

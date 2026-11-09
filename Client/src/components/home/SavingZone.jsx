@@ -13,7 +13,7 @@ const ProductGridWrapper = styled.div`
 const ProductCardOverlayWrapper = styled.div`
   position: relative;
   height: 390px;
-  border-radius: 12px;
+  border-radius: 0;
   overflow: hidden;
 
   @media (max-width: ${breakpoints.sm}) {

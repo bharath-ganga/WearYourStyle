@@ -77,14 +77,14 @@ export const PriceFilter = styled.div`
     height: 5px;
     position: relative;
     background-color: rgba(128, 125, 126, 0.3);
-    border-radius: 2px;
+    border-radius: 0;
     margin-top: 10px;
   }
   .range-selected {
     left: 30%;
     right: 30%;
     position: absolute;
-    border-radius: 5px;
+    border-radius: 0;
   }
   .range-input {
     position: relative;
@@ -103,7 +103,7 @@ export const PriceFilter = styled.div`
   .range-input input::-webkit-slider-thumb {
     height: 16px;
     width: 16px;
-    border-radius: 50%;
+    border-radius: 0;
     background-color: ${defaultTheme.color_sea_green};
     pointer-events: auto;
     -webkit-appearance: none;
@@ -111,7 +111,7 @@ export const PriceFilter = styled.div`
   .range-input input::-moz-slider-thumb {
     height: 15px;
     width: 15px;
-    border-radius: 50%;
+    border-radius: 0;
     background-color: ${defaultTheme.color_white};
     pointer-events: auto;
     -webkit-appearance: none;
@@ -125,7 +125,7 @@ export const PriceFilter = styled.div`
     width: 50%;
     padding: 5px;
     height: 32px;
-    border-radius: 4px;
+    border-radius: 0;
     border: 1px solid rgba(190, 188, 189, 0.8);
   }
 `;
@@ -173,18 +173,18 @@ export const ColorsFilter = styled.div`
         & + img {
           outline: 1px solid ${defaultTheme.color_platinum};
           outline-offset: 4px;
-          border-radius: 12px;
+          border-radius: 0;
           scale: 0.8;
 
           @media (max-width: ${breakpoints.lg}) {
-            border-radius: 6px;
+            border-radius: 0;
           }
         }
       }
     }
 
     img {
-      border-radius: 12px;
+      border-radius: 0;
       transition: ${defaultTheme.default_transition};
       &:hover {
         scale: 0.9;
@@ -214,7 +214,7 @@ export const SizesFilter = styled.div`
     position: relative;
 
     span {
-      border-radius: 4px;
+      border-radius: 0;
       border: 1px solid rgba(190, 188, 189, 0.8);
       position: absolute;
       top: 0;

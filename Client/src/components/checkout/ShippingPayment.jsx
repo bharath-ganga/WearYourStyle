@@ -26,11 +26,11 @@ const ShippingPaymentWrapper = styled.div`
       background-color: ${defaultTheme.color_whitesmoke};
       max-width: 818px;
       margin-top: 24px;
-      border-radius: 12px;
+      border-radius: 0;
 
       @media (max-width: ${breakpoints.sm}) {
         padding: 16px;
-        border-radius: 8px;
+        border-radius: 0;
         margin-top: 16px;
       }
     }
@@ -99,7 +99,7 @@ const ShippingPaymentWrapper = styled.div`
           position: absolute;
           top: 0;
           left: 0;
-          border-radius: 5px;
+          border-radius: 0;
           border: 1px solid rgba(0, 0, 0, 0.1);
 
           .card-selected {
@@ -132,7 +132,7 @@ const ShippingPaymentWrapper = styled.div`
       .form-elem {
         height: 40px;
         border: 1px solid ${defaultTheme.color_platinum};
-        border-radius: 6px;
+        border-radius: 0;
         padding: 16px;
 
         &:focus {
@@ -141,7 +141,7 @@ const ShippingPaymentWrapper = styled.div`
 
         @media (max-width: ${breakpoints.sm}) {
           margin-bottom: 10px;
-          border-radius: 4px;
+          border-radius: 0;
         }
       }
     }
@@ -258,7 +258,7 @@ const ShippingPayment = ({ billingDetails }) => {
                 </span>
             </div>
             {billingDetails?.address && (
-                <div style={{ marginLeft: '28px', padding: '12px', backgroundColor: '#eef2f6', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#334155', fontSize: '14px', maxWidth: '400px' }}>
+                <div style={{ marginLeft: '28px', padding: '12px', backgroundColor: '#eef2f6', border: '1px solid #cbd5e1', borderRadius: 0, color: '#334155', fontSize: '14px', maxWidth: '400px' }}>
                     <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{billingDetails.name}</div>
                     <div><i className="bi bi-geo-alt-fill" style={{ marginRight: '6px', color: '#00a98f' }}></i>{billingDetails.address}</div>
                     <div style={{ marginTop: '4px' }}><i className="bi bi-telephone-fill" style={{ marginRight: '6px', color: '#00a98f' }}></i>{billingDetails.phone}</div>
@@ -445,7 +445,7 @@ const ShippingPayment = ({ billingDetails }) => {
                         }}
                     />
                     <span style={{ fontWeight: 'bold', fontSize: '18px', color: '#555' }}>@</span>
-                    <select className="form-elem" style={{ flex: 1, padding: '0 10px', height: '40px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                    <select className="form-elem" style={{ flex: 1, padding: '0 10px', height: '40px', borderRadius: 0, border: '1px solid #e2e8f0' }}>
                         <option value="okaxis">okaxis</option>
                         <option value="okhdfcbank">okhdfcbank</option>
                         <option value="oksbi">oksbi</option>

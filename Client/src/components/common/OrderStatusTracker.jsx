@@ -33,7 +33,7 @@ const BackgroundLine = styled.div`
   height: 4px;
   background-color: #e5e7eb; /* gray-200 */
   z-index: 1;
-  border-radius: 2px;
+  border-radius: 0;
 `;
 
 const ProgressFill = styled.div`
@@ -44,10 +44,10 @@ const ProgressFill = styled.div`
   height: 4px;
   background-color: #3b82f6; /* blue-500 */
   z-index: 2;
-  border-radius: 2px;
+  border-radius: 0;
   width: ${props => props.$width}%;
   transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  box-shadow: none;
 `;
 
 const StepWrapper = styled.div`
@@ -60,7 +60,7 @@ const StepWrapper = styled.div`
 const StepIcon = styled.div`
   width: ${props => props.$compact ? '20px' : '28px'};
   height: ${props => props.$compact ? '20px' : '28px'};
-  border-radius: 50%;
+  border-radius: 0;
   background-color: ${props => props.$active ? '#3b82f6' : '#fff'};
   border: ${props => props.$active ? 'none' : '3px solid #d1d5db'};
   display: flex;
@@ -69,7 +69,7 @@ const StepIcon = styled.div`
   transition: all 0.4s ease;
   transition-delay: ${props => props.$delay}s;
   color: white;
-  box-shadow: ${props => props.$active ? '0 0 8px rgba(59, 130, 246, 0.6)' : '0 0 0 2px #fff inset'};
+  box-shadow: none;
 
   .check-icon {
     opacity: ${props => props.$active ? 1 : 0};

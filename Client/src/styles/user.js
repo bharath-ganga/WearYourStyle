@@ -82,7 +82,7 @@ export const UserContent = styled.div`
     width: 20px;
     height: 20px;
     border: 1px solid ${defaultTheme.color_silver};
-    border-radius: 2px;
+    border-radius: 0;
     position: relative;
 
     input {

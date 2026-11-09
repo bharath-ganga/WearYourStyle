@@ -4,6 +4,7 @@ import { Container } from "../../styles/styles";
 import axios from "axios";
 import { API_BASE_URL } from "../../config/apiConfig";
 import { toast } from "react-hot-toast";
+import { BaseButtonGreen } from "../../styles/button";
 import { useNavigate } from "react-router-dom";
 
 const LoginBox = styled.div`
@@ -11,8 +12,8 @@ const LoginBox = styled.div`
   margin: 100px auto;
   padding: 40px;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border-radius: 0;
+  box-shadow: none;
   text-align: center;
 `;
 
@@ -21,7 +22,7 @@ const Input = styled.input`
   padding: 12px;
   margin-bottom: 20px;
   border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 0;
 `;
 
 const AdminLogin = () => {
@@ -69,7 +70,7 @@ const AdminLogin = () => {
                         onChange={(e) => setCredentials({...credentials, password: e.target.value})}
                         required
                     />
-                    <button type="submit" className="btn btn-purple" style={{width: '100%'}}>Authenticate</button>
+                    <BaseButtonGreen type="submit" style={{ width: "100%" }}>Sign in</BaseButtonGreen>
                     <p style={{marginTop: '20px', fontSize: '12px', color: '#888'}}>
                         Use the provided admin credentials to manage the platform.
                     </p>

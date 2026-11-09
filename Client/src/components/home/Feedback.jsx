@@ -16,7 +16,7 @@ const FeedbackItemWrapper = styled.div`
   }
 
   .feedback-item-wrap {
-    border-radius: 10px;
+    border-radius: 0;
     border: 1px solid ${defaultTheme.color_platinum};
     padding: 20px;
     height: 320px;
@@ -49,7 +49,7 @@ const FeedbackItemWrapper = styled.div`
   }
 
   .feedback-icon {
-    border-radius: 100%;
+    border-radius: 0;
     overflow: hidden;
     border: 2px solid ${defaultTheme.color_white};
 

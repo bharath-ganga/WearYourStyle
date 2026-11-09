@@ -20,6 +20,7 @@
 
 import express from "express";
 import multer from "multer";
+import ApiError from "../utils/ApiError.js";
 
 import {
   getAllOrders,
@@ -55,7 +56,7 @@ const upload = multer({
     if (allowed.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error(`Unsupported file type: ${file.mimetype}`), false);
+      cb(new ApiError(400, `Unsupported file type: ${file.mimetype}`), false);
     }
   },
 });

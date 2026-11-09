@@ -119,7 +119,7 @@ const ProductSizeWrapper = styled.div`
     span {
       width: 38px;
       height: 38px;
-      border-radius: 8px;
+      border-radius: 0;
       border: 1.5px solid ${defaultTheme.color_silver};
       text-transform: uppercase;
 
@@ -172,7 +172,7 @@ const ProductColorWrapper = styled.div`
     }
 
     .prod-colorbox {
-      border-radius: 100%;
+      border-radius: 0;
       width: 22px;
       height: 22px;
       display: inline-block;

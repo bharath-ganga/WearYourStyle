@@ -14,10 +14,10 @@ const FeaturedContent = styled.div`
 `;
 const FeaturedCardWrapper = styled.div`
   height: 430px;
-  border-radius: 22px;
+  border-radius: 0;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 16px 34px rgba(35, 35, 31, 0.12);
+  box-shadow: none;
 
   .feat-text-top {
     margin-bottom: 24px;
